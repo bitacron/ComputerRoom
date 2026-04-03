@@ -5,18 +5,16 @@ import com.example.room.device.entity.Device;
 import com.example.room.device.entity.UserDevicePreference;
 import com.example.room.device.service.DeviceService;
 import com.example.room.device.service.UserDevicePreferenceService;
-import com.example.room.environment.entity.dto.EnvironmentStatisticsQuery;
-import com.example.room.util.JwtUtil;
 import com.example.room.util.Result;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 
 /**
- * 用户设备偏好 Controller
+ * 用户设备偏好
  */
 @RestController
 @RequestMapping("/service/device/default")
@@ -28,15 +26,10 @@ public class UserDevicePreferenceController {
     @Resource
     private DeviceService deviceService;
 
-    /**
-     * 获取用户默认设备
-     * @param request Http请求
-     * @return 默认设备信息
-     */
+    @PreAuthorize("hasAuthority('realTime.index')")
     @GetMapping("/getDefaultDevice")
-    public Result<UserDevicePreference> getDefaultDevice(HttpServletRequest request) {
-        String token = JwtUtil.getTokenFromRequest(request);
-        String code = JwtUtil.getAccountCodeFromToken(token);
+    public Result<UserDevicePreference> getDefaultDevice() {
+        String code = SecurityContextHolder.getContext().getAuthentication().getName();
         UserDevicePreference defaultDevice = userDevicePreferenceService.getDefaultDeviceKey(code);
         if (Objects.isNull(defaultDevice)) {
             QueryWrapper<Device> queryWrapper = new QueryWrapper<>();
@@ -49,23 +42,11 @@ public class UserDevicePreferenceController {
         return Result.ok(defaultDevice);
     }
 
-    /**
-     * 设置用户默认设备（实际是记录用户最后选择的设备）
-     * @param request Http请求
-     * @param param 设备标识
-     * @return 操作结果
-     */
+    @PreAuthorize("hasAuthority('realTime.index')")
     @PostMapping("/setDefaultDevice")
-    public Result<Boolean> setDefaultDevice(HttpServletRequest request,@RequestBody(required = false) UserDevicePreference param) {
-        String token = JwtUtil.getTokenFromRequest(request);
-        String userCode = JwtUtil.getAccountCodeFromToken(token);
+    public Result<Boolean> setDefaultDevice(@RequestBody(required = false) UserDevicePreference param) {
+        String userCode = SecurityContextHolder.getContext().getAuthentication().getName();
         boolean success = userDevicePreferenceService.setDefaultDevice(userCode, param.getDeviceKey());
-        
-        if (success) {
-            return Result.ok(true);
-        } else {
-            return Result.fail("设置默认设备失败");
-        }
+        return success ? Result.ok(true) : Result.fail("设置默认设备失败");
     }
-
 }

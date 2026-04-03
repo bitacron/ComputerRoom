@@ -6,9 +6,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * @author spyn
- * @date 2023/11/16
- * @Version 1.0
+ *
+ * @author zhmy
  */
 
 @Configuration
@@ -25,7 +24,7 @@ public class WebMvcConfig {
                         .allowedMethods("*") // 允许任何方法（post、get等）
                         .allowedHeaders("*") // 允许任何请求头
                         .allowCredentials(false) // 允许证书、cookie
-                        .exposedHeaders(HttpHeaders.SET_COOKIE)
+                        .exposedHeaders(HttpHeaders.SET_COOKIE, HttpHeaders.CONTENT_DISPOSITION, HttpHeaders.CONTENT_TYPE)
                         .maxAge(3600L); // maxAge(3600)表明在3600秒内，不需要再发送预检验请求，可以缓存该结果
             }
         };

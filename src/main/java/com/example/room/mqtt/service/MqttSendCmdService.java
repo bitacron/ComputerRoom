@@ -7,10 +7,10 @@ import com.example.room.mqtt.entity.dto.MqttSendCmdQuery;
 
 /**
  * <p>
- * 讲师 服务类
+ * MQTT发送指令 服务类
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface MqttSendCmdService extends IService<MqttSendCmd> {

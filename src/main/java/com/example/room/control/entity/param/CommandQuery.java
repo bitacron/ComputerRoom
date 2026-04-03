@@ -17,7 +17,7 @@ import java.util.Date;
  * 设备反控记录实体
  * </p>
  *
- * @author yourname
+ * @author zhmy
  * @since 2025-03-28
  */
 @Data

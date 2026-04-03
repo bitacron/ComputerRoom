@@ -8,6 +8,7 @@ import com.example.room.util.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -27,6 +28,7 @@ public class MqttSendCmdController {
     // restful风格
     // 访问地址  http://localhost:8001/mqtt/send/cmd/findAll
     @ApiOperation(value = "所有MQTT发送记录列表")
+    @PreAuthorize("hasAuthority('sendCmd.list')")
     @GetMapping("findAll")
     public Result<List<MqttSendCmd>> findAllSendCmd() {
         // 调用service的方法实现查询所有的操作
@@ -34,8 +36,9 @@ public class MqttSendCmdController {
         return Result.ok(list);
     }
 
-    // 2.逻辑删除MQTT发送消息讲师方法
+    // 2.逻辑删除MQTT发送消息方法
     @ApiOperation(value = "逻辑删除")
+    @PreAuthorize("hasAuthority('sendCmd.remove')")
     @DeleteMapping("{id}")
     public Result<String> removeSendCmd(@ApiParam(name = "id", value = "消息id", required = true) @PathVariable String id) {
         boolean flag = sendCmdService.removeById(id);
@@ -48,6 +51,7 @@ public class MqttSendCmdController {
 
     // 4.添加查询带分页的方法
     @ApiOperation(value = "条件查询分页方法")
+    @PreAuthorize("hasAuthority('sendCmd.list')")
     @PostMapping("pageSendCmdCondition")
     public Result<Page<MqttSendCmd>> pageSendCmdCondition(@RequestBody(required = false) MqttSendCmdQuery sendQuery) {
         // 调用方法，实现分页查询
@@ -75,6 +79,7 @@ public class MqttSendCmdController {
     }
 
     @ApiOperation("根据ID查询MQTT发送记录")
+    @PreAuthorize("hasAuthority('sendCmd.list')")
     @GetMapping("getSendCmd/{id}")
     public Result<MqttSendCmd> getSendCmd(@PathVariable String id) {
         MqttSendCmd byId = sendCmdService.getById(id);

@@ -13,6 +13,7 @@ import com.example.room.util.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -23,105 +24,70 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * <p>
- * 环境数据 前端控制器
- * </p>
- *
- * @author helloWorld
- * @since 2023-05-31
- */
 @Api(description = "环境监测数据管理")
 @RestController
 @RequestMapping("/service/environment")
-//@CrossOrigin // 解决跨域问题
+@CrossOrigin
 public class EnvironmentController {
-    // 把service注入
+
     @Resource
     private EnvironmentService environmentService;
 
-    //1. 查询环境所有数据
-    // restful风格
-    // 访问地址  http://localhost:8001/service/environment/findAll
     @ApiOperation(value = "所有环境监测数据列表")
+    @PreAuthorize("hasAuthority('environment.list')")
     @GetMapping("findAll")
     public Result<List<Environment>> findAll() {
-        // 调用service的方法实现查询所有的操作
-        List<Environment> list = environmentService.list();
-        return Result.ok(list);
+        return Result.ok(environmentService.list());
     }
 
-    // 2.逻辑删除讲师方法
     @ApiOperation(value = "逻辑删除")
+    @PreAuthorize("hasAuthority('environment.remove')")
     @DeleteMapping("{id}")
-    public Result<String> removeEnvironment(@ApiParam(name = "id", value = "环境数据id", required = true) @PathVariable Long id) {
-        boolean flag = environmentService.removeById(id);
-        if (flag) {
-            return Result.ok();
-        } else {
-            return Result.fail();
-        }
+    public Result<String> removeEnvironment(@PathVariable Long id) {
+        return environmentService.removeById(id) ? Result.ok() : Result.fail();
     }
 
-    // 4.添加查询带分页的方法
     @ApiOperation(value = "条件查询分页方法")
+    @PreAuthorize("hasAuthority('environment.list')")
     @PostMapping("pageEnvironmentCondition")
     public Result<Page<EnvironmentVO>> pageEnvironmentCondition(@RequestBody(required = false) EnvironmentQuery environmentQuery) {
-        // 调用方法，实现分页查询
         Page<Environment> environmentPage = environmentService.pageQuery(environmentQuery);
-        List<Environment> environmentList = environmentPage.getRecords();
-        List<EnvironmentVO> voList = BeanUtil.copyToList(environmentList, EnvironmentVO.class);
-        // 创建新的 Page 对象，保留分页信息
+        List<EnvironmentVO> voList = BeanUtil.copyToList(environmentPage.getRecords(), EnvironmentVO.class);
         Page<EnvironmentVO> voPage = new Page<>(environmentPage.getCurrent(), environmentPage.getSize(), environmentPage.getTotal());
         voPage.setRecords(voList);
-        // 使用 map 转换，保留分页信息
-        // Page<EnvironmentVO> voPage = environmentPage.convert(entity -> {
-        //     return BeanUtil.copyToList(entity, EnvironmentVO.class);
-        // });
         return Result.ok(voPage);
     }
 
-    @ApiOperation(value = "条件查询分页方法")
+    @ApiOperation(value = "统计分析")
+    @PreAuthorize("hasAuthority('environment.list')")
     @PostMapping("statistics")
     public Result<List<Environment>> getStatistics(@RequestBody(required = false) EnvironmentStatisticsQuery query) {
-        List<Environment> resultList = environmentService.getStatistics(query);
-        return Result.ok(resultList);
+        return Result.ok(environmentService.getStatistics(query));
     }
 
     @ApiOperation(value = "获取最新一条数据")
+    @PreAuthorize("hasAuthority('realTime.index')")
     @GetMapping("getLastEnvironment")
     public Result<Environment> getLastEnvironment(@RequestParam("deviceKey") String deviceKey) {
-        Environment environment = environmentService.getLastData(deviceKey);
-        return Result.ok(environment);
+        return Result.ok(environmentService.getLastData(deviceKey));
     }
 
-    /**
-     * 导出环境数据到Excel
-     */
     @ApiOperation("导出环境监测数据")
     @PostMapping("export")
     public void export(@RequestBody(required = false) EnvironmentQuery environmentQuery,
                        HttpServletResponse response) {
         try {
-            // 1. 查询所有符合条件的数据（不分页）
             environmentQuery.setCurrentPage(1);
             environmentQuery.setPageSize(Integer.MAX_VALUE);
-
-            // 查询数据
             Page<Environment> pageResult = environmentService.pageQuery(environmentQuery);
-            List<Environment> list = pageResult.getRecords();
-            List<EnvironmentExportVO> exportVOList = BeanUtil.copyToList(list, EnvironmentExportVO.class);
+            List<EnvironmentExportVO> exportVOList = BeanUtil.copyToList(pageResult.getRecords(), EnvironmentExportVO.class);
             AtomicInteger index = new AtomicInteger(1);
-            exportVOList.forEach(vo -> {
-                vo.setIndex(index.getAndIncrement());
-            });
-            // 2. 设置响应头
+            exportVOList.forEach(vo -> vo.setIndex(index.getAndIncrement()));
+
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setCharacterEncoding("utf-8");
             String fileName = URLEncoder.encode("环境监测数据", "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-
-            // 3. 使用 EasyExcel 写出
             EasyExcel.write(response.getOutputStream(), EnvironmentExportVO.class)
                     .sheet("环境数据")
                     .doWrite(exportVOList);
@@ -129,32 +95,26 @@ public class EnvironmentController {
             throw new RuntimeException(e);
         }
     }
+
     @ApiOperation("添加环境监测数据")
+    @PreAuthorize("hasAuthority('environment.add')")
     @PostMapping("addEnvironment")
     public Result<String> addEnvironment(@RequestBody Environment environment) {
         environment.setGmtCreate(new Date());
-        boolean save = environmentService.save(environment);
-        if (save) {
-            return Result.ok();
-        } else
-            return Result.fail();
+        return environmentService.save(environment) ? Result.ok() : Result.fail();
     }
 
     @ApiOperation("根据ID查询环境监测数据")
+    @PreAuthorize("hasAuthority('environment.list')")
     @GetMapping("getEnvironment/{id}")
     public Result<Environment> getEnvironment(@PathVariable Long id) {
-        Environment byId = environmentService.getById(id);
-        return Result.ok(byId);
+        return Result.ok(environmentService.getById(id));
     }
 
     @ApiOperation("修改环境监测数据")
+    @PreAuthorize("hasAuthority('environment.update')")
     @PostMapping("updateEnvironment")
     public Result<String> updateEnvironment(@RequestBody Environment environment) {
-        boolean b = environmentService.updateById(environment);
-        if (b) {
-            return Result.ok();
-        } else
-            return Result.fail("修改失败");
+        return environmentService.updateById(environment) ? Result.ok() : Result.fail("修改失败");
     }
-
 }

@@ -30,4 +30,7 @@ public class MqttConfig {
     @Value("${mqtt.qos}")
     private Integer qos = 1;
 
+    @Value("${mqtt.enabled:true}")
+    private boolean enabled;
+
 }

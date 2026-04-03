@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.example.room.mqtt.entity.MqttSendCmd;
 import com.example.room.mqtt.service.MqttSendCmdService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -17,7 +19,8 @@ import java.util.Date;
 @Service
 public class MqttSendMessageService {
 
-    @Resource(name = "mqttOutputChannel")
+    @Autowired(required = false)
+    @Qualifier("mqttOutputChannel")
     private MessageChannel mqttOutputChannel;
 
     @Resource
@@ -30,6 +33,10 @@ public class MqttSendMessageService {
      * @return 是否发送成功
      */
     public boolean sendMessage(String topic, String payload) {
+        if (mqttOutputChannel == null) {
+            log.warn("MQTT 未启用，消息未发送 -> [主题:{}] [内容:{}]", topic, payload);
+            return false;
+        }
         try {
             Message<String> message = MessageBuilder
                     .withPayload(payload)
@@ -69,6 +76,10 @@ public class MqttSendMessageService {
      * @return 是否发送成功
      */
     public boolean sendMessage(String topic, byte[] payload) {
+        if (mqttOutputChannel == null) {
+            log.warn("MQTT 未启用，二进制消息未发送 -> [主题:{}]", topic);
+            return false;
+        }
         try {
             Message<byte[]> message = MessageBuilder
                     .withPayload(payload)
@@ -97,6 +108,10 @@ public class MqttSendMessageService {
      * @return 是否发送成功
      */
     public boolean sendMessage(String topic, String payload, int qos, boolean retained) {
+        if (mqttOutputChannel == null) {
+            log.warn("MQTT 未启用，消息未发送 -> [主题:{}] [内容:{}]", topic, payload);
+            return false;
+        }
         try {
             Message<String> message = MessageBuilder
                     .withPayload(payload)

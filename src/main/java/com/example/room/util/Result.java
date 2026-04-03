@@ -1,9 +1,8 @@
 package com.example.room.util;
 
 import java.io.Serializable;
-
 /**
- * http请求返回的最外层对象
+ * HTTP 统一响应结构
  */
 public class Result<T> implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -95,4 +94,5 @@ public class Result<T> implements Serializable {
     public static <T> Boolean isSuccess(Result<T> ret) {
         return Result.SUCCESS == ret.getCode();
     }
+
 }

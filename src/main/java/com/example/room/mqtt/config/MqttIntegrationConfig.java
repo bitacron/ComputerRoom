@@ -3,8 +3,10 @@ package com.example.room.mqtt.config;
 import com.example.room.mqtt.handler.MqttMessageProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
@@ -19,6 +21,7 @@ import javax.annotation.Resource;
 
 @Slf4j
 @Configuration
+@ConditionalOnProperty(prefix = "mqtt", name = "enabled", havingValue = "true")
 public class MqttIntegrationConfig {
 
     @Resource
@@ -34,7 +37,7 @@ public class MqttIntegrationConfig {
         options.setAutomaticReconnect(true);
         options.setCleanSession(true);
 
-        if (mqttConfig.getUsername() != null) {
+        if (StringUtils.hasText(mqttConfig.getUsername())) {
             options.setUserName(mqttConfig.getUsername());
             options.setPassword(mqttConfig.getPassword().toCharArray());
         }
@@ -69,8 +72,7 @@ public class MqttIntegrationConfig {
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(mqttConfig.getQos());
         adapter.setOutputChannel(mqttInputChannel());
-        // adapter.setCompletionTimeout(mqttConfig.getCompletionTimeout());
-        // adapter.setRecoveryInterval(10000);
+        adapter.setRecoveryInterval(10000);
         log.info("MQTT接收适配器已创建，Client ID: {}", receiverClientId);
         return adapter;
     }

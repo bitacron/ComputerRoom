@@ -5,10 +5,10 @@ import com.example.room.mqtt.entity.MqttReceiveCmdResp;
 
 /**
  * <p>
- * 讲师 Mapper 接口
+ * MQTT接收指令响应 Mapper 接口
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface MqttReceiveCmdRespMapper extends BaseMapper<MqttReceiveCmdResp> {

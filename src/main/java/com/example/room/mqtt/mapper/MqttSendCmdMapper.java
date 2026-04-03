@@ -5,10 +5,10 @@ import com.example.room.mqtt.entity.MqttSendCmd;
 
 /**
  * <p>
- * 讲师 Mapper 接口
+ * MQTT发送指令 Mapper 接口
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface MqttSendCmdMapper extends BaseMapper<MqttSendCmd> {

@@ -12,7 +12,7 @@ import com.example.room.control.entity.vo.DeviceOptionVo;
  * 反控记录 服务类
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface DeviceOptionService extends IService<DeviceOption> {

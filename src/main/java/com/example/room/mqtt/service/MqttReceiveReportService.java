@@ -10,7 +10,7 @@ import com.example.room.mqtt.entity.dto.MqttReceiveReportQuery;
  * Mqtt接收 服务类
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface MqttReceiveReportService extends IService<MqttReceiveReport> {

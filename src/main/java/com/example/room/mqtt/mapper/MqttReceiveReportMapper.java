@@ -5,10 +5,10 @@ import com.example.room.mqtt.entity.MqttReceiveReport;
 
 /**
  * <p>
- * 讲师 Mapper 接口
+ * MQTT接收上报 Mapper 接口
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface MqttReceiveReportMapper extends BaseMapper<MqttReceiveReport> {

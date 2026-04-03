@@ -8,6 +8,7 @@ import com.example.room.util.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -26,6 +27,7 @@ public class MqttReceiveReportController {
     // restful风格
     // 访问地址  http://localhost:8001/mqtt/receive/findAll
     @ApiOperation(value = "所有MQTT接收消息列表")
+    @PreAuthorize("hasAuthority('receiveReport.list')")
     @GetMapping("findAll")
     public Result<List<MqttReceiveReport>> findAllReport() {
         // 调用service的方法实现查询所有的操作
@@ -33,8 +35,9 @@ public class MqttReceiveReportController {
         return Result.ok(list);
     }
 
-    // 2.逻辑删除MQTT发送消息讲师方法
+    // 2.逻辑删除MQTT接收上报方法
     @ApiOperation(value = "逻辑删除")
+    @PreAuthorize("hasAuthority('receiveReport.remove')")
     @DeleteMapping("{id}")
     public Result<String> removeReport(@ApiParam(name = "id", value = "消息id", required = true) @PathVariable String id) {
         boolean flag = receiveReportService.removeById(id);
@@ -47,6 +50,7 @@ public class MqttReceiveReportController {
 
     // 4.添加查询带分页的方法
     @ApiOperation(value = "条件查询分页方法")
+    @PreAuthorize("hasAuthority('receiveReport.list')")
     @PostMapping("pageReportCondition")
     public Result<Page<MqttReceiveReport>> pageReportCondition(@RequestBody MqttReceiveReportQuery receiveQuery) {
         // 调用方法，实现分页查询
@@ -55,6 +59,7 @@ public class MqttReceiveReportController {
     }
 
     @ApiOperation(value = "获取最新一条记录")
+    @PreAuthorize("hasAuthority('receiveReport.list')")
     @GetMapping("getLastReport")
     public Result<MqttReceiveReport> getLastReport() {
         // 调用方法，实现分页查询
@@ -74,6 +79,7 @@ public class MqttReceiveReportController {
     }
 
     @ApiOperation("根据ID查询MQTT接收消息")
+    @PreAuthorize("hasAuthority('receiveReport.list')")
     @GetMapping("getReport/{id}")
     public Result<MqttReceiveReport> getReport(@PathVariable String id) {
         MqttReceiveReport byId = receiveReportService.getById(id);

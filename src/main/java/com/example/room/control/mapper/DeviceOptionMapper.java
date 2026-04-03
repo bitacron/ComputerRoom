@@ -5,10 +5,10 @@ import com.example.room.control.entity.DeviceOption;
 
 /**
  * <p>
- * 讲师 Mapper 接口
+ * 设备反控记录 Mapper 接口
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface DeviceOptionMapper extends BaseMapper<DeviceOption> {

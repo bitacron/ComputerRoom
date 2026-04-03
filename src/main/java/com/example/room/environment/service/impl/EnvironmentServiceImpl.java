@@ -25,36 +25,53 @@ import java.util.*;
  * 环境数据 服务实现类
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 @Service
 public class EnvironmentServiceImpl extends ServiceImpl<EnvironmentMapper, Environment> implements EnvironmentService {
     @Override
     public Page<Environment> pageQuery(EnvironmentQuery query) {
-        // 创建page
+        if (query == null) {
+            query = new EnvironmentQuery();
+        }
+        if (query.getCurrentPage() == null) {
+            query.setCurrentPage(1);
+        }
+        if (query.getPageSize() == null) {
+            query.setPageSize(10);
+        }
         Page<Environment> page = new Page<>(query.getCurrentPage(), query.getPageSize());
-        // 构建条件
-        QueryWrapper<Environment> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<Environment> queryWrapper = buildEnvironmentQueryWrapper(query);
+        queryWrapper.lambda().orderByDesc(Environment::getGmtCreate);
+        return baseMapper.selectPage(page, queryWrapper);
+    }
 
-        Integer source = query.getSource();
-        String begin = query.getBegin();
-        String end = query.getEnd();
+    @Override
+    public List<Environment> listByQuery(EnvironmentQuery query) {
+        if (query == null) {
+            query = new EnvironmentQuery();
+        }
+        QueryWrapper<Environment> queryWrapper = buildEnvironmentQueryWrapper(query);
+        queryWrapper.lambda().orderByDesc(Environment::getGmtCreate);
+        return baseMapper.selectList(queryWrapper);
+    }
+
+    private QueryWrapper<Environment> buildEnvironmentQueryWrapper(EnvironmentQuery query) {
+        QueryWrapper<Environment> queryWrapper = new QueryWrapper<>();
         if (Objects.nonNull(query.getSource())) {
-            queryWrapper.lambda().eq(Environment::getSource, source); // eq等于
+            queryWrapper.lambda().eq(Environment::getSource, query.getSource());
         }
-        if (!StringUtils.isEmpty(begin)) {
-            queryWrapper.lambda().ge(Environment::getGmtCreate, begin); // ge大于等于
+        if (!StringUtils.isEmpty(query.getBegin())) {
+            queryWrapper.lambda().ge(Environment::getGmtCreate, query.getBegin());
         }
-        if (!StringUtils.isEmpty(end)) {
-            queryWrapper.lambda().le(Environment::getGmtCreate, end); // le小于等于
+        if (!StringUtils.isEmpty(query.getEnd())) {
+            queryWrapper.lambda().le(Environment::getGmtCreate, query.getEnd());
         }
         if (!StringUtils.isEmpty(query.getDeviceKey())) {
             queryWrapper.lambda().eq(Environment::getDeviceKey, query.getDeviceKey());
         }
-        // 排序
-        queryWrapper.lambda().orderByDesc(Environment::getGmtCreate);
-        return baseMapper.selectPage(page, queryWrapper);
+        return queryWrapper;
     }
 
     @Override

@@ -17,8 +17,8 @@ import com.example.room.control.entity.enums.DeviceTypeEnum;
 import com.example.room.control.mapper.DeviceOptionMapper;
 import com.example.room.control.service.DeviceOptionService;
 import com.example.room.environment.service.EnvironmentService;
-import com.example.room.login.entity.Account;
-import com.example.room.login.mapper.AccountMapper;
+import com.example.room.access.entity.User;
+import com.example.room.access.service.UserService;
 import com.example.room.mqtt.common.MqttSendMessageService;
 import com.example.room.util.RequestIdGenerator;
 import com.example.room.util.WebSocketPushUtil;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * 反控记录 服务实现类
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 @Service
@@ -49,7 +49,7 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
     private EnvironmentService environmentService;
 
     @Resource
-    private AccountMapper accountMapper;
+    private UserService userService;
 
     @Resource
     private CommandService commandService;
@@ -80,14 +80,14 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
                 .map(DeviceOption::getOperatorCode)  // 假设有getOperatorId()方法
                 .collect(Collectors.toList());
 
-        QueryWrapper<Account> accountQueryWrapper = new QueryWrapper<>();
-        accountQueryWrapper.lambda().in(Account::getUsername, operatorList);
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.lambda().in(User::getUsername, operatorList);
 
-        List<Account> accountList = accountMapper.selectList(accountQueryWrapper);
-        Map<String, String> accountMap = accountList.stream()
+        List<User> userList = userService.list(userQueryWrapper);
+        Map<String, String> userMap = userList.stream()
                 .collect(Collectors.toMap(
-                        Account::getUsername,
-                        Account::getNickname   // value: nickname
+                        User::getUsername,
+                        User::getNickName
                 ));
         // 将 DeviceOption 列表转换为 DeviceOptionVo 列表
         List<DeviceOptionVo> voList = new ArrayList<>();
@@ -95,7 +95,7 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
             DeviceOptionVo vo = new DeviceOptionVo();
             BeanUtils.copyProperties(record, vo);
 
-            vo.setOperatorName(accountMap.getOrDefault(record.getOperatorCode(), ""));
+            vo.setOperatorName(userMap.getOrDefault(record.getOperatorCode(), ""));
             voList.add(vo);
         }
 

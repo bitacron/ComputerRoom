@@ -14,10 +14,10 @@ import java.util.Date;
 
 /**
  * <p>
- * 讲师
+ * 环境检测数据
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 @Data

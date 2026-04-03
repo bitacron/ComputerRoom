@@ -5,10 +5,10 @@ import com.example.room.environment.entity.Environment;
 
 /**
  * <p>
- * 讲师 Mapper 接口
+ * 环境检测数据 Mapper 接口
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface EnvironmentMapper extends BaseMapper<Environment> {

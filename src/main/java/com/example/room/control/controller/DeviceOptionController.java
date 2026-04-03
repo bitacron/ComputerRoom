@@ -6,26 +6,17 @@ import com.example.room.control.entity.param.DeviceOptionControl;
 import com.example.room.control.entity.param.DeviceOptionQuery;
 import com.example.room.control.entity.vo.DeviceOptionVo;
 import com.example.room.control.service.DeviceOptionService;
-import com.example.room.mqtt.common.MqttSendMessageService;
-import com.example.room.util.JwtUtil;
 import com.example.room.util.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-/**
- * <p>
- * 环境数据前端控制器
- * </p>
- *
- * @author helloWorld
- * @since 2023-05-31
- */
 @Api(description = "反控操作记录数据管理")
 @RestController
 @RequestMapping("/service/deviceOption")
@@ -35,60 +26,46 @@ public class DeviceOptionController {
     private DeviceOptionService deviceOptionService;
 
     @ApiOperation(value = "所有反控操作记录数据列表")
+    @PreAuthorize("hasAuthority('index.list')")
     @GetMapping("findAll")
     public Result<List<DeviceOption>> findAll() {
-        List<DeviceOption> list = deviceOptionService.list();
-        return Result.ok(list);
+        return Result.ok(deviceOptionService.list());
     }
 
     @ApiOperation(value = "逻辑删除")
+    @PreAuthorize("hasAuthority('index.remove')")
     @DeleteMapping("{id}")
-    public Result<String> removeDeviceOption(@ApiParam(name = "id", value = "环境数据id", required = true) @PathVariable String id) {
-        boolean flag = deviceOptionService.removeById(id);
-        if (flag) {
-            return Result.ok();
-        } else {
-            return Result.fail();
-        }
+    public Result<String> removeDeviceOption(@PathVariable String id) {
+        return deviceOptionService.removeById(id) ? Result.ok() : Result.fail();
     }
 
     @ApiOperation(value = "条件查询分页方法")
+    @PreAuthorize("hasAuthority('index.list')")
     @PostMapping("pageDeviceOptionCondition")
     public Result<Page<DeviceOptionVo>> pageDeviceOptionCondition(@RequestBody DeviceOptionQuery deviceOptionQuery) {
-        // 调用方法，实现分页查询
-        Page<DeviceOptionVo> resultPage = deviceOptionService.pageQuery(deviceOptionQuery);
-        return Result.ok(resultPage);
+        return Result.ok(deviceOptionService.pageQuery(deviceOptionQuery));
     }
 
     @ApiOperation("根据ID查询反控操作记录数据")
+    @PreAuthorize("hasAuthority('index.list')")
     @GetMapping("getDeviceOption/{id}")
     public Result<DeviceOption> getDeviceOption(@PathVariable String id) {
-        DeviceOption byId = deviceOptionService.getById(id);
-        return Result.ok(byId);
+        return Result.ok(deviceOptionService.getById(id));
     }
 
     @ApiOperation("修改反控操作记录数据")
+    @PreAuthorize("hasAuthority('index.list')")
     @PostMapping("updateDeviceOption")
     public Result<String> updateDeviceOption(@RequestBody DeviceOption deviceOption) {
-        boolean b = deviceOptionService.updateById(deviceOption);
-        if (b) {
-            return Result.ok();
-        } else
-            return Result.fail("修改失败");
+        return deviceOptionService.updateById(deviceOption) ? Result.ok() : Result.fail("修改失败");
     }
 
-
-    @ApiOperation("反控操作")
+    @ApiOperation("反控操作（登录即可，小程序通用；后续可单独加权限点）")
     @PostMapping("control")
-    public Result<String> controlDevice(@RequestBody DeviceOptionControl deviceOption, HttpServletRequest request) {
-        String token = JwtUtil.getTokenFromRequest(request);
-        // Long userIdFromToken = JwtUtil.getAccountIdFromToken(token);
-        String username = JwtUtil.getAccountCodeFromToken(token);
-        boolean b = deviceOptionService.controlDevice(deviceOption, username);
-        if (b) {
-            return Result.ok("指令已下达");
-        } else
-            return Result.fail("操作失败，请稍后重试");
+    public Result<String> controlDevice(@RequestBody DeviceOptionControl deviceOption) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return deviceOptionService.controlDevice(deviceOption, username)
+                ? Result.ok("指令已下达")
+                : Result.fail("操作失败，请稍后重试");
     }
-
 }

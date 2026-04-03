@@ -9,7 +9,7 @@ import com.example.room.device.entity.Device;
  * 设备 Mapper 接口
  * </p>
  *
- * @author helloWorld
+ * @author zhmy
  * @since 2023-05-31
  */
 public interface DeviceMapper extends BaseMapper<Device> {
