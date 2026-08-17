@@ -1,0 +1,132 @@
+// {
+// 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+// 		{
+// 			"path": "pages/index/index",
+// 			"style": {
+// 				"navigationBarTitleText": "uni-app"
+// 			}
+// 		}
+// 	],
+// 	"globalStyle": {
+// 		"navigationBarTextStyle": "black",
+// 		"navigationBarTitleText": "uni-app",
+// 		"navigationBarBackgroundColor": "#F8F8F8",
+// 		"backgroundColor": "#F8F8F8"
+// 	}
+// }
+// {
+//   "pages": [
+//     {
+//       "path": "pages/login/login",
+//       "style": {
+//         "navigationBarTitleText": "登录",
+//         "navigationStyle": "custom"
+//       }
+//     },
+//     {
+//       "path": "pages/realTime/realTime",
+//       "style": {
+//         "navigationBarTitleText": "实时监测",
+//         "enablePullDownRefresh": false
+//       }
+//     },
+//     {
+//       "path": "pages/history/history",
+//       "style": {
+//         "navigationBarTitleText": "历史数据"
+//       }
+//     }
+//   ],
+//   "globalStyle": {
+//     "navigationBarTextStyle": "black",
+//     "navigationBarTitleText": "IoT智能监测",
+//     "navigationBarBackgroundColor": "#FFFFFF",
+//     "backgroundColor": "#F5F7FA"
+//   },
+//   "tabBar": {
+//     "color": "#7A7E83",
+//     "selectedColor": "#409EFF",
+//     "borderStyle": "black",
+//     "backgroundColor": "#ffffff",
+//     "list": [
+//       {
+//         "pagePath": "pages/realTime/realTime",
+//         "iconPath": "static/real_off.png",
+//         "selectedIconPath": "static/real_on.png",
+//         "text": "实时数据"
+//       },
+//       {
+//         "pagePath": "pages/history/history",
+//         "iconPath": "static/history_off.png",
+//         "selectedIconPath": "static/history_on.png",
+//         "text": "历史数据"
+//       }
+//     ]
+//   }
+// }
+
+{  
+  "easycom": {
+	"^qiun-data-charts": "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue"
+  },
+  "pages": [
+    {
+      "path": "pages/realTime/realTime",
+      "style": {
+        "navigationBarTitleText": "实时监测",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/history/history",
+      "style": {
+        "navigationBarTitleText": "历史数据"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "中小型数据中心机房监测系统",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F5F7FA"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#409EFF",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/realTime/realTime",
+        "iconPath": "static/real_off.png",
+        "selectedIconPath": "static/real_on.png",
+        "text": "实时数据"
+      },
+      {
+        "pagePath": "pages/history/history",
+        "iconPath": "static/history_off.png",
+        "selectedIconPath": "static/history_on.png",
+        "text": "历史数据"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "iconPath": "static/profile_off.png",
+        "selectedIconPath": "static/profile_on.png",
+        "text": "我的"
+      }
+    ]
+  }
+}

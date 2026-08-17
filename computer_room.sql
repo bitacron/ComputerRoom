@@ -11,178 +11,68 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 04/04/2026 00:47:09
+ Date: 12/03/2026 01:00:54
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for account
--- ----------------------------
-DROP TABLE IF EXISTS `account`;
-CREATE TABLE `account`  (
-  `id` bigint(19) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
-  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名',
-  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '密码',
-  `nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '昵称',
-  `avatar` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '头像',
-  `role` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '角色',
-  `phone` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '手机号',
-  `email` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '邮箱',
-  `gender` tinyint(4) NULL DEFAULT NULL COMMENT '性别（0-女；1-男）',
-  `gmt_created` datetime NULL DEFAULT NULL COMMENT '创建日期',
-  `gmt_modified` datetime NULL DEFAULT NULL COMMENT '修改时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_username`(`username`) USING BTREE COMMENT '用户名唯一索引',
-  INDEX `idx_username`(`username`) USING BTREE,
-  INDEX `idx_gmt_created`(`gmt_created`) USING BTREE,
-  INDEX `idx_gmt_modified`(`gmt_modified`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户信息表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for access_permission
--- ----------------------------
-DROP TABLE IF EXISTS `access_permission`;
-CREATE TABLE `access_permission`  (
-  `id` bigint NOT NULL COMMENT '编号',
-  `pid` bigint NOT NULL DEFAULT 0 COMMENT '所属上级',
-  `name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '名称',
-  `type` tinyint(3) NOT NULL DEFAULT 0 COMMENT '类型(1:菜单,2:按钮)',
-  `permission_value` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '权限值',
-  `path` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '访问路径',
-  `component` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '组件路径',
-  `icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '图标',
-  `status` tinyint(4) NULL DEFAULT NULL COMMENT '状态(0:禁止,1:正常)',
-  `sort` int NOT NULL DEFAULT 0 COMMENT '同级排序，越小越靠前',
-  `is_deleted` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
-  `gmt_create` datetime NULL DEFAULT NULL COMMENT '创建时间',
-  `gmt_modified` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_pid`(`pid`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '权限' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for access_role
--- ----------------------------
-DROP TABLE IF EXISTS `access_role`;
-CREATE TABLE `access_role`  (
-  `id` bigint NOT NULL COMMENT '角色id',
-  `role_name` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '角色名称',
-  `role_code` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '角色编码',
-  `remark` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注',
-  `is_deleted` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
-  `gmt_create` datetime NOT NULL COMMENT '创建时间',
-  `gmt_modified` datetime NOT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for access_role_permission
--- ----------------------------
-DROP TABLE IF EXISTS `access_role_permission`;
-CREATE TABLE `access_role_permission`  (
-  `id` bigint NOT NULL,
-  `role_id` bigint NOT NULL DEFAULT 0,
-  `permission_id` bigint NOT NULL DEFAULT 0,
-  `is_deleted` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
-  `gmt_create` datetime NULL DEFAULT NULL COMMENT '创建时间',
-  `gmt_modified` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_role_id`(`role_id`) USING BTREE,
-  INDEX `idx_permission_id`(`permission_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '角色权限' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for access_user
--- ----------------------------
-DROP TABLE IF EXISTS `access_user`;
-CREATE TABLE `access_user`  (
-  `id` bigint NOT NULL COMMENT '用户ID',
-  `username` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '用户名',
-  `password` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '密码（MD5）',
-  `nick_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '昵称',
-  `phone` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '手机号',
-  `email` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '邮箱',
-  `avatar` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '头像',
-  `gender` tinyint(4) NULL DEFAULT NULL COMMENT '性别（0-女；1-男）',
-  `is_deleted` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
-  `gmt_create` datetime NOT NULL COMMENT '创建时间',
-  `gmt_modified` datetime NOT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_username`(`username`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for access_user_role
--- ----------------------------
-DROP TABLE IF EXISTS `access_user_role`;
-CREATE TABLE `access_user_role`  (
-  `id` bigint NOT NULL COMMENT '主键id',
-  `role_id` bigint NOT NULL DEFAULT 0 COMMENT '角色id',
-  `user_id` bigint NOT NULL DEFAULT 0 COMMENT '用户id',
-  `is_deleted` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
-  `gmt_create` datetime NOT NULL COMMENT '创建时间',
-  `gmt_modified` datetime NOT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_role_id`(`role_id`) USING BTREE,
-  INDEX `idx_user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for command
--- ----------------------------
-DROP TABLE IF EXISTS `command`;
-CREATE TABLE `command`  (
-  `id` bigint(19) NOT NULL COMMENT '主键ID',
-  `cmd_id` char(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '指令ID',
-  `device_key` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-  `device_type` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '控制类型：1-散热',
-  `command` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '命令：1-ON 2-OFF',
-  `status` tinyint(4) NULL DEFAULT NULL COMMENT '状态\r\n',
-  `gmt_create` datetime NOT NULL COMMENT '创建时间',
-  `is_deleted` tinyint(1) NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '设备反控记录' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for device
--- ----------------------------
-DROP TABLE IF EXISTS `device`;
-CREATE TABLE `device`  (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `product_key` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '产品标识（冗余字段，方便查询）',
-  `device_key` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '设备唯一标识（用户自定义或系统生成）',
-  `device_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '设备名称（用户自定义）',
-  `online_status` tinyint(4) NULL DEFAULT 0 COMMENT '在线状态: 0-离线, 1-在线（实时状态）',
-  `last_online_time` datetime NULL DEFAULT NULL COMMENT '最后上线时间',
-  `last_offline_time` datetime NULL DEFAULT NULL COMMENT '最后离线时间',
-  `last_active_time` datetime NULL DEFAULT NULL COMMENT '最后活跃时间（上报数据时间）',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '设备表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
 -- Table structure for device_option
 -- ----------------------------
 DROP TABLE IF EXISTS `device_option`;
 CREATE TABLE `device_option`  (
-  `id` bigint(19) NOT NULL COMMENT '反控ID',
-  `device_key` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '设备ID',
-  `action` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '操作',
-  `operator_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '操作人',
+  `id` char(19) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '反控ID',
+  `device_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '设备ID',
+  `device_type` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '控制类型：1-散热',
+  `command` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '命令：1-ON 2-OFF',
+  `operator` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '操作人',
   `gmt_create` datetime NOT NULL COMMENT '创建时间',
   `is_deleted` tinyint(1) NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '设备反控记录' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of device_option
+-- ----------------------------
+INSERT INTO `device_option` VALUES ('2031770426820026370', 'stm32_01', 'radiator', 'off', NULL, '2026-03-12 00:33:13', 0);
+INSERT INTO `device_option` VALUES ('2031770623495135234', 'stm32_01', 'led', 'on', NULL, '2026-03-12 00:34:00', 0);
+INSERT INTO `device_option` VALUES ('2031770659763281923', 'stm32_01', 'led', 'off', NULL, '2026-03-12 00:34:08', 0);
+INSERT INTO `device_option` VALUES ('2031770681175203842', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:34:14', 0);
+INSERT INTO `device_option` VALUES ('2031770731582349314', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:34:26', 0);
+INSERT INTO `device_option` VALUES ('2031770761466765315', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:34:33', 0);
+INSERT INTO `device_option` VALUES ('2031770874515841027', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:35:00', 0);
+INSERT INTO `device_option` VALUES ('2031770963053404162', 'stm32_01', 'led', 'on', NULL, '2026-03-12 00:35:21', 0);
+INSERT INTO `device_option` VALUES ('2031770973425917955', 'stm32_01', 'led', 'on', NULL, '2026-03-12 00:35:23', 0);
+INSERT INTO `device_option` VALUES ('2031771659505000451', 'stm32_01', 'led', 'on', NULL, '2026-03-12 00:38:07', 0);
+INSERT INTO `device_option` VALUES ('2031771695408242690', 'stm32_01', 'led', 'off', NULL, '2026-03-12 00:38:15', 0);
+INSERT INTO `device_option` VALUES ('2031771740220186626', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:38:26', 0);
+INSERT INTO `device_option` VALUES ('2031772865749082115', 'stm32_01', 'radiator', 'off', NULL, '2026-03-12 00:42:54', 0);
+INSERT INTO `device_option` VALUES ('2031772900251426818', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:43:03', 0);
+INSERT INTO `device_option` VALUES ('2031772925979287554', 'stm32_01', 'radiator', 'off', NULL, '2026-03-12 00:43:09', 0);
+INSERT INTO `device_option` VALUES ('2031772945331806210', 'stm32_01', 'led', 'on', NULL, '2026-03-12 00:43:13', 0);
+INSERT INTO `device_option` VALUES ('2031772961337270273', 'stm32_01', 'led', 'off', NULL, '2026-03-12 00:43:17', 0);
+INSERT INTO `device_option` VALUES ('2031773791918514179', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:46:35', 0);
+INSERT INTO `device_option` VALUES ('2031774170563502083', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:48:05', 0);
+INSERT INTO `device_option` VALUES ('2031774206936506370', 'stm32_01', 'radiator', 'off', NULL, '2026-03-12 00:48:14', 0);
+INSERT INTO `device_option` VALUES ('2031776679860396034', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:58:04', 0);
+INSERT INTO `device_option` VALUES ('2031776702958428161', 'stm32_01', 'radiator', 'off', NULL, '2026-03-12 00:58:09', 0);
+INSERT INTO `device_option` VALUES ('2031776782654398466', 'stm32_01', 'led', 'on', NULL, '2026-03-12 00:58:28', 0);
+INSERT INTO `device_option` VALUES ('2031776816582123522', 'stm32_01', 'led', 'off', NULL, '2026-03-12 00:58:36', 0);
+INSERT INTO `device_option` VALUES ('2031776848723075074', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:58:44', 0);
+INSERT INTO `device_option` VALUES ('2031777072002654211', 'stm32_01', 'radiator', 'on', NULL, '2026-03-12 00:59:37', 0);
+INSERT INTO `device_option` VALUES ('2031777108631511043', 'stm32_01', 'radiator', 'off', NULL, '2026-03-12 00:59:46', 0);
+INSERT INTO `device_option` VALUES ('2031777149425311746', 'stm32_01', 'led', 'on', NULL, '2026-03-12 00:59:56', 0);
+INSERT INTO `device_option` VALUES ('2031777183529197570', 'stm32_01', 'led', 'off', NULL, '2026-03-12 01:00:04', 0);
 
 -- ----------------------------
 -- Table structure for environment
 -- ----------------------------
 DROP TABLE IF EXISTS `environment`;
 CREATE TABLE `environment`  (
-  `id` bigint(19) NOT NULL COMMENT '环境数据ID',
+  `id` char(19) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '环境数据ID',
   `source` tinyint(4) NULL DEFAULT 1 COMMENT '数据来源（1：硬件上报；0：手动记录）',
-  `device_key` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '上报设备',
+  `device_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '上报设备',
   `temperature` decimal(5, 2) NULL DEFAULT NULL COMMENT '温度',
   `humidity` decimal(5, 2) NULL DEFAULT NULL COMMENT '湿度',
   `gas_ppm` decimal(5, 2) NULL DEFAULT NULL COMMENT '烟雾浓度',
@@ -192,7 +82,7 @@ CREATE TABLE `environment`  (
   `light_percentage` decimal(5, 2) NULL DEFAULT NULL COMMENT '光照强度（0-100）',
   `flame_percentage` decimal(5, 2) NULL DEFAULT NULL COMMENT '附近有火焰的百分比（0-100）',
   `alarm_status` tinyint(4) NULL DEFAULT NULL COMMENT '蜂鸣器报警状态（1：报警；0：未报警）',
-  `fan_status` tinyint(4) NULL DEFAULT NULL COMMENT '散热设备开关（1：开启；0：关闭）',
+  `radiator_status` tinyint(4) NULL DEFAULT NULL COMMENT '散热设备开关（1：开启；0：关闭）',
   `led_status` tinyint(4) NULL DEFAULT NULL COMMENT 'led开关（1：开启；0：关闭）',
   `gmt_measurement` datetime NULL DEFAULT NULL COMMENT '测量时间',
   `gmt_create` datetime NOT NULL COMMENT '创建时间',
@@ -201,62 +91,496 @@ CREATE TABLE `environment`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '环境监测数据' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for mqtt_receive_cmd_resp
+-- Records of environment
 -- ----------------------------
-DROP TABLE IF EXISTS `mqtt_receive_cmd_resp`;
-CREATE TABLE `mqtt_receive_cmd_resp`  (
-  `id` bigint(19) NOT NULL COMMENT 'ID',
+INSERT INTO `environment` VALUES ('2031406332149538818', 1, 'stm32_01', 24.00, 48.00, 0.00, 0, 0, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:26:26', '2026-03-11 00:26:26', 0);
+INSERT INTO `environment` VALUES ('2031406403515621379', 1, 'stm32_01', 24.00, 48.00, 0.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:26:43', '2026-03-11 00:26:43', 0);
+INSERT INTO `environment` VALUES ('2031406549825503234', 1, 'stm32_01', 24.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:27:18', '2026-03-11 00:27:18', 0);
+INSERT INTO `environment` VALUES ('2031406617785810946', 1, 'stm32_01', 24.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:27:34', '2026-03-11 00:27:34', 0);
+INSERT INTO `environment` VALUES ('2031406689235779585', 1, 'stm32_01', 24.00, 48.00, 1.00, 0, 0, 0, 85.00, 0.00, 0, 0, 0, '2026-03-11 00:27:51', '2026-03-11 00:27:51', 0);
+INSERT INTO `environment` VALUES ('2031406760962572290', 1, 'stm32_01', 24.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:28:08', '2026-03-11 00:28:08', 0);
+INSERT INTO `environment` VALUES ('2031406832227991555', 1, 'stm32_01', 24.00, 48.00, 1.00, 0, 1, 0, 5.00, 0.00, 0, 0, 0, '2026-03-11 00:28:25', '2026-03-11 00:28:25', 0);
+INSERT INTO `environment` VALUES ('2031406903539548162', 1, 'stm32_01', 24.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:28:42', '2026-03-11 00:28:42', 0);
+INSERT INTO `environment` VALUES ('2031406974842716162', 1, 'stm32_01', 24.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:28:59', '2026-03-11 00:28:59', 0);
+INSERT INTO `environment` VALUES ('2031407046569508866', 1, 'stm32_01', 24.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:29:16', '2026-03-11 00:29:16', 0);
+INSERT INTO `environment` VALUES ('2031407117860093955', 1, 'stm32_01', 24.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:29:33', '2026-03-11 00:29:33', 0);
+INSERT INTO `environment` VALUES ('2031407188873854978', 1, 'stm32_01', 25.00, 48.00, 1.00, 0, 1, 0, 29.00, 0.00, 0, 0, 0, '2026-03-11 00:29:50', '2026-03-11 00:29:50', 0);
+INSERT INTO `environment` VALUES ('2031407260495790082', 1, 'stm32_01', 25.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:30:07', '2026-03-11 00:30:07', 0);
+INSERT INTO `environment` VALUES ('2031407331593437187', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 0, 0, 44.00, 93.00, 0, 0, 0, '2026-03-11 00:30:24', '2026-03-11 00:30:24', 0);
+INSERT INTO `environment` VALUES ('2031407403068571651', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:30:41', '2026-03-11 00:30:41', 0);
+INSERT INTO `environment` VALUES ('2031407474531123202', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:30:58', '2026-03-11 00:30:58', 0);
+INSERT INTO `environment` VALUES ('2031407545888817154', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 0, 1, 55.00, 93.00, 0, 0, 0, '2026-03-11 00:31:15', '2026-03-11 00:31:15', 0);
+INSERT INTO `environment` VALUES ('2031407617313619971', 1, 'stm32_01', 25.00, 47.00, 3.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:31:32', '2026-03-11 00:31:32', 0);
+INSERT INTO `environment` VALUES ('2031407688717451267', 1, 'stm32_01', 25.00, 49.00, 7.00, 1, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:31:49', '2026-03-11 00:31:49', 0);
+INSERT INTO `environment` VALUES ('2031407760125476867', 1, 'stm32_01', 25.00, 49.00, 4.00, 0, 1, 0, 5.00, 0.00, 0, 0, 0, '2026-03-11 00:32:06', '2026-03-11 00:32:06', 0);
+INSERT INTO `environment` VALUES ('2031407831541891074', 1, 'stm32_01', 25.00, 49.00, 2.00, 0, 1, 0, 5.00, 0.00, 0, 0, 0, '2026-03-11 00:32:23', '2026-03-11 00:32:23', 0);
+INSERT INTO `environment` VALUES ('2031407903398707202', 1, 'stm32_01', 25.00, 48.00, 2.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:32:41', '2026-03-11 00:32:41', 0);
+INSERT INTO `environment` VALUES ('2031407974345359362', 1, 'stm32_01', 25.00, 48.00, 2.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:32:57', '2026-03-11 00:32:57', 0);
+INSERT INTO `environment` VALUES ('2031408045715636227', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:33:15', '2026-03-11 00:33:15', 0);
+INSERT INTO `environment` VALUES ('2031408117157216259', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 4.00, 0.00, 0, 0, 0, '2026-03-11 00:33:32', '2026-03-11 00:33:32', 0);
+INSERT INTO `environment` VALUES ('2031408188602990594', 1, 'stm32_01', 25.00, 48.00, 1.00, 0, 1, 0, 5.00, 0.00, 0, 0, 0, '2026-03-11 00:33:49', '2026-03-11 00:33:49', 0);
+INSERT INTO `environment` VALUES ('2031408259969073155', 1, 'stm32_01', 25.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:34:06', '2026-03-11 00:34:06', 0);
+INSERT INTO `environment` VALUES ('2031408331427430402', 1, 'stm32_01', 25.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:34:23', '2026-03-11 00:34:23', 0);
+INSERT INTO `environment` VALUES ('2031408402848038913', 1, 'stm32_01', 25.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:34:40', '2026-03-11 00:34:40', 0);
+INSERT INTO `environment` VALUES ('2031408474339950594', 1, 'stm32_01', 25.00, 48.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:34:57', '2026-03-11 00:34:57', 0);
+INSERT INTO `environment` VALUES ('2031408545555038210', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:35:14', '2026-03-11 00:35:14', 0);
+INSERT INTO `environment` VALUES ('2031408616971452419', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:35:31', '2026-03-11 00:35:31', 0);
+INSERT INTO `environment` VALUES ('2031408688417226754', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:35:48', '2026-03-11 00:35:48', 0);
+INSERT INTO `environment` VALUES ('2031408759858806786', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:36:05', '2026-03-11 00:36:05', 0);
+INSERT INTO `environment` VALUES ('2031408831245860867', 1, 'stm32_01', 25.00, 48.00, 1.00, 0, 1, 0, 6.00, 0.00, 0, 0, 0, '2026-03-11 00:36:22', '2026-03-11 00:36:22', 0);
+INSERT INTO `environment` VALUES ('2031408902687440899', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:36:39', '2026-03-11 00:36:39', 0);
+INSERT INTO `environment` VALUES ('2031408974082883587', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 5.00, 0.00, 0, 0, 0, '2026-03-11 00:36:56', '2026-03-11 00:36:56', 0);
+INSERT INTO `environment` VALUES ('2031409021461741569', 2, 'test_01', 12.00, 35.00, 17.00, 1, 1, 1, 23.00, 98.00, 1, 1, NULL, NULL, '2026-03-11 00:37:07', 0);
+INSERT INTO `environment` VALUES ('2031409045490909186', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 6.00, 0.00, 0, 0, 0, '2026-03-11 00:37:13', '2026-03-11 00:37:13', 0);
+INSERT INTO `environment` VALUES ('2031409116961849347', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 4.00, 0.00, 0, 0, 0, '2026-03-11 00:37:30', '2026-03-11 00:37:30', 0);
+INSERT INTO `environment` VALUES ('2031409188344709122', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 4.00, 0.00, 0, 0, 0, '2026-03-11 00:37:47', '2026-03-11 00:37:47', 0);
+INSERT INTO `environment` VALUES ('2031409259790483458', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:38:04', '2026-03-11 00:38:04', 0);
+INSERT INTO `environment` VALUES ('2031409331198509058', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:38:21', '2026-03-11 00:38:21', 0);
+INSERT INTO `environment` VALUES ('2031409402669449218', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:38:38', '2026-03-11 00:38:38', 0);
+INSERT INTO `environment` VALUES ('2031409474043920386', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:38:55', '2026-03-11 00:38:55', 0);
+INSERT INTO `environment` VALUES ('2031409545477111810', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:39:12', '2026-03-11 00:39:12', 0);
+INSERT INTO `environment` VALUES ('2031409616885137410', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:39:29', '2026-03-11 00:39:29', 0);
+INSERT INTO `environment` VALUES ('2031409688267997186', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:39:46', '2026-03-11 00:39:46', 0);
+INSERT INTO `environment` VALUES ('2031409759713771522', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:40:03', '2026-03-11 00:40:03', 0);
+INSERT INTO `environment` VALUES ('2031409831117602818', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 5.00, 0.00, 0, 0, 0, '2026-03-11 00:40:20', '2026-03-11 00:40:20', 0);
+INSERT INTO `environment` VALUES ('2031409902550794242', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 00:40:37', '2026-03-11 00:40:37', 0);
+INSERT INTO `environment` VALUES ('2031409974004957186', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 6.00, 0.00, 0, 0, 0, '2026-03-11 00:40:54', '2026-03-11 00:40:54', 0);
+INSERT INTO `environment` VALUES ('2031410045429760002', 1, 'stm32_01', 25.00, 47.00, 1.00, 0, 1, 0, 5.00, 0.00, 0, 0, 0, '2026-03-11 00:41:11', '2026-03-11 00:41:11', 0);
+INSERT INTO `environment` VALUES ('2031752917022715906', 1, 'stm32_01', 25.00, 41.00, 15.00, 1, 0, 0, 47.00, 0.00, 1, 0, 0, '2026-03-11 23:23:38', '2026-03-11 23:23:38', 0);
+INSERT INTO `environment` VALUES ('2031752986971123714', 1, 'stm32_01', 25.00, 41.00, 14.00, 1, 0, 0, 43.00, 0.00, 1, 0, 0, '2026-03-11 23:23:55', '2026-03-11 23:23:55', 0);
+INSERT INTO `environment` VALUES ('2031753058349789187', 1, 'stm32_01', 25.00, 41.00, 20.00, 1, 1, 0, 24.00, 0.00, 1, 0, 0, '2026-03-11 23:24:12', '2026-03-11 23:24:12', 0);
+INSERT INTO `environment` VALUES ('2031753129766203394', 1, 'stm32_01', 25.00, 42.00, 16.00, 1, 0, 0, 44.00, 0.00, 1, 0, 0, '2026-03-11 23:24:29', '2026-03-11 23:24:29', 0);
+INSERT INTO `environment` VALUES ('2031753201178423298', 1, 'stm32_01', 25.00, 41.00, 12.00, 1, 0, 0, 47.00, 0.00, 1, 0, 0, '2026-03-11 23:24:46', '2026-03-11 23:24:46', 0);
+INSERT INTO `environment` VALUES ('2031753272590643202', 1, 'stm32_01', 25.00, 41.00, 10.00, 1, 0, 0, 46.00, 0.00, 1, 0, 0, '2026-03-11 23:25:03', '2026-03-11 23:25:03', 0);
+INSERT INTO `environment` VALUES ('2031753344002863107', 1, 'stm32_01', 25.00, 41.00, 8.00, 1, 0, 0, 47.00, 0.00, 0, 0, 0, '2026-03-11 23:25:20', '2026-03-11 23:25:20', 0);
+INSERT INTO `environment` VALUES ('2031753415452831746', 1, 'stm32_01', 25.00, 41.00, 7.00, 1, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 23:25:37', '2026-03-11 23:25:37', 0);
+INSERT INTO `environment` VALUES ('2031753486839885826', 1, 'stm32_01', 25.00, 41.00, 5.00, 1, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 23:25:54', '2026-03-11 23:25:54', 0);
+INSERT INTO `environment` VALUES ('2031753558260494339', 1, 'stm32_01', 26.00, 48.00, 5.00, 1, 0, 0, 47.00, 0.00, 0, 0, 0, '2026-03-11 23:26:11', '2026-03-11 23:26:11', 0);
+INSERT INTO `environment` VALUES ('2031753629693685763', 1, 'stm32_01', 27.00, 46.00, 4.00, 0, 0, 0, 39.00, 0.00, 0, 0, 0, '2026-03-11 23:26:28', '2026-03-11 23:26:28', 0);
+INSERT INTO `environment` VALUES ('2031753701135265795', 1, 'stm32_01', 27.00, 44.00, 4.00, 0, 0, 0, 38.00, 0.00, 0, 0, 0, '2026-03-11 23:26:45', '2026-03-11 23:26:45', 0);
+INSERT INTO `environment` VALUES ('2031753772513931266', 1, 'stm32_01', 27.00, 44.00, 4.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-11 23:27:02', '2026-03-11 23:27:02', 0);
+INSERT INTO `environment` VALUES ('2031753843947122691', 1, 'stm32_01', 27.00, 54.00, 4.00, 0, 1, 0, 27.00, 0.00, 0, 0, 0, '2026-03-11 23:27:19', '2026-03-11 23:27:19', 0);
+INSERT INTO `environment` VALUES ('2031753915434840067', 1, 'stm32_01', 28.00, 61.00, 4.00, 0, 0, 0, 36.00, 0.00, 1, 0, 0, '2026-03-11 23:27:36', '2026-03-11 23:27:36', 0);
+INSERT INTO `environment` VALUES ('2031753986855448578', 1, 'stm32_01', 28.00, 52.00, 3.00, 0, 0, 0, 40.00, 0.00, 0, 0, 0, '2026-03-11 23:27:53', '2026-03-11 23:27:53', 0);
+INSERT INTO `environment` VALUES ('2031765391558094850', 1, 'stm32_01', 24.00, 42.00, 5.00, 1, 1, 0, 13.00, 0.00, 0, 0, 0, '2026-03-12 00:13:12', '2026-03-12 00:13:12', 0);
+INSERT INTO `environment` VALUES ('2031765462798348291', 1, 'stm32_01', 24.00, 42.00, 4.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:13:29', '2026-03-12 00:13:29', 0);
+INSERT INTO `environment` VALUES ('2031765533883412482', 1, 'stm32_01', 24.00, 42.00, 4.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:13:46', '2026-03-12 00:13:46', 0);
+INSERT INTO `environment` VALUES ('2031765605375324162', 1, 'stm32_01', 24.00, 42.00, 3.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:14:03', '2026-03-12 00:14:03', 0);
+INSERT INTO `environment` VALUES ('2031765677144059906', 1, 'stm32_01', 24.00, 42.00, 3.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:14:20', '2026-03-12 00:14:20', 0);
+INSERT INTO `environment` VALUES ('2031765748447227907', 1, 'stm32_01', 24.00, 42.00, 3.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:14:37', '2026-03-12 00:14:37', 0);
+INSERT INTO `environment` VALUES ('2031765819691675650', 1, 'stm32_01', 24.00, 42.00, 2.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:14:54', '2026-03-12 00:14:54', 0);
+INSERT INTO `environment` VALUES ('2031765890978066435', 1, 'stm32_01', 24.00, 41.00, 2.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:15:11', '2026-03-12 00:15:11', 0);
+INSERT INTO `environment` VALUES ('2031767415913738241', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:21:15', '2026-03-12 00:21:15', 0);
+INSERT INTO `environment` VALUES ('2031767487393067010', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:21:32', '2026-03-12 00:21:32', 0);
+INSERT INTO `environment` VALUES ('2031767560348790787', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:21:49', '2026-03-12 00:21:49', 0);
+INSERT INTO `environment` VALUES ('2031767633606504451', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:22:07', '2026-03-12 00:22:07', 0);
+INSERT INTO `environment` VALUES ('2031767706818080771', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:22:24', '2026-03-12 00:22:24', 0);
+INSERT INTO `environment` VALUES ('2031767780126126081', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:22:42', '2026-03-12 00:22:42', 0);
+INSERT INTO `environment` VALUES ('2031767853383839747', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:22:59', '2026-03-12 00:22:59', 0);
+INSERT INTO `environment` VALUES ('2031767926566055939', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:23:17', '2026-03-12 00:23:17', 0);
+INSERT INTO `environment` VALUES ('2031767999832158210', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:23:34', '2026-03-12 00:23:34', 0);
+INSERT INTO `environment` VALUES ('2031768073266032643', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:23:52', '2026-03-12 00:23:52', 0);
+INSERT INTO `environment` VALUES ('2031768146729267202', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:24:09', '2026-03-12 00:24:09', 0);
+INSERT INTO `environment` VALUES ('2031768219445915651', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:24:27', '2026-03-12 00:24:27', 0);
+INSERT INTO `environment` VALUES ('2031768292691046402', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:24:44', '2026-03-12 00:24:44', 0);
+INSERT INTO `environment` VALUES ('2031768365931982850', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:25:02', '2026-03-12 00:25:02', 0);
+INSERT INTO `environment` VALUES ('2031768439600738307', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:25:19', '2026-03-12 00:25:19', 0);
+INSERT INTO `environment` VALUES ('2031768512623570947', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:25:37', '2026-03-12 00:25:37', 0);
+INSERT INTO `environment` VALUES ('2031768661764632577', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:26:12', '2026-03-12 00:26:12', 0);
+INSERT INTO `environment` VALUES ('2031768732082139138', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:26:29', '2026-03-12 00:26:29', 0);
+INSERT INTO `environment` VALUES ('2031768805255966723', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:26:46', '2026-03-12 00:26:46', 0);
+INSERT INTO `environment` VALUES ('2031768879012802561', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 13.00, 0.00, 0, 0, 0, '2026-03-12 00:27:04', '2026-03-12 00:27:04', 0);
+INSERT INTO `environment` VALUES ('2031768952035635202', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:27:21', '2026-03-12 00:27:21', 0);
+INSERT INTO `environment` VALUES ('2031769076551938050', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:27:51', '2026-03-12 00:27:51', 0);
+INSERT INTO `environment` VALUES ('2031769098093883395', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:27:56', '2026-03-12 00:27:56', 0);
+INSERT INTO `environment` VALUES ('2031769171347402755', 1, 'stm32_01', 25.00, 44.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:28:14', '2026-03-12 00:28:14', 0);
+INSERT INTO `environment` VALUES ('2031769244596727810', 1, 'stm32_01', 25.00, 44.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:28:31', '2026-03-12 00:28:31', 0);
+INSERT INTO `environment` VALUES ('2031769317850247170', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:28:48', '2026-03-12 00:28:48', 0);
+INSERT INTO `environment` VALUES ('2031769391099572226', 1, 'stm32_01', 25.00, 44.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:29:06', '2026-03-12 00:29:06', 0);
+INSERT INTO `environment` VALUES ('2031769464290177026', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:29:23', '2026-03-12 00:29:23', 0);
+INSERT INTO `environment` VALUES ('2031769537573056515', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:29:41', '2026-03-12 00:29:41', 0);
+INSERT INTO `environment` VALUES ('2031769610793021442', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:29:58', '2026-03-12 00:29:58', 0);
+INSERT INTO `environment` VALUES ('2031769684038152194', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:30:16', '2026-03-12 00:30:16', 0);
+INSERT INTO `environment` VALUES ('2031769757342003201', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:30:33', '2026-03-12 00:30:33', 0);
+INSERT INTO `environment` VALUES ('2031769830532608002', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:30:51', '2026-03-12 00:30:51', 0);
+INSERT INTO `environment` VALUES ('2031769903798710274', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:31:08', '2026-03-12 00:31:08', 0);
+INSERT INTO `environment` VALUES ('2031770042474979329', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 1, 0, '2026-03-12 00:31:41', '2026-03-12 00:31:41', 0);
+INSERT INTO `environment` VALUES ('2031770104563261442', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 1, 0, '2026-03-12 00:31:56', '2026-03-12 00:31:56', 0);
+INSERT INTO `environment` VALUES ('2031770177820975106', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 16.00, 0.00, 0, 1, 0, '2026-03-12 00:32:14', '2026-03-12 00:32:14', 0);
+INSERT INTO `environment` VALUES ('2031770251091271682', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 1, 0, '2026-03-12 00:32:31', '2026-03-12 00:32:31', 0);
+INSERT INTO `environment` VALUES ('2031770324290265091', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 1, 0, '2026-03-12 00:32:48', '2026-03-12 00:32:48', 0);
+INSERT INTO `environment` VALUES ('2031770397539590146', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 15.00, 0.00, 0, 1, 0, '2026-03-12 00:33:06', '2026-03-12 00:33:06', 0);
+INSERT INTO `environment` VALUES ('2031770437297397763', 1, 'stm32_01', 25.00, 43.00, 0.00, 0, 1, 0, 14.00, 0.00, 0, 0, 0, '2026-03-12 00:33:15', '2026-03-12 00:33:15', 0);
+INSERT INTO `environment` VALUES ('2031770510613831682', 1, 'stm32_01', 25.00, 44.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:33:33', '2026-03-12 00:33:33', 0);
+INSERT INTO `environment` VALUES ('2031770583800242178', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:33:50', '2026-03-12 00:33:50', 0);
+INSERT INTO `environment` VALUES ('2031770629170028546', 1, 'stm32_01', 25.00, 43.00, 0.00, 0, 1, 0, 13.00, 0.00, 0, 0, 1, '2026-03-12 00:34:01', '2026-03-12 00:34:01', 0);
+INSERT INTO `environment` VALUES ('2031770668902670338', 1, 'stm32_01', 25.00, 43.00, 0.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:34:11', '2026-03-12 00:34:11', 0);
+INSERT INTO `environment` VALUES ('2031771520174415875', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:37:34', '2026-03-12 00:37:34', 0);
+INSERT INTO `environment` VALUES ('2031771593486655490', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:37:51', '2026-03-12 00:37:51', 0);
+INSERT INTO `environment` VALUES ('2031771665511243779', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 1, '2026-03-12 00:38:08', '2026-03-12 00:38:08', 0);
+INSERT INTO `environment` VALUES ('2031771705185165315', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:38:18', '2026-03-12 00:38:18', 0);
+INSERT INTO `environment` VALUES ('2031772598076989442', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 1.00, 0.00, 0, 0, 0, '2026-03-12 00:41:51', '2026-03-12 00:41:51', 0);
+INSERT INTO `environment` VALUES ('2031772612572504066', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 1.00, 0.00, 0, 0, 0, '2026-03-12 00:41:54', '2026-03-12 00:41:54', 0);
+INSERT INTO `environment` VALUES ('2031772640171024387', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 4.00, 0.00, 0, 1, 0, '2026-03-12 00:42:01', '2026-03-12 00:42:01', 0);
+INSERT INTO `environment` VALUES ('2031772679907860482', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 1.00, 0.00, 0, 0, 0, '2026-03-12 00:42:10', '2026-03-12 00:42:10', 0);
+INSERT INTO `environment` VALUES ('2031772719862800387', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 2.00, 0.00, 0, 0, 1, '2026-03-12 00:42:20', '2026-03-12 00:42:20', 0);
+INSERT INTO `environment` VALUES ('2031772735369142275', 1, 'stm32_01', 25.00, 44.00, 1.00, 0, 1, 0, 1.00, 0.00, 0, 0, 0, '2026-03-12 00:42:23', '2026-03-12 00:42:23', 0);
+INSERT INTO `environment` VALUES ('2031772766381826051', 1, 'stm32_01', 25.00, 44.00, 1.00, 0, 1, 0, 4.00, 0.00, 0, 1, 0, '2026-03-12 00:42:31', '2026-03-12 00:42:31', 0);
+INSERT INTO `environment` VALUES ('2031772809826426883', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 1.00, 0.00, 0, 0, 0, '2026-03-12 00:42:41', '2026-03-12 00:42:41', 0);
+INSERT INTO `environment` VALUES ('2031772834941919235', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 4.00, 0.00, 0, 1, 0, '2026-03-12 00:42:47', '2026-03-12 00:42:47', 0);
+INSERT INTO `environment` VALUES ('2031772874708115457', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:42:57', '2026-03-12 00:42:57', 0);
+INSERT INTO `environment` VALUES ('2031772906458996738', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 14.00, 0.00, 0, 1, 0, '2026-03-12 00:43:04', '2026-03-12 00:43:04', 0);
+INSERT INTO `environment` VALUES ('2031772931612237827', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:43:10', '2026-03-12 00:43:10', 0);
+INSERT INTO `environment` VALUES ('2031772951031865346', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 13.00, 0.00, 0, 0, 1, '2026-03-12 00:43:15', '2026-03-12 00:43:15', 0);
+INSERT INTO `environment` VALUES ('2031772966890528770', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:43:18', '2026-03-12 00:43:18', 0);
+INSERT INTO `environment` VALUES ('2031773040173408259', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:43:36', '2026-03-12 00:43:36', 0);
+INSERT INTO `environment` VALUES ('2031773113401761794', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 9.00, 0.00, 0, 0, 0, '2026-03-12 00:43:53', '2026-03-12 00:43:53', 0);
+INSERT INTO `environment` VALUES ('2031773187510919171', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 8.00, 0.00, 0, 0, 0, '2026-03-12 00:44:11', '2026-03-12 00:44:11', 0);
+INSERT INTO `environment` VALUES ('2031773260185624579', 1, 'stm32_01', 25.00, 43.00, 1.00, 0, 1, 0, 8.00, 0.00, 0, 0, 0, '2026-03-12 00:44:28', '2026-03-12 00:44:28', 0);
+INSERT INTO `environment` VALUES ('2031773333095211011', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 8.00, 0.00, 0, 0, 0, '2026-03-12 00:44:46', '2026-03-12 00:44:46', 0);
+INSERT INTO `environment` VALUES ('2031773406248067075', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 7.00, 0.00, 0, 0, 0, '2026-03-12 00:45:03', '2026-03-12 00:45:03', 0);
+INSERT INTO `environment` VALUES ('2031773479497392129', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 8.00, 0.00, 0, 0, 0, '2026-03-12 00:45:21', '2026-03-12 00:45:21', 0);
+INSERT INTO `environment` VALUES ('2031773552700579843', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 7.00, 0.00, 0, 0, 0, '2026-03-12 00:45:38', '2026-03-12 00:45:38', 0);
+INSERT INTO `environment` VALUES ('2031773626180591618', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 7.00, 0.00, 0, 0, 0, '2026-03-12 00:45:56', '2026-03-12 00:45:56', 0);
+INSERT INTO `environment` VALUES ('2031773699308281858', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 9.00, 0.00, 0, 0, 0, '2026-03-12 00:46:13', '2026-03-12 00:46:13', 0);
+INSERT INTO `environment` VALUES ('2031773772347891714', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:46:31', '2026-03-12 00:46:31', 0);
+INSERT INTO `environment` VALUES ('2031774047997550595', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:47:36', '2026-03-12 00:47:36', 0);
+INSERT INTO `environment` VALUES ('2031774121225904130', 1, 'stm32_01', 25.00, 42.00, 0.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:47:54', '2026-03-12 00:47:54', 0);
+INSERT INTO `environment` VALUES ('2031774176385196033', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 15.00, 0.00, 0, 1, 0, '2026-03-12 00:48:07', '2026-03-12 00:48:07', 0);
+INSERT INTO `environment` VALUES ('2031774216042340354', 1, 'stm32_01', 25.00, 42.00, 0.00, 0, 1, 0, 13.00, 0.00, 0, 0, 0, '2026-03-12 00:48:16', '2026-03-12 00:48:16', 0);
+INSERT INTO `environment` VALUES ('2031774289253916675', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:48:34', '2026-03-12 00:48:34', 0);
+INSERT INTO `environment` VALUES ('2031774362570350594', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:48:51', '2026-03-12 00:48:51', 0);
+INSERT INTO `environment` VALUES ('2031774435748372483', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:49:09', '2026-03-12 00:49:09', 0);
+INSERT INTO `environment` VALUES ('2031774508955754498', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:49:26', '2026-03-12 00:49:26', 0);
+INSERT INTO `environment` VALUES ('2031774582217662466', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 9.00, 0.00, 0, 0, 0, '2026-03-12 00:49:44', '2026-03-12 00:49:44', 0);
+INSERT INTO `environment` VALUES ('2031774655425044482', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 9.00, 0.00, 0, 0, 0, '2026-03-12 00:50:01', '2026-03-12 00:50:01', 0);
+INSERT INTO `environment` VALUES ('2031774728661786626', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:50:19', '2026-03-12 00:50:19', 0);
+INSERT INTO `environment` VALUES ('2031774803085516802', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:50:36', '2026-03-12 00:50:36', 0);
+INSERT INTO `environment` VALUES ('2031774875579867138', 1, 'stm32_01', 25.00, 41.00, 0.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:50:54', '2026-03-12 00:50:54', 0);
+INSERT INTO `environment` VALUES ('2031774948594311170', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:51:11', '2026-03-12 00:51:11', 0);
+INSERT INTO `environment` VALUES ('2031775021482926083', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:51:28', '2026-03-12 00:51:28', 0);
+INSERT INTO `environment` VALUES ('2031775094732251139', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:51:46', '2026-03-12 00:51:46', 0);
+INSERT INTO `environment` VALUES ('2031775167985770499', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:52:03', '2026-03-12 00:52:03', 0);
+INSERT INTO `environment` VALUES ('2031775241235095554', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:52:21', '2026-03-12 00:52:21', 0);
+INSERT INTO `environment` VALUES ('2031775314509586434', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:52:38', '2026-03-12 00:52:38', 0);
+INSERT INTO `environment` VALUES ('2031775387742134274', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:52:56', '2026-03-12 00:52:56', 0);
+INSERT INTO `environment` VALUES ('2031775460991459330', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:53:13', '2026-03-12 00:53:13', 0);
+INSERT INTO `environment` VALUES ('2031775534219812867', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:53:31', '2026-03-12 00:53:31', 0);
+INSERT INTO `environment` VALUES ('2031775607406223362', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:53:48', '2026-03-12 00:53:48', 0);
+INSERT INTO `environment` VALUES ('2031775680890429443', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:54:06', '2026-03-12 00:54:06', 0);
+INSERT INTO `environment` VALUES ('2031775753909067778', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:54:23', '2026-03-12 00:54:23', 0);
+INSERT INTO `environment` VALUES ('2031775827141615618', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:54:40', '2026-03-12 00:54:40', 0);
+INSERT INTO `environment` VALUES ('2031775900374163459', 1, 'stm32_01', 25.00, 42.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:54:58', '2026-03-12 00:54:58', 0);
+INSERT INTO `environment` VALUES ('2031775973686403075', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:55:15', '2026-03-12 00:55:15', 0);
+INSERT INTO `environment` VALUES ('2031776046877007875', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 11.00, 0.00, 0, 0, 0, '2026-03-12 00:55:33', '2026-03-12 00:55:33', 0);
+INSERT INTO `environment` VALUES ('2031776120143110145', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:55:50', '2026-03-12 00:55:50', 0);
+INSERT INTO `environment` VALUES ('2031776193291771906', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:56:08', '2026-03-12 00:56:08', 0);
+INSERT INTO `environment` VALUES ('2031776266557874178', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:56:25', '2026-03-12 00:56:25', 0);
+INSERT INTO `environment` VALUES ('2031776340125966338', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:56:43', '2026-03-12 00:56:43', 0);
+INSERT INTO `environment` VALUES ('2031776412981026819', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 00:57:00', '2026-03-12 00:57:00', 0);
+INSERT INTO `environment` VALUES ('2031776486230351874', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:57:18', '2026-03-12 00:57:18', 0);
+INSERT INTO `environment` VALUES ('2031776559626477571', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:57:35', '2026-03-12 00:57:35', 0);
+INSERT INTO `environment` VALUES ('2031776633064546306', 1, 'stm32_01', 25.00, 41.00, 0.00, 0, 1, 0, 0.00, 0.00, 0, 0, 0, '2026-03-12 00:57:53', '2026-03-12 00:57:53', 0);
+INSERT INTO `environment` VALUES ('2031776687183650818', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 15.00, 0.00, 0, 1, 0, '2026-03-12 00:58:05', '2026-03-12 00:58:05', 0);
+INSERT INTO `environment` VALUES ('2031776712538218499', 1, 'stm32_01', 25.00, 41.00, 0.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:58:12', '2026-03-12 00:58:12', 0);
+INSERT INTO `environment` VALUES ('2031776789377867779', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 12.00, 0.00, 0, 0, 1, '2026-03-12 00:58:30', '2026-03-12 00:58:30', 0);
+INSERT INTO `environment` VALUES ('2031776822085050371', 1, 'stm32_01', 25.00, 41.00, 0.00, 0, 1, 0, 12.00, 0.00, 0, 0, 0, '2026-03-12 00:58:38', '2026-03-12 00:58:38', 0);
+INSERT INTO `environment` VALUES ('2031777078017286147', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 12.00, 0.00, 0, 1, 0, '2026-03-12 00:59:39', '2026-03-12 00:59:39', 0);
+INSERT INTO `environment` VALUES ('2031777117712179203', 1, 'stm32_01', 25.00, 41.00, 0.00, 0, 1, 0, 9.00, 0.00, 0, 0, 0, '2026-03-12 00:59:48', '2026-03-12 00:59:48', 0);
+INSERT INTO `environment` VALUES ('2031777157449015298', 1, 'stm32_01', 25.00, 41.00, 0.00, 0, 1, 0, 11.00, 0.00, 0, 0, 1, '2026-03-12 00:59:58', '2026-03-12 00:59:58', 0);
+INSERT INTO `environment` VALUES ('2031777189212479491', 1, 'stm32_01', 25.00, 41.00, 0.00, 0, 1, 0, 10.00, 0.00, 0, 0, 0, '2026-03-12 01:00:05', '2026-03-12 01:00:05', 0);
+INSERT INTO `environment` VALUES ('2031777262474387457', 1, 'stm32_01', 25.00, 41.00, 1.00, 0, 1, 0, 8.00, 0.00, 0, 0, 0, '2026-03-12 01:00:23', '2026-03-12 01:00:23', 0);
+
+-- ----------------------------
+-- Table structure for mqtt_receive
+-- ----------------------------
+DROP TABLE IF EXISTS `mqtt_receive`;
+CREATE TABLE `mqtt_receive`  (
+  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ID',
   `topic` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'topic主题',
   `payload` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'payload有效载荷',
-  `device_key` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '设备id',
+  `device_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '设备id',
   `receive_time` datetime NULL DEFAULT NULL COMMENT '接收时间',
   `is_deleted` tinyint(1) UNSIGNED ZEROFILL NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_receive_time`(`receive_time`) USING BTREE,
-  INDEX `idx_device_id`(`device_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'MQTT接收数据-指令回复表' ROW_FORMAT = Dynamic;
+  INDEX `idx_device_id`(`device_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'MQTT接收数据表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for mqtt_receive_report
+-- Records of mqtt_receive
 -- ----------------------------
-DROP TABLE IF EXISTS `mqtt_receive_report`;
-CREATE TABLE `mqtt_receive_report`  (
-  `id` bigint(19) NOT NULL COMMENT 'ID',
-  `topic` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'topic主题',
-  `payload` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'payload有效载荷',
-  `device_key` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '设备id',
-  `receive_time` datetime NULL DEFAULT NULL COMMENT '接收时间',
-  `is_deleted` tinyint(1) UNSIGNED ZEROFILL NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_receive_time`(`receive_time`) USING BTREE,
-  INDEX `idx_device_id`(`device_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'MQTT接收数据-上报表' ROW_FORMAT = Dynamic;
+INSERT INTO `mqtt_receive` VALUES ('2031406617785810945', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:27:34', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031406689168670721', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":0,\"ldrPer\":85,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:27:51', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031406760895463426', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:28:08', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031406832227991554', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":5,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:28:25', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031406903539548161', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:28:42', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031406974842716161', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:28:59', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407046569508865', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:29:16', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407117860093954', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:29:33', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407188806746113', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":29,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:29:50', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407260495790081', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:30:07', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407331593437186', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":0,\"ldrPer\":44,\"flameDig\":0,\"flamePer\":93,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:30:24', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407403068571650', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:30:41', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407474531123201', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:30:58', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407545888817153', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":0,\"ldrPer\":55,\"flameDig\":1,\"flamePer\":93,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:31:15', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407617313619970', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":3,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:31:32', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407688717451266', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":49,\"gasPPM\":7,\"gasDig\":1,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:31:49', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407760125476866', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":49,\"gasPPM\":4,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":5,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:32:06', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407831541891073', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":49,\"gasPPM\":2,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":5,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:32:23', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407903398707201', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":2,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:32:41', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031407974345359361', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":2,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:32:57', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408045715636226', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:33:15', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408117157216258', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":4,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:33:32', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408188602990593', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":5,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:33:49', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408259969073154', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:34:06', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408331427430401', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:34:23', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408402772541442', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:34:40', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408474339950593', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:34:57', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408545555038209', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:35:14', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408616971452418', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:35:31', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408688417226753', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:35:48', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408759858806785', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:36:05', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408831245860866', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":48,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":6,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:36:22', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408902687440898', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:36:39', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031408974082883586', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":5,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:36:56', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409045490909185', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":6,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:37:13', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409116961849346', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":4,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:37:30', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409188344709121', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":4,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:37:47', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409259790483457', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:38:04', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409331198509057', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:38:21', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409402669449217', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:38:38', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409474043920385', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:38:55', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409545477111809', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:39:12', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409616885137409', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:39:29', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409688267997185', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:39:46', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409759713771521', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:40:03', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409831117602817', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":5,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:40:20', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409902550794241', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:40:37', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031409974004957185', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":6,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:40:54', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031410045429760001', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":47,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":5,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 00:41:11', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031752915961556993', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":15,\"gasDig\":1,\"ldrDig\":0,\"ldrPer\":47,\"flameDig\":0,\"flamePer\":0,\"alarm\":1,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:23:38', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031752986971123713', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":14,\"gasDig\":1,\"ldrDig\":0,\"ldrPer\":43,\"flameDig\":0,\"flamePer\":0,\"alarm\":1,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:23:55', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753058349789186', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":20,\"gasDig\":1,\"ldrDig\":1,\"ldrPer\":24,\"flameDig\":0,\"flamePer\":0,\"alarm\":1,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:24:12', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753129766203393', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":16,\"gasDig\":1,\"ldrDig\":0,\"ldrPer\":44,\"flameDig\":0,\"flamePer\":0,\"alarm\":1,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:24:29', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753201178423297', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":12,\"gasDig\":1,\"ldrDig\":0,\"ldrPer\":47,\"flameDig\":0,\"flamePer\":0,\"alarm\":1,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:24:46', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753272590643201', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":10,\"gasDig\":1,\"ldrDig\":0,\"ldrPer\":46,\"flameDig\":0,\"flamePer\":0,\"alarm\":1,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:25:03', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753344002863106', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":8,\"gasDig\":1,\"ldrDig\":0,\"ldrPer\":47,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:25:20', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753415452831745', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":7,\"gasDig\":1,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:25:37', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753486839885825', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":5,\"gasDig\":1,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:25:54', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753558260494338', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":26,\"humi\":48,\"gasPPM\":5,\"gasDig\":1,\"ldrDig\":0,\"ldrPer\":47,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:26:11', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753629693685762', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":27,\"humi\":46,\"gasPPM\":4,\"gasDig\":0,\"ldrDig\":0,\"ldrPer\":39,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:26:28', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753701135265794', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":27,\"humi\":44,\"gasPPM\":4,\"gasDig\":0,\"ldrDig\":0,\"ldrPer\":38,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:26:45', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753772513931265', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":27,\"humi\":44,\"gasPPM\":4,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:27:02', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753843947122690', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":27,\"humi\":54,\"gasPPM\":4,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":27,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:27:19', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753915434840066', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":28,\"humi\":61,\"gasPPM\":4,\"gasDig\":0,\"ldrDig\":0,\"ldrPer\":36,\"flameDig\":0,\"flamePer\":0,\"alarm\":1,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:27:36', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031753986855448577', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":28,\"humi\":52,\"gasPPM\":3,\"gasDig\":0,\"ldrDig\":0,\"ldrPer\":40,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-11 23:27:53', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031765391558094849', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":42,\"gasPPM\":5,\"gasDig\":1,\"ldrDig\":1,\"ldrPer\":13,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:13:12', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031765462798348290', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":42,\"gasPPM\":4,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:13:29', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031765533883412481', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":42,\"gasPPM\":4,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:13:46', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031765605375324161', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":42,\"gasPPM\":3,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:14:03', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031765677144059905', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":42,\"gasPPM\":3,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:14:20', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031765748447227906', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":42,\"gasPPM\":3,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:14:37', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031765819691675649', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":42,\"gasPPM\":2,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:14:54', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031765890978066434', '/room/stm32_01/post', '{\"dev\":\"stm32_01\",\"temp\":24,\"humi\":41,\"gasPPM\":2,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:15:11', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767415477530625', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:21:15', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767487393067009', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:21:32', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767560348790786', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:21:49', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767633606504450', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:22:07', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767706818080770', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:22:24', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767780059017217', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:22:42', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767853383839746', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:22:59', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767926566055938', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:23:17', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031767999832158209', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:23:34', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768073266032642', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:23:52', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768146662158337', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:24:09', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768219445915650', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:24:27', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768292691046401', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:24:44', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768365931982849', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:25:02', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768439600738306', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:25:19', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768512623570946', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:25:37', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768661110321153', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:26:12', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768732082139137', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:26:29', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768805255966722', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:26:46', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768878945693698', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":13,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:27:04', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031768951972720641', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:27:21', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769076530966530', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:27:51', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769098093883394', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:27:56', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769171347402754', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":44,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:28:14', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769244596727809', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":44,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:28:31', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769317850247169', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:28:48', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769391099572225', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":44,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:29:06', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769464290177025', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:29:23', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769537573056514', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:29:41', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769610793021441', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:29:58', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769684038152193', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:30:16', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769757274894338', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:30:33', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769830532608001', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:30:51', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031769903798710273', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:31:08', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770042021994497', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:31:41', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770104563261441', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:31:56', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770177820975105', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":16,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:32:14', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770251091271681', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:32:31', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770324290265090', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:32:48', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770397539590145', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":15,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:33:06', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770437297397762', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":14,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:33:15', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770510613831681', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":44,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:33:33', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770583800242177', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:33:50', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770629170028545', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":13,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":1}', 'stm32_01', '2026-03-12 00:34:01', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031770668902670337', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:34:11', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031771520174415874', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:37:34', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031771593419546625', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:37:51', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031771665511243778', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":1}', 'stm32_01', '2026-03-12 00:38:08', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031771705185165314', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:38:18', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772598076989441', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":1,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:41:51', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772612572504065', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":1,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:41:54', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772640171024386', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":4,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:42:01', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772679907860481', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":1,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:42:10', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772719862800386', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":2,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":1}', 'stm32_01', '2026-03-12 00:42:20', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772735369142274', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":44,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":1,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:42:23', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772766381826050', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":44,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":4,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:42:31', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772809826426882', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":1,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:42:41', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772834941919234', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":4,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:42:47', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772874645200897', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:42:57', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772906391887873', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":14,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:43:04', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772931612237826', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:43:10', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772950964756481', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":13,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":1}', 'stm32_01', '2026-03-12 00:43:15', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031772966890528769', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:43:18', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773040173408258', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:43:36', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773113401761793', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":9,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:43:53', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773187510919170', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":8,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:44:11', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773260185624578', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":43,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":8,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:44:28', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773333095211010', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":8,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:44:46', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773406248067074', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":7,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:45:03', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773479434477569', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":8,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:45:21', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773552700579842', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":7,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:45:38', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773626180591617', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":7,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:45:56', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773699308281857', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":9,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:46:13', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031773772347891713', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:46:31', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774047997550594', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:47:36', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774121225904129', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:47:54', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774176318087169', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":15,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:48:07', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774216042340353', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":13,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:48:16', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774289253916674', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:48:34', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774362570350593', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:48:51', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774435748372482', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:49:09', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774508955754497', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:49:26', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774582150553602', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":9,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:49:44', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774655425044481', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":9,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:50:01', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774728661786625', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:50:19', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774803085516801', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:50:36', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774875579867137', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:50:54', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031774948594311169', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:51:11', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775021482926082', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:51:28', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775094732251138', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:51:46', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775167985770498', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:52:03', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775241235095553', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:52:21', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775314509586433', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:52:38', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775387742134273', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:52:56', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775460991459329', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:53:13', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775534219812866', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:53:31', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775607406223361', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:53:48', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775680890429442', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:54:06', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775753909067777', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:54:23', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775827141615617', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:54:40', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775900374163458', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":42,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:54:58', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031775973686403074', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:55:15', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776046877007874', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:55:33', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776120076001281', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:55:50', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776193291771905', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:56:08', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776266557874177', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:56:25', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776340125966337', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:56:43', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776412981026818', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:57:00', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776486230351873', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:57:18', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776559626477570', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:57:35', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776633064546305', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":0,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:57:53', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776687183650817', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":15,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:58:05', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776712538218498', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:58:12', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776789377867778', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":1}', 'stm32_01', '2026-03-12 00:58:30', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031776822085050370', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:58:38', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031777078017286146', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":12,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":1,\"led\":0}', 'stm32_01', '2026-03-12 00:59:39', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031777117712179202', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":9,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 00:59:48', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031777157449015297', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":11,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":1}', 'stm32_01', '2026-03-12 00:59:58', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031777189212479490', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":0,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":10,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 01:00:05', 0);
+INSERT INTO `mqtt_receive` VALUES ('2031777262411472897', '/room/stm32_01/data/report', '{\"dev\":\"stm32_01\",\"temp\":25,\"humi\":41,\"gasPPM\":1,\"gasDig\":0,\"ldrDig\":1,\"ldrPer\":8,\"flameDig\":0,\"flamePer\":0,\"alarm\":0,\"radiator\":0,\"led\":0}', 'stm32_01', '2026-03-12 01:00:23', 0);
 
 -- ----------------------------
--- Table structure for mqtt_send_cmd
+-- Table structure for mqtt_send
 -- ----------------------------
-DROP TABLE IF EXISTS `mqtt_send_cmd`;
-CREATE TABLE `mqtt_send_cmd`  (
-  `id` bigint(19) NOT NULL COMMENT 'ID',
+DROP TABLE IF EXISTS `mqtt_send`;
+CREATE TABLE `mqtt_send`  (
+  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ID',
   `topic` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'topic主题',
   `payload` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'payload有效载荷',
-  `device_key` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '设备id',
+  `device_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '设备id',
   `send_time` datetime NULL DEFAULT NULL COMMENT '发送时间',
   `is_deleted` tinyint(1) UNSIGNED ZEROFILL NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_receive_time`(`send_time`) USING BTREE,
-  INDEX `idx_device_id`(`device_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'MQTT发送记录-指令表' ROW_FORMAT = Dynamic;
+  INDEX `idx_device_id`(`device_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'MQTT发送数据表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for user_device_preference
+-- Records of mqtt_send
 -- ----------------------------
-DROP TABLE IF EXISTS `user_device_preference`;
-CREATE TABLE `user_device_preference`  (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `user_code` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户编码',
-  `device_key` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '设备唯一标识（用户自定义或系统生成）',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '设备表' ROW_FORMAT = Dynamic;
+INSERT INTO `mqtt_send` VALUES ('2023033733363392513', '/product123/device456/get', '{\"command\":\"start\",\"param\":1990}', 'device456', '2026-02-15 21:56:43', 0);
+INSERT INTO `mqtt_send` VALUES ('2031768823434080257', '/room/null/command/control', '{\"radiator\":1}', 'null', '2026-03-12 00:26:51', 0);
+INSERT INTO `mqtt_send` VALUES ('2031768970255691777', '/room/null/command/control', '{\"radiator\":1}', 'null', '2026-03-12 00:27:26', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770021667037186', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:31:36', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770426752917506', '/room/stm32_01/command/control', '{\"radiator\":0}', 'stm32_01', '2026-03-12 00:33:13', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770623432220674', '/room/stm32_01/command/control', '{\"led\":1}', 'stm32_01', '2026-03-12 00:34:00', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770659763281922', '/room/stm32_01/command/control', '{\"led\":0}', 'stm32_01', '2026-03-12 00:34:08', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770681175203841', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:34:14', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770731582349313', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:34:26', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770761466765314', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:34:33', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770874515841026', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:35:00', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770962986295297', '/room/stm32_01/command/control', '{\"led\":1}', 'stm32_01', '2026-03-12 00:35:21', 0);
+INSERT INTO `mqtt_send` VALUES ('2031770973425917954', '/room/stm32_01/command/control', '{\"led\":1}', 'stm32_01', '2026-03-12 00:35:23', 0);
+INSERT INTO `mqtt_send` VALUES ('2031771659505000450', '/room/stm32_01/command/control', '{\"led\":1}', 'stm32_01', '2026-03-12 00:38:07', 0);
+INSERT INTO `mqtt_send` VALUES ('2031771695408242689', '/room/stm32_01/command/control', '{\"led\":0}', 'stm32_01', '2026-03-12 00:38:15', 0);
+INSERT INTO `mqtt_send` VALUES ('2031771740153077761', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:38:26', 0);
+INSERT INTO `mqtt_send` VALUES ('2031772865749082114', '/room/stm32_01/command/control', '{\"radiator\":0}', 'stm32_01', '2026-03-12 00:42:54', 0);
+INSERT INTO `mqtt_send` VALUES ('2031772900251426817', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:43:03', 0);
+INSERT INTO `mqtt_send` VALUES ('2031772925979287553', '/room/stm32_01/command/control', '{\"radiator\":0}', 'stm32_01', '2026-03-12 00:43:09', 0);
+INSERT INTO `mqtt_send` VALUES ('2031772945331806209', '/room/stm32_01/command/control', '{\"led\":1}', 'stm32_01', '2026-03-12 00:43:13', 0);
+INSERT INTO `mqtt_send` VALUES ('2031772961207246850', '/room/stm32_01/command/control', '{\"led\":0}', 'stm32_01', '2026-03-12 00:43:17', 0);
+INSERT INTO `mqtt_send` VALUES ('2031773791918514178', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:46:35', 0);
+INSERT INTO `mqtt_send` VALUES ('2031774170563502082', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:48:05', 0);
+INSERT INTO `mqtt_send` VALUES ('2031774206936506369', '/room/stm32_01/command/control', '{\"radiator\":0}', 'stm32_01', '2026-03-12 00:48:14', 0);
+INSERT INTO `mqtt_send` VALUES ('2031776679860396033', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:58:04', 0);
+INSERT INTO `mqtt_send` VALUES ('2031776702895513601', '/room/stm32_01/command/control', '{\"radiator\":0}', 'stm32_01', '2026-03-12 00:58:09', 0);
+INSERT INTO `mqtt_send` VALUES ('2031776782591483905', '/room/stm32_01/command/control', '{\"led\":1}', 'stm32_01', '2026-03-12 00:58:28', 0);
+INSERT INTO `mqtt_send` VALUES ('2031776816519208962', '/room/stm32_01/command/control', '{\"led\":0}', 'stm32_01', '2026-03-12 00:58:36', 0);
+INSERT INTO `mqtt_send` VALUES ('2031776848660160513', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:58:44', 0);
+INSERT INTO `mqtt_send` VALUES ('2031777072002654210', '/room/stm32_01/command/control', '{\"radiator\":1}', 'stm32_01', '2026-03-12 00:59:37', 0);
+INSERT INTO `mqtt_send` VALUES ('2031777108631511042', '/room/stm32_01/command/control', '{\"radiator\":0}', 'stm32_01', '2026-03-12 00:59:46', 0);
+INSERT INTO `mqtt_send` VALUES ('2031777149362397186', '/room/stm32_01/command/control', '{\"led\":1}', 'stm32_01', '2026-03-12 00:59:56', 0);
+INSERT INTO `mqtt_send` VALUES ('2031777183529197569', '/room/stm32_01/command/control', '{\"led\":0}', 'stm32_01', '2026-03-12 01:00:04', 0);
+
+-- ----------------------------
+-- Table structure for user
+-- ----------------------------
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE `user`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名',
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '密码',
+  `nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '昵称',
+  `avatar` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '邮箱',
+  `birthday` bigint(20) NULL DEFAULT NULL COMMENT '生日',
+  `gmt_created` bigint(20) NOT NULL DEFAULT 0 COMMENT '创建日期',
+  `gmt_modified` bigint(20) NOT NULL DEFAULT 0 COMMENT '修改时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_username`(`username`) USING BTREE COMMENT '用户名唯一索引',
+  INDEX `idx_username`(`username`) USING BTREE,
+  INDEX `idx_gmt_created`(`gmt_created`) USING BTREE,
+  INDEX `idx_gmt_modified`(`gmt_modified`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户信息表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of user
+-- ----------------------------
+INSERT INTO `user` VALUES (1, 'admin', '123456', '管理员', 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif', 631152000000, 1672502400000, 1672502400000);
+INSERT INTO `user` VALUES (2, 'user1', '123456', '用户1', 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif', 786240000000, 1672588800000, 1672588800000);
 
 SET FOREIGN_KEY_CHECKS = 1;

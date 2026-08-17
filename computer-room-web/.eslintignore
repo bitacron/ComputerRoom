@@ -1,0 +1,5 @@
+# 第三方静态资源与构建产物，不参与 ESLint（消除 WebStorm 对 TinyMCE 等的误报）
+/public
+/dist
+/node_modules
+*.min.js

@@ -1,0 +1,13 @@
+mqtts.heclouds.com
+1883
+test
+032xlmj49q
+version=2018-10-31&res=products%2F032xlmj49q%2Fdevices%2Ftest&et=1746942850&method=md5&sign=B8L2dSOyE0jzc59dPrceuw%3D%3D
+
+$sys/032xlmj49q/test/thing/property/post
+{"id":"1715469319882","version":"1.0","params":{"temp":{"value":20},"humi":{"value":43},"smoke":{"value":3},"light":{"value":1}}}
+{"id":"1715469319882","version":"1.0","params":{"temp":{"value":77},"humi":{"value":77},"smoke":{"value":7},"light":{"value":0}}}
+
+{"id":"1715469319882","version":"1.0","params":{"temp":{"value":13},"humi":{"value":33},"smoke":{"value":23},"light":{"value":0}}}
+
+$sys/032xlmj49q/test/thing/property/post/reply

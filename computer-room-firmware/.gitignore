@@ -1,0 +1,37 @@
+# Keil 编译输出
+*.axf
+*.htm
+*.lnp
+*.o
+*.d
+*.crf
+*.tra
+*.dep
+*.iex
+*.sct
+*.map
+*.hex
+*.bin
+*.lst
+*.obj
+*.omf
+*.plg
+*.rpt
+*.tmp
+*.__i
+*.bak
+JLinkLog.txt
+
+# 编译器生成目录
+DebugConfig/
+Listings/
+Objects/
+RTE/
+
+# Keil 用户本地状态（工程文件 *.uvprojx 需入库，不忽略）
+*.uvguix.*
+*.uvoptx
+*.scvd
+
+# IDE 备份
+*.dep

@@ -1,0 +1,29 @@
+# Mac
+.DS_Store
+**/.DS_Store
+
+# vim/vi
+*.swp
+*~
+
+# uni-app / HBuilderX 编译产物
+unpackage/
+dist/
+.hbuilderx/
+
+# npm（保留空目录占位）
+node_modules/*
+!node_modules/.gitkeep
+.eslintcache
+
+# python
+*.pyc
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.sln
+
+# 微信开发者工具本地缓存
+project.private.config.json
