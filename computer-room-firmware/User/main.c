@@ -21,8 +21,8 @@
  *								MQ2     AO------PA1
  *								        DO------PA4
  *								        VCC-----5V
- *								LDR     AO------PB13
- *								        DO------PB1
+ *								LDR     AO------PB1
+ *								        DO------PB13
  *								        VCC-----3.3V
  *								Flame   AO------PB0
  *								        DO------PA0
@@ -121,19 +121,20 @@ int main(void)
 			gasPPM = (uint16_t)MQ2_GetGasPPM();  // 驱动内已限幅 0~10000
 			gasDig = MQ2_GetDigital();
 			
-			ldrDig=LDR_GetDigital();
-			uint8_t ldrAna = LDR_GetAnalogAverage();
+			ldrDig = LDR_GetDigital();
+			uint16_t ldrAna = LDR_GetAnalogAverage();
 			ldrPer = LDR_GetPercentage();
 			
-			// 读取数字量输出
+			// 读取数字量输出（1 = 检测到火焰）
 			flameDig = Flame_GetDigital();
-			// 读取模拟量原始值（平均后）
-			uint8_t flameAna = Flame_GetAnalogAverage();
+			// 读取模拟量原始值（平均后，12 位 0~4095）
+			uint16_t flameAna = Flame_GetAnalogAverage();
 			// 读取强度百分比
 			flamePer = Flame_GetPercentage();
 			
 		  Delay_ms(1000);
-			if(humi < 60 && temp < 50 && gasPPM < 20){
+			// 温湿度/烟雾超限或检测到火焰时报警
+			if (humi < 60 && temp < 50 && gasPPM < 20 && flameDig == 0) {
 				Beep_Off();
 			}
 			else {

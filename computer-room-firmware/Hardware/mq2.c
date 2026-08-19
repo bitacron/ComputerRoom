@@ -3,8 +3,10 @@
 #include "usart.h"
 #include "adc.h"
 #include <math.h>
-// --- 定义常量 ---
-#define RL_VALUE        (5.0f)      // 模块上的负载电阻值，单位 KΩ，请根据实际电路修改
+// --- 定义常量（标定与浓度计算共用，勿再另写一套）---
+#define RL_VALUE        (5.0f)      // 模块负载电阻 RL，单位 KΩ，请按实际电路修改
+#define VCC_VALUE       (5.0f)      // 传感器回路电压 / ADC 参考电压
+#define ADC_MAX_VALUE   (4095.0f)   // 12 位 ADC 满量程
 #define CLEAN_AIR_RATIO (9.8f)      // 洁净空气中 Rs/R0 的比值 (MQ-2 通常在 9-10 之间)
 #define CAL_PPM         (613.9f)    // 拟合公式中的常数 (用于 LPG/烟雾)
 #define CAL_EXPONENT    (-2.074f)   // 拟合公式中的指数常数
@@ -99,13 +101,7 @@ u16 MQ2_GetAnalogAverage(u8 ch,u8 times)
 	return sum/times;
 }
 
-// 负载电阻值 (单位 KΩ)，根据你硬件上的实际电阻修改
-const float RL = 10.0; 
-// 系统电压，根据实际修改
-const float VCC = 5.0; 
-// ADC 分辨率最大值 (10位ADC是1024，12位是4096)
-const float ADC_MAX = 4096.0; 
-float R0 = 2.49f;
+float R0 = 2.49f;  // 洁净空气标定得到的传感器电阻基准，可由 MQ2_Calibrate 更新
 /*******************************************************************************
 * 函数名：MQ2_Calibrate
 * 描述  ：获取MQ2的R0值
@@ -118,20 +114,23 @@ void MQ2_Calibrate(void) {
     float Vrl, Rs;
 
     UsartPrintf(USART_DEBUG,"Calibrating MQ-2, please keep in clean air...\n");
-    Delay_ms(20000); // 等待预热 20 秒 [citation:7]
+    Delay_ms(20000); // 等待预热 20 秒
 
     // 获取 ADC 平均值
     adc_value = MQ2_GetAnalogAverage(ADC_Channel_1, 10);
 
     // 1. 根据 ADC 值计算负载电阻 RL 上的电压 Vrl
-    //    假设 ADC 参考电压为 5V，分辨率为 12位 (0-4095)
-    Vrl = (5.0f * adc_value) / 4095.0f;
+    Vrl = (VCC_VALUE * (float)adc_value) / ADC_MAX_VALUE;
+    if (Vrl < 0.001f) {
+        UsartPrintf(USART_DEBUG, "Calibration failed: Vrl too low\n");
+        return;
+    }
 
-    // 2. 根据分压公式计算传感器电阻 Rs (Vc 为回路电压，通常也是 5V)
-    //    Rs = ((Vc / Vrl) - 1.0f) * RL [citation:7][citation:8]
-    Rs = ((5.0f / Vrl) - 1.0f) * RL_VALUE;
+    // 2. 根据分压公式计算传感器电阻 Rs
+    //    Rs = ((Vc / Vrl) - 1.0f) * RL
+    Rs = ((VCC_VALUE / Vrl) - 1.0f) * RL_VALUE;
 
-    // 3. 在洁净空气中，Rs / R0 = CLEAN_AIR_RATIO，所以 R0 = Rs / CLEAN_AIR_RATIO
+    // 3. 洁净空气中 Rs / R0 = CLEAN_AIR_RATIO
     R0 = Rs / CLEAN_AIR_RATIO;
 
     UsartPrintf(USART_DEBUG,"Calibration done! R0 = %.2f KOhm\n", R0);
@@ -142,30 +141,30 @@ void MQ2_Calibrate(void) {
 * 描述  ：获取烟雾浓度PPM值
 * 输入  ：无
 * 输出  ：PPM，值越大表示烟雾越浓
-* 说明  ：ADC 值越大（电压越低）表示烟雾越浓，通过固定R0，和公式计算得到。
+* 说明  ：与 MQ2_Calibrate 使用同一套 RL_VALUE / VCC_VALUE / ADC_MAX_VALUE。
 *******************************************************************************/
 float MQ2_GetGasPPM(void) {
     // 1. 获取滤波后的 ADC 值
-    int adc = MQ2_GetAnalogAverage(ADC_Channel_1, 10); 
-    
+    int adc = MQ2_GetAnalogAverage(ADC_Channel_1, 10);
+
     // 2. 计算 VRL (负载电阻上的电压)
-    float VRL = (adc / ADC_MAX) * VCC;
-    
+    float VRL = ((float)adc / ADC_MAX_VALUE) * VCC_VALUE;
+    if (VRL < 0.001f) {
+        return 10000.0f; // 接近短路/异常，按超量程处理
+    }
+
     // 3. 计算当前传感器电阻 RS
-    float RS = (VCC - VRL) / VRL * RL;
-    
+    float RS = (VCC_VALUE - VRL) / VRL * RL_VALUE;
+
     // 4. 计算比值 Rs/R0
     float ratio = RS / R0;
-    
-    // 5. 通过幂函数计算浓度 (以下参数针对 LPG / 可燃气体，是常用拟合值)
-    //    公式: ppm = CAL_PPM * pow(ratio, CAL_EXPONENT)
-    //    其中 CAL_PPM = 613.9f, CAL_EXPONENT = -2.074f 是一个常见的经验参数 [citation:2]
+
+    // 5. 通过幂函数计算浓度（LPG/可燃气体常用拟合）
     float ppm = CAL_PPM * powf(ratio, CAL_EXPONENT);
-    
-    // 增加合理性检查，防止异常值
+
     if (ppm < 0) ppm = 0;
-    if (ppm > 10000) ppm = 10000; // 根据传感器量程调整
-    
+    if (ppm > 10000) ppm = 10000;
+
     return ppm;
 }
 
