@@ -108,7 +108,7 @@ _Bool OneNet_DevLink(void)
 
 u8 velue0 = 0;
 u8 velue1 = 0;
-extern uint8_t gasPPM;
+extern uint16_t gasPPM;
 extern uint8_t humi;
 extern uint8_t temp;
 extern uint8_t ldrDig;

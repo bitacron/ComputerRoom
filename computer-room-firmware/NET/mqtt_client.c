@@ -78,7 +78,7 @@ _Bool MQTT_Client_DevLink(void)
 
 extern uint8_t humi;
 extern uint8_t temp;
-extern uint8_t gasPPM;
+extern uint16_t gasPPM;
 extern uint8_t gasDig;
 extern uint8_t ldrDig;
 extern uint8_t ldrPer;

@@ -41,7 +41,7 @@
 #define SERVER_PORT						"1883"								//	MQTT服务器端口（一般为1883不用改）
 
 //#define SERVER_HOST						"broker.emqx.io"			//	MQTT服务器域名或IP
-#define SERVER_HOST						"192.168.1.21"			//	MQTT服务器域名或IP
+#define SERVER_HOST						"192.168.1.12"			//	MQTT服务器域名或IP
 #define ESP8266_WIFI_INFO			"AT+CWJAP=\"" WIFI_SSID "\",\"" WIFI_PSWD "\"\r\n"
 #define ESP8266_ONENET_INFO		"AT+CIPSTART=\"TCP\",\"" SERVER_HOST "\"," SERVER_PORT "\r\n"
 

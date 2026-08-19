@@ -60,10 +60,10 @@
 
 #include <string.h>
 
-uint8_t temp, humi, gasPPM,ldrDig, alarmFlag, fan,led, flameDig, flamePer, gasDig, ldrPer;
+uint8_t temp, humi, ldrDig, alarmFlag, fan, led, flameDig, flamePer, gasDig, ldrPer;
+uint16_t gasPPM;  // MQ2 PPM 可达上千，不可用 uint8_t
 
 u8 ESP8266_INIT_OK = 0;//esp8266
-u8 alarmFlag = 0;
 unsigned short timeCount = 0;
 int main(void)
 {
@@ -117,9 +117,9 @@ int main(void)
 		{
 			DHT11_ReadData(&temp, &humi);
 			
-			uint8_t gasAna=MQ2_GetAnalogAverage(ADC_Channel_1,10);
-			gasPPM=MQ2_GetGasPPM();
-			gasDig=MQ2_GetDigital();
+			uint16_t gasAna = MQ2_GetAnalogAverage(ADC_Channel_1, 10);
+			gasPPM = (uint16_t)MQ2_GetGasPPM();  // 驱动内已限幅 0~10000
+			gasDig = MQ2_GetDigital();
 			
 			ldrDig=LDR_GetDigital();
 			uint8_t ldrAna = LDR_GetAnalogAverage();
@@ -163,7 +163,7 @@ int main(void)
 		OLED_ShowString(4, 1, "ldr:");
 		OLED_ShowNum(2, 6,temp,2);
 		OLED_ShowNum(2, 14,humi,2);
-		OLED_ShowNum(3, 5,gasPPM,2);
+		OLED_ShowNum(3, 5, gasPPM, 4);
 		OLED_ShowNum(3, 15,flameDig,1);
 		OLED_ShowNum(4, 5,ldrDig,1);
 
