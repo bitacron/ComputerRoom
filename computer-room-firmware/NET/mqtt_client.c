@@ -1,73 +1,73 @@
-//单片机头文件
+//?????????
 #include "stm32f10x.h"
 
-//网络设备
+//?????豸
 #include "esp8266.h"
 
-//协议文件
+//Э?????
 #include "mqtt_client.h"
 #include "mqttkit.h"
 
-//硬件驱动
+//???????
 #include "usart.h"
 #include "delay.h"
 
-//C库
+//C??
 #include <string.h>
 #include <stdio.h>
 #include "cJSON.h"
 
 #include "actuators.h"
 
-#define DEVICEID      "stm32_01"  // 设备ID
-#define MQTT_USERNAME       ""  // MQTT服务用户名
-#define MQTT_PASSWORD       ""   // MQTT服务密码
-#define MQTT_KEEP_ALIVE     60 // 最大连接时间
+#define DEVICEID      "stm32_01"  // ?豸ID
+#define MQTT_USERNAME       ""  // MQTT?????????
+#define MQTT_PASSWORD       ""   // MQTT????????
+#define MQTT_KEEP_ALIVE     60 // ??????????
 
 extern unsigned char esp8266_buf[2048];
 
 /*******************************************************************************
 * MQTT_Client_DevLink
-* 描述  ：与MQTT服务器创建连接
-* 输入  ：无
-* 输出  ：无
+* ????  ????MQTT??????????????
+* ????  ????
+* ???  ????
 *******************************************************************************/		
 _Bool MQTT_Client_DevLink(void)
 {
 	
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};					//协议包
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};					//Э???
 
 	unsigned char *dataPtr;
 	
 	_Bool status = 1;
 	
-	UsartPrintf(USART_DEBUG, "Mqtt_Client_DevLink----USERNAME: %s,	PASSWORD: %s,	DEVICEID:%s	--- 连接中....\r\n"
+	UsartPrintf(USART_DEBUG, "Mqtt_Client_DevLink----USERNAME: %s,	PASSWORD: %s,	DEVICEID:%s	--- ??????....\r\n"
                         , MQTT_USERNAME, MQTT_PASSWORD, DEVICEID);
   if(MQTT_PacketConnect(MQTT_USERNAME, MQTT_PASSWORD, DEVICEID, MQTT_KEEP_ALIVE, 1, MQTT_QOS_LEVEL0, NULL, NULL, 0, &mqttPacket) == 0)	
 	{
-		ESP8266_SendData(mqttPacket._data, mqttPacket._len);			//上传平台
+		ESP8266_SendData(mqttPacket._data, mqttPacket._len);			//?????
 		
-		dataPtr = ESP8266_GetIPD(250);									//等待平台响应
+		dataPtr = ESP8266_GetIPD(250);									//????????
 		if(dataPtr != NULL)
 		{
 			if(MQTT_UnPacketRecv(dataPtr) == MQTT_PKT_CONNACK)
 			{
 				switch(MQTT_UnPacketConnectAck(dataPtr))
 				{
-					case 0:UsartPrintf(USART_DEBUG, "Tips:	连接成功\r\n");status = 0;break;
+					case 0:UsartPrintf(USART_DEBUG, "Tips:	??????\r\n");status = 0;break;
 					
-					case 1:UsartPrintf(USART_DEBUG, "WARN:	连接失败：协议错误\r\n");break;
-					case 2:UsartPrintf(USART_DEBUG, "WARN:	连接失败：非法的clientid\r\n");break;
-					case 3:UsartPrintf(USART_DEBUG, "WARN:	连接失败：服务器失败\r\n");break;
-					case 4:UsartPrintf(USART_DEBUG, "WARN:	连接失败：用户名或密码错误\r\n");break;
-					case 5:UsartPrintf(USART_DEBUG, "WARN:	连接失败：非法链接(比如token非法)\r\n");break;
+					case 1:UsartPrintf(USART_DEBUG, "WARN:	????????Э?????\r\n");break;
+					case 2:UsartPrintf(USART_DEBUG, "WARN:	?????????????clientid\r\n");break;
+					case 3:UsartPrintf(USART_DEBUG, "WARN:	?????????????????\r\n");break;
+					case 4:UsartPrintf(USART_DEBUG, "WARN:	??????????????????????\r\n");break;
+					case 5:UsartPrintf(USART_DEBUG, "WARN:	???????????????(????token???)\r\n");break;
 					
-					default:UsartPrintf(USART_DEBUG, "ERR:	连接失败：未知错误\r\n");break;
+					default:UsartPrintf(USART_DEBUG, "ERR:	????????δ?????\r\n");break;
 				}
 			}
 		}
 		
-		MQTT_DeleteBuffer(&mqttPacket);								//删包
+		MQTT_DeleteBuffer(&mqttPacket);								//???
 	}
 	else
 		UsartPrintf(USART_DEBUG, "WARN:	MQTT_PacketConnect Failed\r\n");
@@ -87,7 +87,7 @@ extern uint8_t flamePer;
 extern uint8_t alarmFlag;
 extern uint8_t fan;
 extern uint8_t led;
-extern unsigned short timeCount;
+extern volatile uint8_t report_asap;
 unsigned char MQTT_Client_FillBuf(char *buf)
 {
   snprintf(buf, 256,
@@ -98,14 +98,14 @@ unsigned char MQTT_Client_FillBuf(char *buf)
 
 /*******************************************************************************
 * MQTT_Client_SendData
-* 描述  ：上传数据到平台MQTT服务器
-* 输入  ：无
-* 输出  ：无
+* ????  ????????????MQTT??????
+* ????  ????
+* ???  ????
 *******************************************************************************/	
 void MQTT_Client_SendData(void)
 {
 	
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};												//协议包
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};												//Э???
 	
 	char buf[256];
   char topic[64]; // MQTT topic
@@ -113,21 +113,21 @@ void MQTT_Client_SendData(void)
 	short body_len = 0, i = 0;
 	
 	UsartPrintf(USART_DEBUG, "Tips:	MQTT_Client_SendData-MQTT\r\n");
-	memset(buf, 0, sizeof(buf));//清空数组内容
+	memset(buf, 0, sizeof(buf));//???????????
 	sprintf(topic, "room/%s/report", DEVICEID);
 	
-	body_len = MQTT_Client_FillBuf(buf);	//获取当前需要发送的数据流的总长度
+	body_len = MQTT_Client_FillBuf(buf);	//???????????????????????????
 	UsartPrintf(USART_DEBUG,"topic: %s, payload: %s\r\n",topic, buf);
 	if(body_len)
 	{		
-		if(MQTT_PacketSaveData(topic, body_len, NULL, 5, &mqttPacket) == 0)							//封包
+		if(MQTT_PacketSaveData(topic, body_len, NULL, 5, &mqttPacket) == 0)							//???
 		{
 			for(; i < body_len; i++){
 				mqttPacket._data[mqttPacket._len++] = buf[i];
 			}
 			UsartPrintf(USART_DEBUG, "ESP8266_SendData\r\n");
-			ESP8266_SendData(mqttPacket._data, mqttPacket._len);									//上传数据到平台
-			MQTT_DeleteBuffer(&mqttPacket);															//删包
+			ESP8266_SendData(mqttPacket._data, mqttPacket._len);									//??????????
+			MQTT_DeleteBuffer(&mqttPacket);															//???
 		}
 		else
 			UsartPrintf(USART_DEBUG, "WARN:EDP_NewBuffer Failed\r\n");
@@ -136,7 +136,7 @@ void MQTT_Client_SendData(void)
 }
 
 /**
- * @brief 发送心跳到 MQTT 服务器
+ * @brief ?????????? MQTT ??????
  */
 void MQTT_Client_SendHeartbeat(void)
 {
@@ -149,7 +149,7 @@ void MQTT_Client_SendHeartbeat(void)
     memset(buf, 0, sizeof(buf));
     sprintf(topic, "room/%s/heartbeat", DEVICEID);
 
-    // 直接构造心跳 JSON
+    // ?????????? JSON
     body_len = snprintf(buf, sizeof(buf), "{\"dev\":\"%s\"}", DEVICEID);
     UsartPrintf(USART_DEBUG, "topic: %s, payload: %s\r\n", topic, buf);
 
@@ -173,37 +173,37 @@ void MQTT_Client_SendHeartbeat(void)
 
 /*******************************************************************************
 * MQTT_Client_Publish
-* 描述  ：发布消息
-* 输入  ：topic：发布的主题
-*         msg：消息内容
-* 输出  ：无
+* ????  ?????????
+* ????  ??topic????????????
+*         msg?????????
+* ???  ????
 *******************************************************************************/	
 void MQTT_Client_Publish(const char *topic, const char *msg)
 {
 
-	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//协议包
+	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//Э???
 	
 	//UsartPrintf(USART_DEBUG, "Publish Topic: %s, Msg: %s\r\n", topic, msg);
 	
 	if(MQTT_PacketPublish(MQTT_PUBLISH_ID, topic, msg, strlen(msg), MQTT_QOS_LEVEL0, 0, 1, &mqtt_packet) == 0)
 	{
-		ESP8266_SendData(mqtt_packet._data, mqtt_packet._len);					//向平台发送订阅请求
+		ESP8266_SendData(mqtt_packet._data, mqtt_packet._len);					//???????????????
 		
-		MQTT_DeleteBuffer(&mqtt_packet);										//删包
+		MQTT_DeleteBuffer(&mqtt_packet);										//???
 	}
 
 }
 
 /*******************************************************************************
 * MQTT_Client_Subscribe
-* 描述  ：订阅MQTT服务器的topic
-* 输入  ：订阅类型（Dev_Att_Rep: 设备属性上报; Dev_Att_Acq: 设备属性获取）
-* 输出  ：无
+* ????  ??????MQTT????????topic
+* ????  ???????????Dev_Att_Rep: ?豸???????; Dev_Att_Acq: ?豸????????
+* ???  ????
 *******************************************************************************/	
 void MQTT_Client_Subscribe(u8 Sub)
 {
 	
-	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//协议包
+	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//Э???
 	
 	char topic_buf[56];
 	const char *topic = topic_buf;
@@ -220,23 +220,23 @@ void MQTT_Client_Subscribe(u8 Sub)
 
 	if(MQTT_PacketSubscribe(MQTT_SUBSCRIBE_ID, MQTT_QOS_LEVEL0, &topic, 1, &mqtt_packet) == 0)
 	{
-		ESP8266_SendData(mqtt_packet._data, mqtt_packet._len);					//向平台发送订阅请求
+		ESP8266_SendData(mqtt_packet._data, mqtt_packet._len);					//???????????????
 		
-		MQTT_DeleteBuffer(&mqtt_packet);										//删包
+		MQTT_DeleteBuffer(&mqtt_packet);										//???
 	}
 
 }
 
 /*******************************************************************************
 * MQTT_Client_RevPro
-* 描述  ：MQTT服务器返回数据检测
-* 输入  ：dataPtr：平台返回的数据
-* 输出  ：无
+* ????  ??MQTT????????????????
+* ????  ??dataPtr?????????????
+* ???  ????
 *******************************************************************************/	
 void MQTT_Client_RevPro(unsigned char *cmd)
 {
 
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};								//协议包
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};								//Э???
 	
 	char *req_payload = NULL;
 	char *cmdid_topic = NULL;
@@ -251,8 +251,8 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 
 	switch(type)
 	{
-		case MQTT_PKT_CMD:															//命令下发
-			result = MQTT_UnPacketCmd(cmd, &cmdid_topic, &req_payload, &req_len);	//解出topic和消息体
+		case MQTT_PKT_CMD:															//?????·?
+			result = MQTT_UnPacketCmd(cmd, &cmdid_topic, &req_payload, &req_len);	//???topic???????
 
 			if(result == 0)
 			{
@@ -289,18 +289,18 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 								UsartPrintf(USART_DEBUG, "led = %d, turn the led\r\n", val);
 							}
 						}
-						timeCount=200;
+						report_asap = 1;
 				}
 				
-				if(MQTT_PacketCmdResp(cmdid_topic, req_payload, &mqttPacket) == 0)	//命令回复组包
+				if(MQTT_PacketCmdResp(cmdid_topic, req_payload, &mqttPacket) == 0)	//?????????
 				{
-					ESP8266_SendData(mqttPacket._data, mqttPacket._len);			//回复命令
-					MQTT_DeleteBuffer(&mqttPacket);									//删包
+					ESP8266_SendData(mqttPacket._data, mqttPacket._len);			//???????
+					MQTT_DeleteBuffer(&mqttPacket);									//???
 				}
 			}
 		break;
 			
-		case MQTT_PKT_PUBACK:														//发送Publish消息，平台回复的Ack
+		case MQTT_PKT_PUBACK:														//????Publish????????????Ack
 			if(MQTT_UnPacketPublishAck(cmd) == 0)
 				UsartPrintf(USART_DEBUG, "Tips:	MQTT Publish Send OK\r\n");
 		break;
@@ -311,7 +311,7 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 		break;
 	}
 
-	ESP8266_Clear();									//清空缓存
+	ESP8266_Clear();									//??????
 
 	if(type == MQTT_PKT_CMD || type == MQTT_PKT_PUBLISH)
 	{
