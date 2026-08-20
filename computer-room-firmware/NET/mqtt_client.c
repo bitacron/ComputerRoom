@@ -1,10 +1,10 @@
 //?????????
 #include "stm32f10x.h"
 
-//?????õô
+//??????
 #include "esp8266.h"
 
-//§¿?????
+//??????
 #include "mqtt_client.h"
 #include "mqttkit.h"
 
@@ -19,10 +19,12 @@
 
 #include "actuators.h"
 
-#define DEVICEID      "stm32_01"  // ?õôID
-#define MQTT_USERNAME       ""  // MQTT?????????
-#define MQTT_PASSWORD       ""   // MQTT????????
-#define MQTT_KEEP_ALIVE     60 // ??????????
+#define DEVICEID            "stm32_01"
+#define MQTT_USERNAME       ""
+#define MQTT_PASSWORD       ""
+#define MQTT_KEEP_ALIVE     60
+#define MQTT_WILL_MSG       "{\"dev\":\"stm32_01\",\"online\":0}"
+
 
 extern unsigned char esp8266_buf[2048];
 
@@ -35,15 +37,18 @@ extern unsigned char esp8266_buf[2048];
 _Bool MQTT_Client_DevLink(void)
 {
 	
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};					//§¿???
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};					//????
 
 	unsigned char *dataPtr;
-	
+	char will_topic[48];
 	_Bool status = 1;
 	
-	UsartPrintf(USART_DEBUG, "Mqtt_Client_DevLink----USERNAME: %s,	PASSWORD: %s,	DEVICEID:%s	--- ??????....\r\n"
+	UsartPrintf(USART_DEBUG, "Mqtt_Client_DevLink----USERNAME: %s,	PASSWORD: %s,	DEVICEID:%s	--- connecting....\r\n"
                         , MQTT_USERNAME, MQTT_PASSWORD, DEVICEID);
-  if(MQTT_PacketConnect(MQTT_USERNAME, MQTT_PASSWORD, DEVICEID, MQTT_KEEP_ALIVE, 1, MQTT_QOS_LEVEL0, NULL, NULL, 0, &mqttPacket) == 0)	
+	sprintf(will_topic, "room/%s/status", DEVICEID);
+	/* CONNECT Last Will: broker publishes online:0 on abnormal disconnect */
+	if(MQTT_PacketConnect(MQTT_USERNAME, MQTT_PASSWORD, DEVICEID, MQTT_KEEP_ALIVE, 1, MQTT_QOS_LEVEL0,
+						will_topic, MQTT_WILL_MSG, 1, &mqttPacket) == 0)
 	{
 		ESP8266_SendData(mqttPacket._data, mqttPacket._len);			//?????
 		
@@ -56,13 +61,13 @@ _Bool MQTT_Client_DevLink(void)
 				{
 					case 0:UsartPrintf(USART_DEBUG, "Tips:	??????\r\n");status = 0;break;
 					
-					case 1:UsartPrintf(USART_DEBUG, "WARN:	????????§¿?????\r\n");break;
+					case 1:UsartPrintf(USART_DEBUG, "WARN:	??????????????\r\n");break;
 					case 2:UsartPrintf(USART_DEBUG, "WARN:	?????????????clientid\r\n");break;
 					case 3:UsartPrintf(USART_DEBUG, "WARN:	?????????????????\r\n");break;
 					case 4:UsartPrintf(USART_DEBUG, "WARN:	??????????????????????\r\n");break;
 					case 5:UsartPrintf(USART_DEBUG, "WARN:	???????????????(????token???)\r\n");break;
 					
-					default:UsartPrintf(USART_DEBUG, "ERR:	????????¦Ä?????\r\n");break;
+					default:UsartPrintf(USART_DEBUG, "ERR:	??????????????\r\n");break;
 				}
 			}
 		}
@@ -105,7 +110,7 @@ unsigned char MQTT_Client_FillBuf(char *buf)
 void MQTT_Client_SendData(void)
 {
 	
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};												//§¿???
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};												//????
 	
 	char buf[256];
   char topic[64]; // MQTT topic
@@ -136,39 +141,36 @@ void MQTT_Client_SendData(void)
 }
 
 /**
- * @brief ?????????? MQTT ??????
+ * @brief device online/birth message (once after connect). Liveness via report.
  */
-void MQTT_Client_SendHeartbeat(void)
+void MQTT_Client_SendOnline(void)
 {
-    MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
-    char buf[64];
-    char topic[64];
-    short body_len = 0, i = 0;
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
+	char buf[160];
+	char topic[48];
+	short body_len = 0;
 
-    UsartPrintf(USART_DEBUG, "Tips: MQTT_Client_SendHeartbeat\r\n");
-    memset(buf, 0, sizeof(buf));
-    sprintf(topic, "room/%s/heartbeat", DEVICEID);
+	UsartPrintf(USART_DEBUG, "Tips: MQTT_Client_SendOnline\r\n");
+	sprintf(topic, "room/%s/status", DEVICEID);
+	body_len = snprintf(buf, sizeof(buf),
+		"{\"dev\":\"%s\",\"online\":1,\"product\":\"room\",\"name\":\"%s\"}",
+		DEVICEID, DEVICEID);
+	UsartPrintf(USART_DEBUG, "topic: %s, payload: %s\r\n", topic, buf);
 
-    // ?????????? JSON
-    body_len = snprintf(buf, sizeof(buf), "{\"dev\":\"%s\"}", DEVICEID);
-    UsartPrintf(USART_DEBUG, "topic: %s, payload: %s\r\n", topic, buf);
-
-    if (body_len > 0 && body_len < sizeof(buf))
-    {
-        if (MQTT_PacketSaveData(topic, body_len, NULL, 5, &mqttPacket) == 0)
-        {
-            for (; i < body_len; i++)
-            {
-                mqttPacket._data[mqttPacket._len++] = buf[i];
-            }
-            ESP8266_SendData(mqttPacket._data, mqttPacket._len);
-            MQTT_DeleteBuffer(&mqttPacket);
-        }
-        else
-        {
-            UsartPrintf(USART_DEBUG, "WARN: MQTT_PacketSaveData Failed\r\n");
-        }
-    }
+	if (body_len > 0 && body_len < (short)sizeof(buf))
+	{
+		/* retain=1 to overwrite retained will online:0 */
+		if (MQTT_PacketPublish(MQTT_PUBLISH_ID, topic, buf, (uint32)body_len,
+				MQTT_QOS_LEVEL0, 1, 1, &mqttPacket) == 0)
+		{
+			ESP8266_SendData(mqttPacket._data, mqttPacket._len);
+			MQTT_DeleteBuffer(&mqttPacket);
+		}
+		else
+		{
+			UsartPrintf(USART_DEBUG, "WARN: MQTT_PacketPublish Online Failed\r\n");
+		}
+	}
 }
 
 /*******************************************************************************
@@ -181,7 +183,7 @@ void MQTT_Client_SendHeartbeat(void)
 void MQTT_Client_Publish(const char *topic, const char *msg)
 {
 
-	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//§¿???
+	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//????
 	
 	//UsartPrintf(USART_DEBUG, "Publish Topic: %s, Msg: %s\r\n", topic, msg);
 	
@@ -197,13 +199,13 @@ void MQTT_Client_Publish(const char *topic, const char *msg)
 /*******************************************************************************
 * MQTT_Client_Subscribe
 * ????  ??????MQTT????????topic
-* ????  ???????????Dev_Att_Rep: ?õô???????; Dev_Att_Acq: ?õô????????
+* ????  ???????????Dev_Att_Rep: ?????????; Dev_Att_Acq: ??????????
 * ???  ????
 *******************************************************************************/	
 void MQTT_Client_Subscribe(u8 Sub)
 {
 	
-	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//§¿???
+	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//????
 	
 	char topic_buf[56];
 	const char *topic = topic_buf;
@@ -236,7 +238,7 @@ void MQTT_Client_Subscribe(u8 Sub)
 void MQTT_Client_RevPro(unsigned char *cmd)
 {
 
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};								//§¿???
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};								//????
 	
 	char *req_payload = NULL;
 	char *cmdid_topic = NULL;
@@ -251,7 +253,7 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 
 	switch(type)
 	{
-		case MQTT_PKT_CMD:															//?????¡¤?
+		case MQTT_PKT_CMD:															//?????·?
 			result = MQTT_UnPacketCmd(cmd, &cmdid_topic, &req_payload, &req_len);	//???topic???????
 
 			if(result == 0)

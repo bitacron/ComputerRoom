@@ -8,7 +8,7 @@
 
 _Bool MQTT_Client_DevLink(void);
 void MQTT_Client_SendData(void);
-void MQTT_Client_SendHeartbeat(void);
+void MQTT_Client_SendOnline(void);
 void MQTT_Client_RevPro(unsigned char *cmd);
 
 //void MQTT_Client_Subscribe(const char *topics[], unsigned char topic_cnt);

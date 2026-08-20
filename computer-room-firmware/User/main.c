@@ -113,7 +113,7 @@ int main(void)
 	}
 	MQTT_Client_Subscribe(Dev_Att_Rep);
 
-	MQTT_Client_SendHeartbeat();
+	MQTT_Client_SendOnline();
 
 	OLED_ShowString(1, 1, "Init_Finish");
 	Beep_ShortBeep(200);

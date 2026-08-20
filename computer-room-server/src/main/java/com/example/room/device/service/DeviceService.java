@@ -47,5 +47,15 @@ public interface DeviceService extends IService<Device> {
 
     void onlineDevice(String deviceKey);
 
+    /**
+     * 设备上线/注册：可携带名称与产品标识
+     */
+    void onlineDevice(String deviceKey, String deviceName, String productKey);
+
+    /**
+     * 设备离线（含 Last Will 异常掉线）
+     */
+    void offlineDevice(String deviceKey);
+
     void reportData(String deviceKey);
 }

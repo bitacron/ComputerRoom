@@ -71,8 +71,16 @@ public class MqttProcessMessageService {
             deviceService.reportData(deviceKeyStr);
             // 2. 解析并处理报警数据
             deviceOptionService.onMqttMessage(topic, payload);
-        } else if (topic.contains("heartbeat")) {
-            deviceService.onlineDevice(deviceKeyStr);
+        } else if (topic.contains("status") || topic.contains("heartbeat")) {
+            // status: 上线声明 / Last Will 离线；heartbeat 兼容旧固件
+            Integer online = jsonObject.getInteger("online");
+            if (online != null && online == 0) {
+                deviceService.offlineDevice(deviceKeyStr);
+            } else {
+                String name = jsonObject.getString("name");
+                String product = jsonObject.getString("product");
+                deviceService.onlineDevice(deviceKeyStr, name, product);
+            }
         }
     }
 

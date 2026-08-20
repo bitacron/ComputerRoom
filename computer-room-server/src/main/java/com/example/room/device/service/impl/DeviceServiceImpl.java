@@ -79,24 +79,54 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Transactional
     @Override
     public void onlineDevice(String deviceKey) {
+        onlineDevice(deviceKey, null, null);
+    }
+
+    @Transactional
+    @Override
+    public void onlineDevice(String deviceKey, String deviceName, String productKey) {
         QueryWrapper<Device> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(Device::getDeviceKey, deviceKey);
         Device device = this.getOne(queryWrapper);
+        Date now = new Date();
         if (device != null) {
             device.setOnlineStatus(1);
-            device.setLastOnlineTime(new Date());
-            device.setLastActiveTime(new Date());
+            device.setLastOnlineTime(now);
+            device.setLastActiveTime(now);
+            if (deviceName != null && !deviceName.isEmpty()) {
+                device.setDeviceName(deviceName);
+            }
+            if (productKey != null && !productKey.isEmpty()) {
+                device.setProductKey(productKey);
+            }
             this.update(device, queryWrapper);
         } else {
             device = new Device();
-            device.setProductKey("room");
+            device.setProductKey(productKey != null && !productKey.isEmpty() ? productKey : "room");
             device.setDeviceKey(deviceKey);
-            device.setDeviceName(deviceKey);
+            device.setDeviceName(deviceName != null && !deviceName.isEmpty() ? deviceName : deviceKey);
             device.setOnlineStatus(1);
-            device.setLastOnlineTime(new Date());
-            device.setLastActiveTime(new Date());
+            device.setLastOnlineTime(now);
+            device.setLastActiveTime(now);
             this.save(device);
         }
+    }
+
+    @Transactional
+    @Override
+    public void offlineDevice(String deviceKey) {
+        if (deviceKey == null || deviceKey.isEmpty()) {
+            return;
+        }
+        QueryWrapper<Device> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(Device::getDeviceKey, deviceKey);
+        Device device = this.getOne(queryWrapper);
+        if (device == null) {
+            return;
+        }
+        device.setOnlineStatus(0);
+        device.setLastOfflineTime(new Date());
+        this.update(device, queryWrapper);
     }
 
     @Override
@@ -105,7 +135,13 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         queryWrapper.lambda().eq(Device::getDeviceKey, deviceKey);
         Device device = this.getOne(queryWrapper);
         if (device != null) {
-            device.setLastActiveTime(new Date());
+            Date now = new Date();
+            // report 同时作为业务存活证明：离线后恢复上报时自动拉回在线
+            if (device.getOnlineStatus() == null || device.getOnlineStatus() != 1) {
+                device.setOnlineStatus(1);
+                device.setLastOnlineTime(now);
+            }
+            device.setLastActiveTime(now);
             this.update(device, queryWrapper);
         }
     }
