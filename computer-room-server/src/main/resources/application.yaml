@@ -52,7 +52,7 @@ lohging:
     org.springframework.security: debug
 mqtt:
   # 本地未安装/启动 MQTT Broker 时可设为 false，避免启动时报 Connection refused
-  enabled: false
+  enabled: true
   broker-url: tcp://localhost:1883
   client-id: iot_mqtt_server
   receive-topic: +/+/report,resp/room/stm32_01/command,+/+/heartbeat
