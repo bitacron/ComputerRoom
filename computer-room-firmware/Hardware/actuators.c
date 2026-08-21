@@ -2,8 +2,8 @@
 #include "actuators.h"
 
 /*******************************************************************************
-* 函数名：Led_Init
-* 描述  ： 统一初始化：依次调用各设备初始化函数
+* 函数名：Actuators_Init
+* 描述  ：统一初始化执行器：依次初始化 LED 与继电器
 * 输入  ：无
 * 输出  ：无
 *******************************************************************************/
@@ -30,7 +30,7 @@ void Led_Init(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-    GPIO_ResetBits(GPIOB, GPIO_Pin_5); // 默认熄灭（高电平）
+    GPIO_ResetBits(GPIOB, GPIO_Pin_5); // 默认熄灭（低电平）
 }
 /*******************************************************************************
 * 函数名：Led_ON

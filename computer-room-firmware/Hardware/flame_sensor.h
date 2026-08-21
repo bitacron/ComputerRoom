@@ -3,30 +3,30 @@
 
 #include "stm32f10x.h"
 
-// ========== å¼•è„šå®šä¹‰ï¼ˆè¯·æ ¹æ®å®žé™…è¿žæŽ¥ä¿®æ”¹ï¼‰==========
-// ç«ç„°ä¼ æ„Ÿå™¨æ•°å­—è¾“å‡ºå¼•è„šï¼ˆDOï¼‰â€”â€” å¦‚æžœä¸éœ€è¦å¯ä»¥æ³¨é‡ŠæŽ‰ç›¸å…³ä»£ç 
+// ========== Òý½Å¶¨Òå£¨Çë¸ù¾ÝÊµ¼ÊÁ¬½ÓÐÞ¸Ä£©==========
+// »ðÑæ´«¸ÐÆ÷Êý×ÖÊä³öÒý½Å£¨DO£©-- Èç¹û²»ÐèÒª¿ÉÒÔ×¢ÊÍµôÏà¹Ø´úÂë
 #define FLAME_DO_PORT       GPIOA
 #define FLAME_DO_PIN        GPIO_Pin_0
 #define FLAME_DO_RCC        RCC_APB2Periph_GPIOA
 
-// ç«ç„°ä¼ æ„Ÿå™¨æ¨¡æ‹Ÿè¾“å‡ºå¼•è„šï¼ˆAOï¼‰â€”â€” ä½¿ç”¨ PB0 (ADC2_IN8)
+// »ðÑæ´«¸ÐÆ÷Ä£ÄâÊä³öÒý½Å£¨AO£©-- Ê¹ÓÃ PB0 (ADC2_IN8)
 #define FLAME_AO_PORT       GPIOB
 #define FLAME_AO_PIN        GPIO_Pin_0
 #define FLAME_AO_RCC        RCC_APB2Periph_GPIOB | RCC_APB2Periph_ADC2
 #define FLAME_ADC           ADC2
-#define FLAME_ADC_CHANNEL   ADC_Channel_8   // PB0 å¯¹åº” ADC2_IN8
+#define FLAME_ADC_CHANNEL   ADC_Channel_8   // PB0 ¶ÔÓ¦ ADC2_IN8
 
-// é‡‡æ ·æ¬¡æ•°ï¼ˆç”¨äºŽæ¨¡æ‹Ÿé‡å¹³å‡æ»¤æ³¢ï¼‰
+// ²ÉÑù´ÎÊý£¨ÓÃÓÚÄ£ÄâÁ¿Æ½¾ùÂË²¨£©
 #define FLAME_ADC_SAMPLES   10
 
-// å‡½æ•°å£°æ˜Ž
-void Flame_Init(void);                      // åˆå§‹åŒ–ç«ç„°ä¼ æ„Ÿå™¨
-void Flame_Init_DO(void);   // åˆå§‹åŒ–æ•°å­—è¾“å‡ºå¼•è„šï¼ˆDOï¼‰
-void Flame_Init_AO_ADC(void);  // åˆå§‹åŒ–æ¨¡æ‹Ÿè¾“å…¥å¼•è„šï¼ˆAOï¼‰åŠ ADC
-void Flame_Init_AO(void);   // åˆå§‹åŒ–æ¨¡æ‹Ÿè¾“å…¥å¼•è„šï¼ˆAOï¼‰
-uint8_t Flame_GetDigital(void);              // è¯»å–æ•°å­—é‡è¾“å‡ºï¼ˆ0æˆ–1ï¼‰
-uint16_t Flame_GetAnalog(void);               // è¯»å–å•æ¬¡æ¨¡æ‹Ÿé‡åŽŸå§‹å€¼ï¼ˆ0-4095ï¼‰
-uint16_t Flame_GetAnalogAverage(void);        // è¯»å–å¤šæ¬¡å¹³å‡åŽçš„æ¨¡æ‹Ÿé‡åŽŸå§‹å€¼
-uint8_t Flame_GetPercentage(void);            // èŽ·å–ç«ç„°å¼ºåº¦ç™¾åˆ†æ¯”ï¼ˆ0-100%ï¼‰
+// º¯ÊýÉùÃ÷
+void Flame_Init(void);                      // ³õÊ¼»¯»ðÑæ´«¸ÐÆ÷
+void Flame_Init_DO(void);   // ³õÊ¼»¯Êý×ÖÊä³öÒý½Å£¨DO£©
+void Flame_Init_AO_ADC(void);  // ³õÊ¼»¯Ä£ÄâÊäÈëÒý½Å£¨AO£©¼° ADC
+void Flame_Init_AO(void);   // ³õÊ¼»¯Ä£ÄâÊäÈëÒý½Å£¨AO£©
+uint8_t Flame_GetDigital(void);              // ¶ÁÈ¡Êý×ÖÁ¿Êä³ö£¨0»ò1£©
+uint16_t Flame_GetAnalog(void);               // ¶ÁÈ¡µ¥´ÎÄ£ÄâÁ¿Ô­Ê¼Öµ£¨0-4095£©
+uint16_t Flame_GetAnalogAverage(void);        // ¶ÁÈ¡¶à´ÎÆ½¾ùºóµÄÄ£ÄâÁ¿Ô­Ê¼Öµ
+uint8_t Flame_GetPercentage(void);            // »ñÈ¡»ðÑæÇ¿¶È°Ù·Ö±È£¨0-100%£©
 
 #endif

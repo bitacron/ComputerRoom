@@ -1,43 +1,15 @@
-/**
-	************************************************************
-	************************************************************
-	************************************************************
-	*	文件名： 	sample.c
-	*
-	*	作者： 		张继瑞
-	*
-	*	日期： 		2017-06-14
-	*
-	*	版本： 		V1.0
-	*
-	*	说明： 		此文件不参与编译，仅仅只是SDK使用的演示
-	*
-	*	修改记录：	
-	************************************************************
-	************************************************************
-	************************************************************
-**/
-
-
 #include "mqttkit.h"
 
 
 unsigned char dataMem[128];		//全局数组方式
 
 
-//==========================================================
-//	函数名称：	OneNet_DevLink
-//
-//	函数功能：	与onenet创建连接
-//
-//	入口参数：	devid：创建设备的devid
-//				proid：产品ID
-//				auth_key：创建设备的masterKey或apiKey或设备鉴权信息
-//
-//	返回参数：	无
-//
-//	说明：		与onenet平台建立连接，成功或会标记oneNetInfo.netWork网络状态标志
-//==========================================================
+/*******************************************************************************
+* 函数名：OneNet_DevLink
+* 描述  ：与onenet创建连接。与onenet平台建立连接，成功或会标记oneNetInfo.netWork网络状态标志
+* 输入  ：devid：创建设备的devid proid：产品ID auth_key：创建设备的masterKey或apiKey或设备鉴权信息
+* 输出  ：无
+*******************************************************************************/
 void OneNet_DevLink(const char* devid, const char *proid, const char* auth_info)
 {
 	
@@ -46,16 +18,16 @@ void OneNet_DevLink(const char* devid, const char *proid, const char* auth_info)
 	edpPacket._data = dataMem;				//全局数组方式
 	edpPacket._size = sizeof(dataMem);		//全局数组方式
 	
-//---------------------------------------------步骤一：组包---------------------------------------------
+
 	if(MQTT_PacketConnect(proid, auth_info, devid, 256, 0, MQTT_QOS_LEVEL0, NULL, NULL, 0, &mqttPacket) == 0)
 	{
-//---------------------------------------------步骤二：发送数据-----------------------------------------
+
 		NET_DEVICE_SendData(mqttPacket._data, mqttPacket._len);
 
-//---------------------------------------------步骤三：判断返回类型--------------------------------------
+
 		if(MQTT_UnPacketRecv(dataPtr) == MQTT_PKT_CONNACK)
 		{
-//---------------------------------------------步骤四：解析返回结果--------------------------------------
+
 			switch(MQTT_UnPacketConnectAck(dataPtr))
 			{
 				case 0:
@@ -73,7 +45,7 @@ void OneNet_DevLink(const char* devid, const char *proid, const char* auth_info)
 			}
 		}
 		
-//---------------------------------------------步骤五：删包---------------------------------------------
+
 		MQTT_DeleteBuffer(&mqttPacket);
 	}
 	else
@@ -81,17 +53,12 @@ void OneNet_DevLink(const char* devid, const char *proid, const char* auth_info)
 	
 }
 
-//==========================================================
-//	函数名称：	OneNet_DisConnect
-//
-//	函数功能：	与平台断开连接
-//
-//	入口参数：	无
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：OneNet_DisConnect
+* 描述  ：与平台断开连接
+* 输入  ：无
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 _Bool OneNet_DisConnect(void)
 {
 
@@ -101,13 +68,13 @@ _Bool OneNet_DisConnect(void)
 	edpPacket._data = dataMem;				//局部数组方式
 	edpPacket._size = sizeof(dataMem);		//局部数组方式
 	
-//---------------------------------------------步骤一：组包---------------------------------------------
+
 	if(MQTT_PacketDisConnect(&mqttPacket) == 0)
 	{
-//---------------------------------------------步骤二：发送数据-----------------------------------------
+
 		NET_DEVICE_SendData(mqttPacket._data, mqttPacket._len);
 		
-//---------------------------------------------步骤三：删包---------------------------------------------
+
 		MQTT_DeleteBuffer(&mqttPacket);
 	}
 	
@@ -115,21 +82,12 @@ _Bool OneNet_DisConnect(void)
 
 }
 
-//==========================================================
-//	函数名称：	OneNet_SendData
-//
-//	函数功能：	上传数据到平台
-//
-//	入口参数：	type：发送数据的格式
-//				devid：设备ID
-//				apikey：设备apikey
-//				streamArray：数据流
-//				streamArrayNum：数据流个数
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：OneNet_SendData
+* 描述  ：上传数据到平台
+* 输入  ：type：发送数据的格式 devid：设备ID apikey：设备apikey streamArray：数据流 streamArrayNum：数据流个数
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 _Bool OneNet_SendData(FORMAT_TYPE type, char *devid, char *apikey, DATA_STREAM *streamArray, unsigned short streamArrayCnt)
 {
 	
@@ -140,27 +98,27 @@ _Bool OneNet_SendData(FORMAT_TYPE type, char *devid, char *apikey, DATA_STREAM *
 	
 	UsartPrintf(USART_DEBUG, "Tips:	OneNet_SendData-MQTT_TYPE%d\r\n", type);
 	
-//---------------------------------------------步骤一：测量数据流长度---------------------------------------------
+
 	body_len = DSTREAM_GetDataStream_Body_Measure(type, streamArray, streamArrayCnt, 0);
 	if(body_len)
 	{
-//---------------------------------------------步骤二：填写协议头-------------------------------------------------
+
 		if(MQTT_PacketSaveData(devid, body_len, NULL, (uint8)type, &mqttPacket) == 0)
 		{
-//---------------------------------------------步骤三：组包-------------------------------------------------------
+
 			body_len = DSTREAM_GetDataStream_Body(type, streamArray, streamArrayCnt, mqttPacket._data, mqttPacket._size, mqttPacket._len);
 			
 			if(body_len)
 			{
 				mqttPacket._len += body_len;
 				UsartPrintf(USART_DEBUG, "Send %d Bytes\r\n", mqttPacket._len);
-//---------------------------------------------步骤四：发送数据---------------------------------------------------
+
 				NET_DEVICE_SendData(mqttPacket._data, mqttPacket._len);
 			}
 			else
 				UsartPrintf(USART_DEBUG, "WARN:	DSTREAM_GetDataStream_Body Failed\r\n");
 			
-//---------------------------------------------步骤五：删包-------------------------------------------------------
+
 			MQTT_DeleteBuffer(&mqttPacket);
 		}
 		else
@@ -173,17 +131,12 @@ _Bool OneNet_SendData(FORMAT_TYPE type, char *devid, char *apikey, DATA_STREAM *
 	
 }
 
-//==========================================================
-//	函数名称：	OneNet_HeartBeat
-//
-//	函数功能：	心跳检测
-//
-//	入口参数：	无
-//
-//	返回参数：	无
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：OneNet_HeartBeat
+* 描述  ：心跳检测
+* 输入  ：无
+* 输出  ：无
+*******************************************************************************/
 void OneNet_HeartBeat(void)
 {
 	
@@ -191,16 +144,16 @@ void OneNet_HeartBeat(void)
 
 	unsigned char sCount = 3;
 	
-//---------------------------------------------步骤一：组包---------------------------------------------
+
 	if(MQTT_PacketPing(&mqttPacket))
 		return;
 	
 	while(sCount--)
 	{
-//---------------------------------------------步骤二：发送数据-----------------------------------------
+
 		NET_DEVICE_SendData(mqttPacket._data, mqttPacket._len);
 
-//---------------------------------------------步骤三：解析返回数据-------------------------------------
+
 		if(MQTT_UnPacketRecv(dataPtr) == MQTT_PKT_PINGRESP)
 		{
 			UsartPrintf(USART_DEBUG, "Tips:	HeartBeat OK\r\n");
@@ -215,23 +168,17 @@ void OneNet_HeartBeat(void)
 		RTOS_TimeDly(2);
 	}
 	
-//---------------------------------------------步骤四：删包---------------------------------------------
+
 	MQTT_DeleteBuffer(&mqttPacket);
 
 }
 
-//==========================================================
-//	函数名称：	OneNet_Publish
-//
-//	函数功能：	发布消息
-//
-//	入口参数：	topic：发布的主题
-//				msg：消息内容
-//
-//	返回参数：	0-成功	1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：OneNet_Publish
+* 描述  ：发布消息
+* 输入  ：topic：发布的主题 msg：消息内容
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 _Bool OneNet_Publish(const char *topic, const char *msg)
 {
 
@@ -239,13 +186,13 @@ _Bool OneNet_Publish(const char *topic, const char *msg)
 	
 	UsartPrintf(USART_DEBUG, "Publish Topic: %s, Msg: %s\r\n", topic, msg);
 	
-//---------------------------------------------步骤一：组包---------------------------------------------
+
 	if(MQTT_PacketPublish(MQTT_PUBLISH_ID, topic, msg, strlen(msg), MQTT_QOS_LEVEL2, 0, 1, &mqttPacket) == 0)
 	{
-//---------------------------------------------步骤二：发送数据-----------------------------------------
+
 		NET_DEVICE_SendData(mqttPacket._data, mqttPacket._len);
 		
-//---------------------------------------------步骤三：删包---------------------------------------------
+
 		MQTT_DeleteBuffer(&mqttPacket);
 	}
 	
@@ -253,18 +200,12 @@ _Bool OneNet_Publish(const char *topic, const char *msg)
 
 }
 
-//==========================================================
-//	函数名称：	OneNet_Subscribe
-//
-//	函数功能：	订阅
-//
-//	入口参数：	topics：订阅的topic
-//				topic_cnt：topic个数
-//
-//	返回参数：	0-成功	1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：OneNet_Subscribe
+* 描述  ：订阅
+* 输入  ：topics：订阅的topic topic_cnt：topic个数
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 _Bool OneNet_Subscribe(const char *topics[], unsigned char topic_cnt)
 {
 	
@@ -275,13 +216,13 @@ _Bool OneNet_Subscribe(const char *topics[], unsigned char topic_cnt)
 	for(; i < topic_cnt; i++)
 		UsartPrintf(USART_DEBUG, "Subscribe Topic: %s\r\n", topics[i]);
 	
-//---------------------------------------------步骤一：组包---------------------------------------------
+
 	if(MQTT_PacketSubscribe(MQTT_SUBSCRIBE_ID, MQTT_QOS_LEVEL2, topics, topic_cnt, &mqttPacket) == 0)
 	{
-//---------------------------------------------步骤二：发送数据-----------------------------------------
+
 		NET_DEVICE_SendData(mqttPacket._data, mqttPacket._len);					//向平台发送订阅请求
 		
-//---------------------------------------------步骤三：删包---------------------------------------------
+
 		MQTT_DeleteBuffer(&mqttPacket);											//删包
 	}
 	
@@ -289,18 +230,12 @@ _Bool OneNet_Subscribe(const char *topics[], unsigned char topic_cnt)
 
 }
 
-//==========================================================
-//	函数名称：	OneNet_UnSubscribe
-//
-//	函数功能：	取消订阅
-//
-//	入口参数：	topics：订阅的topic
-//				topic_cnt：topic个数
-//
-//	返回参数：	0-成功	1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：OneNet_UnSubscribe
+* 描述  ：取消订阅
+* 输入  ：topics：订阅的topic topic_cnt：topic个数
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 _Bool OneNet_UnSubscribe(const char *topics[], unsigned char topic_cnt)
 {
 	
@@ -311,13 +246,13 @@ _Bool OneNet_UnSubscribe(const char *topics[], unsigned char topic_cnt)
 	for(; i < topic_cnt; i++)
 		UsartPrintf(USART_DEBUG, "UnSubscribe Topic: %s\r\n", topics[i]);
 	
-//---------------------------------------------步骤一：组包---------------------------------------------
+
 	if(MQTT_PacketUnSubscribe(MQTT_UNSUBSCRIBE_ID, topics, topic_cnt, &mqttPacket) == 0)
 	{
-//---------------------------------------------步骤二：发送数据-----------------------------------------
+
 		NET_DEVICE_SendData(mqttPacket._data, mqttPacket._len);					//向平台发送取消订阅请求
 		
-//---------------------------------------------步骤三：删包---------------------------------------------
+
 		MQTT_DeleteBuffer(&mqttPacket);											//删包
 	}
 	
@@ -325,17 +260,12 @@ _Bool OneNet_UnSubscribe(const char *topics[], unsigned char topic_cnt)
 
 }
 
-//==========================================================
-//	函数名称：	OneNet_RevPro
-//
-//	函数功能：	平台返回数据检测
-//
-//	入口参数：	dataPtr：平台返回的数据
-//
-//	返回参数：	无
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：OneNet_RevPro
+* 描述  ：平台返回数据检测
+* 输入  ：dataPtr：平台返回的数据
+* 输出  ：无
+*******************************************************************************/
 void OneNet_RevPro(unsigned char *cmd)
 {
 	
@@ -349,11 +279,11 @@ void OneNet_RevPro(unsigned char *cmd)
 	
 	short result = -1;
 	
-//---------------------------------------------步骤一：获取返回数据类型---------------------------------------------
+
 	type = MQTT_UnPacketRecv(cmd);
 	switch(type)
 	{
-//---------------------------------------------步骤二：调用函数解析-------------------------------------------------
+
 		case MQTT_PKT_CMD:															//命令下发
 			
 			result = MQTT_UnPacketCmd(cmd, &cmdid_topic, &req_payload);				//解出topic和消息体
@@ -475,12 +405,12 @@ void OneNet_RevPro(unsigned char *cmd)
 		break;
 	}
 	
-//---------------------------------------------步骤三：命令处理---------------------------------------------
+
 	if(req)
 	{
 		
 	}
-//---------------------------------------------步骤四：释放内存---------------------------------------------
+
 	if(type == MQTT_PKT_CMD || type == MQTT_PKT_PUBLISH)
 	{
 		MQTT_FreeBuffer(cmdid_topic);

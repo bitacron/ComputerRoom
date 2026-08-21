@@ -38,15 +38,21 @@ void TIM3_IRQHandler(void)
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
 	{
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-		g_tick_ms++;
+		g_tick_ms++;	// 1ms 节拍
 	}
 }
 
+/** @brief 读取系统毫秒计数 */
 uint32_t millis(void)
 {
 	return g_tick_ms;
 }
 
+/**
+ * @brief  TIM2 中断初始化（备用）
+ * @param  arr 自动重装值
+ * @param  psc 预分频系数
+ */
 void TIM2_Int_Init(u16 arr, u16 psc)
 {
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;

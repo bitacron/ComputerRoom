@@ -3,15 +3,14 @@
 
 #include "stm32f10x.h"
 
-#define	Dev_Att_Rep  0 //设备属性上报
-#define Dev_Att_Acq  1  //设备属性获取
+#define Dev_Att_Rep  0  // 订阅设备命令 topic（room/{id}/command）
+#define Dev_Att_Acq  1  // 订阅应答 topic（room/{id}/reply）
 
-_Bool MQTT_Client_DevLink(void);
-void MQTT_Client_SendData(void);
-void MQTT_Client_SendOnline(void);
-void MQTT_Client_RevPro(unsigned char *cmd);
+_Bool MQTT_Client_DevLink(void);                 // 连接 MQTT（含 Last Will）
+void MQTT_Client_SendData(void);                 // 上报传感器/执行器 JSON
+void MQTT_Client_SendOnline(void);               // 上线声明
+void MQTT_Client_Publish(const char *topic, const char *msg); // 通用发布
+void MQTT_Client_Subscribe(u8 Sub);              // 按类型订阅
+void MQTT_Client_RevPro(unsigned char *cmd);     // 处理下行命令
 
-//void MQTT_Client_Subscribe(const char *topics[], unsigned char topic_cnt);
-//void MQTT_Client_Publish(const char *topic, const char *msg);
-void MQTT_Client_Subscribe(u8 Sub);
 #endif

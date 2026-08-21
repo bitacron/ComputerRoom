@@ -1,57 +1,18 @@
-/**
-	************************************************************
-	************************************************************
-	************************************************************
-	*	文件名： 	MqttKit.c
-	*
-	*	作者： 		张继瑞
-	*
-	*	日期： 		2018-04-27
-	*
-	*	版本： 		V1.6
-	*
-	*	说明： 		MQTT协议
-	*
-	*	修改记录：	V1.1：解决MQTT_PacketSubscribe订阅不为2个topic
-	*						个数时协议错误的bug
-	*				V1.2：修复MQTT_PacketCmdResp的bug
-	*				V1.3：将strncpy替换为memcpy，解决潜在bug
-	*				V1.4：修复	MQTT_PacketPublishAck
-	*							MQTT_PacketPublishRel
-	*							函数封包错误的bug
-	*				V1.5：增加	MQTT_UnPacketCmd
-	*							MQTT_UnPacketPublish
-	*							接口对消息内容长度的提取参数
-	*				V1.6：增加二进制文件上传接口
-	************************************************************
-	************************************************************
-	************************************************************
-**/
-
-//协议头文件
 #include "MqttKit.h"
 
 #include "usart.h"
-//C库
 #include <string.h>
 #include <stdio.h>
 
 
 #define CMD_TOPIC_PREFIX		"command"
 
-//==========================================================
-//	函数名称：	EDP_NewBuffer
-//
-//	函数功能：	申请内存
-//
-//	入口参数：	edpPacket：包结构体
-//				size：大小
-//
-//	返回参数：	无
-//
-//	说明：		1.可使用动态分配来分配内存
-//				2.可使用局部或全局数组来指定内存
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_NewBuffer
+* 描述  ：为 MQTT 协议包申请/绑定内存缓冲
+* 输入  ：mqttPacket-包结构体，size-需要的字节数
+* 输出  ：无
+*******************************************************************************/
 void MQTT_NewBuffer(MQTT_PACKET_STRUCTURE *mqttPacket, uint32 size)
 {
 	
@@ -85,17 +46,12 @@ void MQTT_NewBuffer(MQTT_PACKET_STRUCTURE *mqttPacket, uint32 size)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_DeleteBuffer
-//
-//	函数功能：	释放数据内存
-//
-//	入口参数：	edpPacket：包结构体
-//
-//	返回参数：	无
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_DeleteBuffer
+* 描述  ：释放 MQTT 协议包占用的动态内存
+* 输入  ：mqttPacket-包结构体
+* 输出  ：无
+*******************************************************************************/
 void MQTT_DeleteBuffer(MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 
@@ -109,6 +65,12 @@ void MQTT_DeleteBuffer(MQTT_PACKET_STRUCTURE *mqttPacket)
 
 }
 
+/*******************************************************************************
+* 函数名：MQTT_DumpLength
+* 描述  ：将剩余长度编码为 MQTT 可变长度字段
+* 输入  ：len-长度值，buf-输出缓冲
+* 输出  ：写入字节数，失败返回 -1
+*******************************************************************************/
 int32 MQTT_DumpLength(size_t len, uint8 *buf)
 {
 	
@@ -132,6 +94,12 @@ int32 MQTT_DumpLength(size_t len, uint8 *buf)
 	return -1;
 }
 
+/*******************************************************************************
+* 函数名：MQTT_ReadLength
+* 描述  ：从 MQTT 流中解析可变剩余长度
+* 输入  ：stream-数据流，size-可读长度，len-解析结果输出
+* 输出  ：长度字段占用的字节数，失败返回 -1
+*******************************************************************************/
 int32 MQTT_ReadLength(const uint8 *stream, int32 size, uint32 *len)
 {
 	
@@ -160,17 +128,12 @@ int32 MQTT_ReadLength(const uint8 *stream, int32 size, uint32 *len)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketRecv
-//
-//	函数功能：	MQTT数据接收类型判断
-//
-//	入口参数：	dataPtr：接收的数据指针
-//
-//	返回参数：	0-成功		其他-失败原因
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketRecv
+* 描述  ：MQTT数据接收类型判断
+* 输入  ：dataPtr：接收的数据指针
+* 输出  ：0-成功 其他-失败原因
+*******************************************************************************/
 uint8 MQTT_UnPacketRecv(uint8 *dataPtr)
 {
 	
@@ -199,7 +162,7 @@ uint8 MQTT_UnPacketRecv(uint8 *dataPtr)
 		
 		UsartPrintf(USART_DEBUG, "the topic is ");
 		for(int i = 0; i < topic_len && i < 50; i++) {
-			if(msgPtr[2 + i] >= 0x20 && msgPtr[2 + i] <= 0x7E) // ?????
+			if(msgPtr[2 + i] >= 0x20 && msgPtr[2 + i] <= 0x7E) // 可打印字符
 				UsartPrintf(USART_DEBUG, "%c", msgPtr[2 + i]);
 			else
 				UsartPrintf(USART_DEBUG, "[%02X]", msgPtr[2 + i]);
@@ -223,26 +186,12 @@ uint8 MQTT_UnPacketRecv(uint8 *dataPtr)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketConnect
-//
-//	函数功能：	连接消息组包
-//
-//	入口参数：	user：用户名：产品ID
-//				password：密码：鉴权信息或apikey
-//				devid：设备ID
-//				cTime：连接保持时间
-//				clean_session：离线消息清除标志
-//				qos：重发标志
-//				will_topic：异常离线topic
-//				will_msg：异常离线消息
-//				will_retain：消息推送标志
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		其他-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketConnect
+* 描述  ：连接消息组包
+* 输入  ：user：用户名：产品ID password：密码：鉴权信息或apikey devid：设备ID cTime：连接保持时间 clean_session：离线消息清除标志 qos：重发标志 will_topic：异常离线topic will_msg：异常离线消息 will_retain：消息推送标志 mqttPacket：包指针
+* 输出  ：0-成功 其他-失败
+*******************************************************************************/
 uint8 MQTT_PacketConnect(const int8 *user, const int8 *password, const int8 *devid,
 						uint16 cTime, uint1 clean_session, uint1 qos,
 						const int8 *will_topic, const int8 *will_msg, int32 will_retain,
@@ -405,17 +354,12 @@ uint8 MQTT_PacketConnect(const int8 *user, const int8 *password, const int8 *dev
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketDisConnect
-//
-//	函数功能：	断开连接消息组包
-//
-//	入口参数：	mqttPacket：包指针
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketDisConnect
+* 描述  ：断开连接消息组包
+* 输入  ：mqttPacket：包指针
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 uint1 MQTT_PacketDisConnect(MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 
@@ -435,17 +379,12 @@ uint1 MQTT_PacketDisConnect(MQTT_PACKET_STRUCTURE *mqttPacket)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketConnectAck
-//
-//	函数功能：	连接消息解包
-//
-//	入口参数：	rev_data：接收的数据
-//
-//	返回参数：	1、255-失败		其他-平台的返回码
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketConnectAck
+* 描述  ：连接消息解包
+* 输入  ：rev_data：接收的数据
+* 输出  ：1、255-失败 其他-平台的返回码
+*******************************************************************************/
 uint8 MQTT_UnPacketConnectAck(uint8 *rev_data)
 {
 
@@ -459,21 +398,12 @@ uint8 MQTT_UnPacketConnectAck(uint8 *rev_data)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketSaveData
-//
-//	函数功能：	数据点上传组包
-//
-//	入口参数：	devid：设备ID(可为空)
-//				send_buf：json缓存buf
-//				send_len：json总长
-//				type_bin_head：bin文件的消息头
-//				type：类型
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketSaveData
+* 描述  ：数据点上传组包
+* 输入  ：devid：设备ID(可为空) send_buf：json缓存buf send_len：json总长 type_bin_head：bin文件的消息头 type：类型
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 uint1 MQTT_PacketSaveData(int8 *topic, int16 send_len, int8 *type_bin_head, uint8 type, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 	if(MQTT_PacketPublish(MQTT_PUBLISH_ID, topic, NULL, send_len, MQTT_QOS_LEVEL1, 0, 1, mqttPacket) != 0)
@@ -484,19 +414,12 @@ uint1 MQTT_PacketSaveData(int8 *topic, int16 send_len, int8 *type_bin_head, uint
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketSaveBinData
-//
-//	函数功能：	为禁止文件上传组包
-//
-//	入口参数：	name：数据流名字
-//				file_len：文件长度
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketSaveBinData
+* 描述  ：为禁止文件上传组包
+* 输入  ：name：数据流名字 file_len：文件长度 mqttPacket：包指针
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 uint1 MQTT_PacketSaveBinData(const int8 *name, int16 file_len, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 
@@ -545,20 +468,12 @@ uint1 MQTT_PacketSaveBinData(const int8 *name, int16 file_len, MQTT_PACKET_STRUC
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketCmd
-//
-//	函数功能：	命令下发解包
-//
-//	入口参数：	rev_data：接收的数据指针
-//				cmdid：cmdid-uuid
-//				req：命令
-//
-//	返回参数：	0-成功		其他-失败原因
-//
-//	说明：		
-//==========================================================
-
+/*******************************************************************************
+* 函数名：MQTT_UnPacketCmd
+* 描述  ：命令下发解包
+* 输入  ：rev_data：接收的数据指针 cmdid：cmdid-uuid req：命令
+* 输出  ：0-成功 其他-失败原因
+*******************************************************************************/
 /**
  * @brief 从MQTT PUBLISH报文中解析出topic主题和负载 ploy
  * @param rev_data 指向完整的MQTT PUBLISH报文的指针 (固定头、剩余长度、可变头、负载)
@@ -606,7 +521,7 @@ uint8 MQTT_UnPacketCmd(uint8 *rev_data, int8 **cmdid, int8 **req, uint16 *req_le
 
     // 复制主题内容
     memcpy(*cmdid, ptr + 2, topic_len);
-    (*cmdid)[topic_len] = '\0';   // ????????
+    (*cmdid)[topic_len] = '\0';   // topic 字符串结束
 
     // 计算负载长度和起始位置
     *req_len = remain_len - 2 - topic_len;
@@ -623,7 +538,7 @@ uint8 MQTT_UnPacketCmd(uint8 *rev_data, int8 **cmdid, int8 **req, uint16 *req_le
         }
         // 复制负载数据
         memcpy(*req, ptr + 2 + topic_len, *req_len);
-        (*req)[*req_len] = '\0';   // ?????
+        (*req)[*req_len] = '\0';   // payload 字符串结束
     }
     else
     {
@@ -640,19 +555,12 @@ uint8 MQTT_UnPacketCmd(uint8 *rev_data, int8 **cmdid, int8 **req, uint16 *req_le
 
     return 0;   // 成功
 }
-//==========================================================
-//	函数名称：	MQTT_PacketCmdResp
-//
-//	函数功能：	命令回复组包
-//
-//	入口参数：	cmdid：cmdid
-//				req：命令
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketCmdResp
+* 描述  ：命令回复组包
+* 输入  ：cmdid：cmdid req：命令 mqttPacket：包指针
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 uint1 MQTT_PacketCmdResp(const int8 *cmdid, const int8 *req, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 	
@@ -679,21 +587,12 @@ uint1 MQTT_PacketCmdResp(const int8 *cmdid, const int8 *req, MQTT_PACKET_STRUCTU
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketSubscribe
-//
-//	函数功能：	Subscribe消息组包
-//
-//	入口参数：	pkt_id：pkt_id
-//				qos：消息重发次数
-//				topics：订阅的消息
-//				topics_cnt：订阅的消息个数
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		其他-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketSubscribe
+* 描述  ：Subscribe消息组包
+* 输入  ：pkt_id：pkt_id qos：消息重发次数 topics：订阅的消息 topics_cnt：订阅的消息个数 mqttPacket：包指针
+* 输出  ：0-成功 其他-失败
+*******************************************************************************/
 uint8 MQTT_PacketSubscribe(uint16 pkt_id, enum MqttQosLevel qos, const int8 *topics[], uint8 topics_cnt, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 	
@@ -759,17 +658,12 @@ uint8 MQTT_PacketSubscribe(uint16 pkt_id, enum MqttQosLevel qos, const int8 *top
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketSubscrebe
-//
-//	函数功能：	Subscribe的回复消息解包
-//
-//	入口参数：	rev_data：接收到的信息
-//
-//	返回参数：	0-成功		其他-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketSubscrebe
+* 描述  ：Subscribe的回复消息解包
+* 输入  ：rev_data：接收到的信息
+* 输出  ：0-成功 其他-失败
+*******************************************************************************/
 uint8 MQTT_UnPacketSubscribe(uint8 *rev_data)
 {
 	
@@ -802,21 +696,12 @@ uint8 MQTT_UnPacketSubscribe(uint8 *rev_data)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketUnSubscribe
-//
-//	函数功能：	UnSubscribe消息组包
-//
-//	入口参数：	pkt_id：pkt_id
-//				qos：消息重发次数
-//				topics：订阅的消息
-//				topics_cnt：订阅的消息个数
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		其他-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketUnSubscribe
+* 描述  ：UnSubscribe消息组包
+* 输入  ：pkt_id：pkt_id qos：消息重发次数 topics：订阅的消息 topics_cnt：订阅的消息个数 mqttPacket：包指针
+* 输出  ：0-成功 其他-失败
+*******************************************************************************/
 uint8 MQTT_PacketUnSubscribe(uint16 pkt_id, const int8 *topics[], uint8 topics_cnt, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 	
@@ -881,17 +766,12 @@ uint8 MQTT_PacketUnSubscribe(uint16 pkt_id, const int8 *topics[], uint8 topics_c
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketUnSubscribe
-//
-//	函数功能：	UnSubscribe的回复消息解包
-//
-//	入口参数：	rev_data：接收到的信息
-//
-//	返回参数：	0-成功		其他-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketUnSubscribe
+* 描述  ：UnSubscribe的回复消息解包
+* 输入  ：rev_data：接收到的信息
+* 输出  ：0-成功 其他-失败
+*******************************************************************************/
 uint1 MQTT_UnPacketUnSubscribe(uint8 *rev_data)
 {
 	
@@ -906,24 +786,12 @@ uint1 MQTT_UnPacketUnSubscribe(uint8 *rev_data)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketPublish
-//
-//	函数功能：	Pulish消息组包
-//
-//	入口参数：	pkt_id：pkt_id
-//				topic：发布的topic
-//				payload：消息体
-//				payload_len：消息体长度
-//				qos：重发次数
-//				retain：离线消息推送
-//				own：
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		其他-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketPublish
+* 描述  ：Pulish消息组包
+* 输入  ：pkt_id：pkt_id topic：发布的topic payload：消息体 payload_len：消息体长度 qos：重发次数 retain：离线消息推送 own： mqttPacket：包指针
+* 输出  ：0-成功 其他-失败
+*******************************************************************************/
 uint8 MQTT_PacketPublish(uint16 pkt_id, const int8 *topic,
 						const int8 *payload, uint32 payload_len,
 						enum MqttQosLevel qos, int32 retain, int32 own,
@@ -1054,19 +922,12 @@ uint8 MQTT_PacketPublish(uint16 pkt_id, const int8 *topic,
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketPublish
-//
-//	函数功能：	Publish消息解包
-//
-//	入口参数：	flags：MQTT相关标志信息
-//				pkt：指向可变头部
-//				size：固定头部中的剩余长度信息
-//
-//	返回参数：	0-成功		其他-失败原因
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketPublish
+* 描述  ：Publish消息解包
+* 输入  ：flags：MQTT相关标志信息 pkt：指向可变头部 size：固定头部中的剩余长度信息
+* 输出  ：0-成功 其他-失败原因
+*******************************************************************************/
 uint8 MQTT_UnPacketPublish(uint8 *rev_data, int8 **topic, uint16 *topic_len, int8 **payload, uint16 *payload_len, uint8 *qos, uint16 *pkt_id)
 {
 	
@@ -1158,18 +1019,12 @@ uint8 MQTT_UnPacketPublish(uint8 *rev_data, int8 **topic, uint16 *topic_len, int
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketPublishAck
-//
-//	函数功能：	Publish Ack消息组包
-//
-//	入口参数：	pkt_id：packet id
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		1-失败原因
-//
-//	说明：		当收到的Publish消息的QoS等级为1时，需要Ack回复
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketPublishAck
+* 描述  ：Publish Ack消息组包。当收到的Publish消息的QoS等级为1时，需要Ack回复
+* 输入  ：pkt_id：packet id mqttPacket：包指针
+* 输出  ：0-成功 1-失败原因
+*******************************************************************************/
 uint1 MQTT_PacketPublishAck(uint16 pkt_id, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 
@@ -1195,17 +1050,12 @@ uint1 MQTT_PacketPublishAck(uint16 pkt_id, MQTT_PACKET_STRUCTURE *mqttPacket)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketPublishAck
-//
-//	函数功能：	Publish Ack消息解包
-//
-//	入口参数：	rev_data：收到的数据
-//
-//	返回参数：	0-成功		1-失败原因
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketPublishAck
+* 描述  ：Publish Ack消息解包
+* 输入  ：rev_data：收到的数据
+* 输出  ：0-成功 1-失败原因
+*******************************************************************************/
 uint1 MQTT_UnPacketPublishAck(uint8 *rev_data)
 {
 
@@ -1219,18 +1069,12 @@ uint1 MQTT_UnPacketPublishAck(uint8 *rev_data)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketPublishRec
-//
-//	函数功能：	Publish Rec消息组包
-//
-//	入口参数：	pkt_id：packet id
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		1-失败原因
-//
-//	说明：		当收到的Publish消息的QoS等级为2时，先收到rec
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketPublishRec
+* 描述  ：Publish Rec消息组包。当收到的Publish消息的QoS等级为2时，先收到rec
+* 输入  ：pkt_id：packet id mqttPacket：包指针
+* 输出  ：0-成功 1-失败原因
+*******************************************************************************/
 uint1 MQTT_PacketPublishRec(uint16 pkt_id, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 
@@ -1256,17 +1100,12 @@ uint1 MQTT_PacketPublishRec(uint16 pkt_id, MQTT_PACKET_STRUCTURE *mqttPacket)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketPublishRec
-//
-//	函数功能：	Publish Rec消息解包
-//
-//	入口参数：	rev_data：接收到的数据
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketPublishRec
+* 描述  ：Publish Rec消息解包
+* 输入  ：rev_data：接收到的数据
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 uint1 MQTT_UnPacketPublishRec(uint8 *rev_data)
 {
 
@@ -1280,18 +1119,12 @@ uint1 MQTT_UnPacketPublishRec(uint8 *rev_data)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketPublishRel
-//
-//	函数功能：	Publish Rel消息组包
-//
-//	入口参数：	pkt_id：packet id
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		1-失败原因
-//
-//	说明：		当收到的Publish消息的QoS等级为2时，先收到rec，再回复rel
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketPublishRel
+* 描述  ：Publish Rel消息组包。当收到的Publish消息的QoS等级为2时，先收到rec，再回复rel
+* 输入  ：pkt_id：packet id mqttPacket：包指针
+* 输出  ：0-成功 1-失败原因
+*******************************************************************************/
 uint1 MQTT_PacketPublishRel(uint16 pkt_id, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 
@@ -1317,17 +1150,12 @@ uint1 MQTT_PacketPublishRel(uint16 pkt_id, MQTT_PACKET_STRUCTURE *mqttPacket)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketPublishRel
-//
-//	函数功能：	Publish Rel消息解包
-//
-//	入口参数：	rev_data：接收到的数据
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketPublishRel
+* 描述  ：Publish Rel消息解包
+* 输入  ：rev_data：接收到的数据
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 uint1 MQTT_UnPacketPublishRel(uint8 *rev_data, uint16 pkt_id)
 {
 
@@ -1341,18 +1169,12 @@ uint1 MQTT_UnPacketPublishRel(uint8 *rev_data, uint16 pkt_id)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketPublishComp
-//
-//	函数功能：	Publish Comp消息组包
-//
-//	入口参数：	pkt_id：packet id
-//				mqttPacket：包指针
-//
-//	返回参数：	0-成功		1-失败原因
-//
-//	说明：		当收到的Publish消息的QoS等级为2时，先收到rec，再回复rel
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketPublishComp
+* 描述  ：Publish Comp消息组包。当收到的Publish消息的QoS等级为2时，先收到rec，再回复rel
+* 输入  ：pkt_id：packet id mqttPacket：包指针
+* 输出  ：0-成功 1-失败原因
+*******************************************************************************/
 uint1 MQTT_PacketPublishComp(uint16 pkt_id, MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 
@@ -1378,17 +1200,12 @@ uint1 MQTT_PacketPublishComp(uint16 pkt_id, MQTT_PACKET_STRUCTURE *mqttPacket)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_UnPacketPublishComp
-//
-//	函数功能：	Publish Comp消息解包
-//
-//	入口参数：	rev_data：接收到的数据
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_UnPacketPublishComp
+* 描述  ：Publish Comp消息解包
+* 输入  ：rev_data：接收到的数据
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 uint1 MQTT_UnPacketPublishComp(uint8 *rev_data)
 {
 
@@ -1402,17 +1219,12 @@ uint1 MQTT_UnPacketPublishComp(uint8 *rev_data)
 
 }
 
-//==========================================================
-//	函数名称：	MQTT_PacketPing
-//
-//	函数功能：	心跳请求组包
-//
-//	入口参数：	mqttPacket：包指针
-//
-//	返回参数：	0-成功		1-失败
-//
-//	说明：		
-//==========================================================
+/*******************************************************************************
+* 函数名：MQTT_PacketPing
+* 描述  ：心跳请求组包
+* 输入  ：mqttPacket：包指针
+* 输出  ：0-成功 1-失败
+*******************************************************************************/
 uint1 MQTT_PacketPing(MQTT_PACKET_STRUCTURE *mqttPacket)
 {
 

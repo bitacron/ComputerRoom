@@ -3,32 +3,32 @@
 #include "adc.h"
 
 /*******************************************************************************
-* å‡½æ•°åï¼šFlame_Init
-* æè¿°  ï¼šåˆå§‹åŒ–ç«ç„°ä¼ æ„Ÿå™¨çš„ GPIO å’Œ ADC2ï¼Œæ ¹æ®æ¡ä»¶åˆå§‹åŒ–DOè¿˜æ˜¯AO
-* è¾“å…¥  ï¼šæ— 
-* è¾“å‡º  ï¼šæ— 
+* º¯ÊıÃû£ºFlame_Init
+* ÃèÊö  £º³õÊ¼»¯»ğÑæ´«¸ĞÆ÷µÄ GPIO ºÍ ADC2£¬¸ù¾İÌõ¼ş³õÊ¼»¯DO»¹ÊÇAO
+* ÊäÈë  £ºÎŞ
+* Êä³ö  £ºÎŞ
 *******************************************************************************/
 void Flame_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
     ADC_InitTypeDef ADC_InitStructure;
 
-    // 1. ä½¿èƒ½æ—¶é’Ÿ
+    // 1. Ê¹ÄÜÊ±ÖÓ
     RCC_APB2PeriphClockCmd(FLAME_DO_RCC | FLAME_AO_RCC, ENABLE);
 
-    // 2. é…ç½® DO å¼•è„šä¸ºè¾“å…¥ï¼ˆå¦‚æœå®šä¹‰äº† DO å¼•è„šï¼‰
+    // 2. ÅäÖÃ DO Òı½ÅÎªÊäÈë£¨Èç¹û¶¨ÒåÁË DO Òı½Å£©
 #ifdef FLAME_DO_PORT
     GPIO_InitStructure.GPIO_Pin = FLAME_DO_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // ä¸Šæ‹‰è¾“å…¥
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // ÉÏÀ­ÊäÈë
     GPIO_Init(FLAME_DO_PORT, &GPIO_InitStructure);
 #endif
 
-    // 3. é…ç½® AO å¼•è„šä¸ºæ¨¡æ‹Ÿè¾“å…¥
+    // 3. ÅäÖÃ AO Òı½ÅÎªÄ£ÄâÊäÈë
     GPIO_InitStructure.GPIO_Pin = FLAME_AO_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
     GPIO_Init(FLAME_AO_PORT, &GPIO_InitStructure);
 
-    // 4. ADC2 é…ç½®
+    // 4. ADC2 ÅäÖÃ
     ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
     ADC_InitStructure.ADC_ScanConvMode = DISABLE;
     ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
@@ -37,10 +37,10 @@ void Flame_Init(void)
     ADC_InitStructure.ADC_NbrOfChannel = 1;
     ADC_Init(FLAME_ADC, &ADC_InitStructure);
 
-    // 5. é…ç½® ADC2 è§„åˆ™ç»„é€šé“ï¼ˆé‡‡æ ·æ—¶é—´ 55.5 å‘¨æœŸï¼‰
+    // 5. ÅäÖÃ ADC2 ¹æÔò×éÍ¨µÀ£¨²ÉÑùÊ±¼ä 55.5 ÖÜÆÚ£©
     ADC_RegularChannelConfig(FLAME_ADC, FLAME_ADC_CHANNEL, 1, ADC_SampleTime_55Cycles5);
 
-    // 6. ä½¿èƒ½ ADC2 å¹¶æ ¡å‡†
+    // 6. Ê¹ÄÜ ADC2 ²¢Ğ£×¼
     ADC_Cmd(FLAME_ADC, ENABLE);
     ADC_ResetCalibration(FLAME_ADC);
     while (ADC_GetResetCalibrationStatus(FLAME_ADC));
@@ -48,40 +48,39 @@ void Flame_Init(void)
     while (ADC_GetCalibrationStatus(FLAME_ADC));
 }
 /*******************************************************************************
-* Flame_Init_DO
-* æè¿°  ï¼šåˆå§‹åŒ–ç«ç„°ä¼ æ„Ÿå™¨çš„ GPIOï¼Œæ•°å­—ä¿¡å·DOæ¨¡å—åˆå§‹åŒ–
-*         DOå¼•è„šæ¥PA0
-* è¾“å…¥  ï¼šæ— 
-* è¾“å‡º  ï¼šæ— 
+* º¯ÊıÃû£ºFlame_Init_DO
+* ÃèÊö  £º³õÊ¼»¯»ğÑæ´«¸ĞÆ÷Êı×ÖÊä³ö DO£¨PA0£©
+* ÊäÈë  £ºÎŞ
+* Êä³ö  £ºÎŞ
 *******************************************************************************/
 void Flame_Init_DO(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	RCC_APB2PeriphClockCmd(FLAME_DO_RCC, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = FLAME_DO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // ä¸Šæ‹‰è¾“å…¥
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // ÉÏÀ­ÊäÈë
 	GPIO_Init(FLAME_DO_PORT, &GPIO_InitStructure);
 }
 /*******************************************************************************
-* Flame_Init_AO_ADC
-* æè¿°  ï¼šåˆå§‹åŒ–ç«ç„°ä¼ æ„Ÿå™¨çš„ ADCï¼Œæ¨¡æ‹Ÿä¿¡å·AOæ¨¡å—åˆå§‹åŒ–
-* è¾“å…¥  ï¼šæ— 
-* è¾“å‡º  ï¼šæ— 
+* º¯ÊıÃû£ºFlame_Init_AO_ADC
+* ÃèÊö  £º³õÊ¼»¯»ğÑæ´«¸ĞÆ÷Ä£ÄâÊäÈë AO ¼° ADC2£¨PB0£©
+* ÊäÈë  £ºÎŞ
+* Êä³ö  £ºÎŞ
 *******************************************************************************/
 void Flame_Init_AO_ADC(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	ADC_InitTypeDef ADC_InitStructure;
 
-	// 1.ä½¿èƒ½ GPIO å’Œ ADC æ—¶é’Ÿ
+	// 1.Ê¹ÄÜ GPIO ºÍ ADC Ê±ÖÓ
 	RCC_APB2PeriphClockCmd(FLAME_AO_RCC, ENABLE);
 
-	// 2.é…ç½® AO å¼•è„šä¸ºæ¨¡æ‹Ÿè¾“å…¥
+	// 2.ÅäÖÃ AO Òı½ÅÎªÄ£ÄâÊäÈë
 	GPIO_InitStructure.GPIO_Pin = FLAME_AO_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
 	GPIO_Init(FLAME_AO_PORT, &GPIO_InitStructure);
 
-	// 3.ADC2 é…ç½®
+	// 3.ADC2 ÅäÖÃ
 	ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
 	ADC_InitStructure.ADC_ScanConvMode = DISABLE;
 	ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
@@ -89,9 +88,9 @@ void Flame_Init_AO_ADC(void)
 	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
 	ADC_InitStructure.ADC_NbrOfChannel = 1;
 	ADC_Init(FLAME_ADC, &ADC_InitStructure);
-	// 4.é…ç½® ADC2 è§„åˆ™ç»„é€šé“ï¼ˆé‡‡æ ·æ—¶é—´ 55.5 å‘¨æœŸï¼‰
+	// 4.ÅäÖÃ ADC2 ¹æÔò×éÍ¨µÀ£¨²ÉÑùÊ±¼ä 55.5 ÖÜÆÚ£©
 	ADC_RegularChannelConfig(FLAME_ADC, FLAME_ADC_CHANNEL, 1, ADC_SampleTime_55Cycles5);
-	// 5. ä½¿èƒ½ ADC2 å¹¶æ ¡å‡†
+	// 5. Ê¹ÄÜ ADC2 ²¢Ğ£×¼
 	ADC_Cmd(FLAME_ADC, ENABLE);
 	ADC_ResetCalibration(FLAME_ADC);
 	while (ADC_GetResetCalibrationStatus(FLAME_ADC));
@@ -99,53 +98,52 @@ void Flame_Init_AO_ADC(void)
 	while (ADC_GetCalibrationStatus(FLAME_ADC));
 }
 /*******************************************************************************
-* Flame_Init_AO
-* æè¿°  ï¼šåˆå§‹åŒ–ç«ç„°ä¼ æ„Ÿå™¨çš„ GPIOï¼Œæ¨¡æ‹Ÿä¿¡å·AOæ¨¡å—åˆå§‹åŒ–
-*         AOå¼•è„šæ¥PB0
-* è¾“å…¥  ï¼šæ— 
-* è¾“å‡º  ï¼šæ— 
+* º¯ÊıÃû£ºFlame_Init_AO
+* ÃèÊö  £º½öÅäÖÃ»ğÑæ´«¸ĞÆ÷ AO Òı½ÅÎªÄ£ÄâÊäÈë£¨PB0£©
+* ÊäÈë  £ºÎŞ
+* Êä³ö  £ºÎŞ
 *******************************************************************************/
 void Flame_Init_AO(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
-	// 2.é…ç½® AO å¼•è„šä¸ºæ¨¡æ‹Ÿè¾“å…¥
+	// 2.ÅäÖÃ AO Òı½ÅÎªÄ£ÄâÊäÈë
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = FLAME_AO_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
 	GPIO_Init(FLAME_AO_PORT, &GPIO_InitStructure);
 }
 /*******************************************************************************
-* å‡½æ•°åï¼šFlame_GetDigital
-* æè¿°  ï¼šè¯»å–ç«ç„°ä¼ æ„Ÿå™¨çš„æ•°å­—é‡è¾“å‡º
-* è¾“å…¥  ï¼šæ— 
-* è¾“å‡º  ï¼š0 = æ— ç«ç„°ï¼Œ1 = æ£€æµ‹åˆ°ç«ç„°
-* æ³¨æ„  ï¼šæ ¹æ®æ¨¡å—å®é™…è¾“å‡ºè°ƒæ•´ï¼ˆé€šå¸¸æ£€æµ‹åˆ°ç«ç„°æ—¶ DO è¾“å‡ºä½ç”µå¹³ï¼‰
+* º¯ÊıÃû£ºFlame_GetDigital
+* ÃèÊö  £º¶ÁÈ¡»ğÑæ´«¸ĞÆ÷µÄÊı×ÖÁ¿Êä³ö
+* ÊäÈë  £ºÎŞ
+* Êä³ö  £º0 = ÎŞ»ğÑæ£¬1 = ¼ì²âµ½»ğÑæ
+* ×¢Òâ  £º¸ù¾İÄ£¿éÊµ¼ÊÊä³öµ÷Õû£¨Í¨³£¼ì²âµ½»ğÑæÊ± DO Êä³öµÍµçÆ½£©
 *******************************************************************************/
 uint8_t Flame_GetDigital(void)
 {
-	// è¯»å– DO å¼•è„šç”µå¹³ï¼Œä½ç”µå¹³è¡¨ç¤ºæœ‰ç«ç„°ï¼ˆå¯æ ¹æ®éœ€è¦å–åï¼‰
+	// ¶ÁÈ¡ DO Òı½ÅµçÆ½£¬µÍµçÆ½±íÊ¾ÓĞ»ğÑæ£¨¿É¸ù¾İĞèÒªÈ¡·´£©
 	return (GPIO_ReadInputDataBit(FLAME_DO_PORT, FLAME_DO_PIN) == Bit_RESET) ? 1 : 0;
 }
 
 /*******************************************************************************
-* å‡½æ•°åï¼šFlame_GetAnalog
-* æè¿°  ï¼šå•æ¬¡è¯»å– ADC å€¼
-* è¾“å…¥  ï¼šæ— 
-* è¾“å‡º  ï¼š12ä½ ADC è½¬æ¢å€¼ï¼ˆ0-4095ï¼‰
+* º¯ÊıÃû£ºFlame_GetAnalog
+* ÃèÊö  £ºµ¥´Î¶ÁÈ¡ ADC Öµ
+* ÊäÈë  £ºÎŞ
+* Êä³ö  £º12Î» ADC ×ª»»Öµ£¨0-4095£©
 *******************************************************************************/
 /*
 uint16_t Flame_GetAnalog(void)
 {
-    // ç¡®ä¿è§„åˆ™ç»„é…ç½®æ­£ç¡®
+    // È·±£¹æÔò×éÅäÖÃÕıÈ·
     ADC_RegularChannelConfig(FLAME_ADC, FLAME_ADC_CHANNEL, 1, ADC_SampleTime_55Cycles5);
 
-    // å¯åŠ¨è½¬æ¢
+    // Æô¶¯×ª»»
     ADC_SoftwareStartConvCmd(FLAME_ADC, ENABLE);
 
-    // ç­‰å¾…è½¬æ¢å®Œæˆ
+    // µÈ´ı×ª»»Íê³É
     while (ADC_GetFlagStatus(FLAME_ADC, ADC_FLAG_EOC) == RESET);
 
-    // è¿”å›è½¬æ¢ç»“æœ
+    // ·µ»Ø×ª»»½á¹û
     return ADC_GetConversionValue(FLAME_ADC);
 		
 		return ADC_GetAnalog(FLAME_ADC, FLAME_ADC_CHANNEL, ADC_SampleTime_55Cycles5);
@@ -157,10 +155,10 @@ uint16_t Flame_GetAnalog(void)
 }
 
 /*******************************************************************************
-* å‡½æ•°åï¼šFlame_GetAnalogAverage
-* æè¿°  ï¼šå¤šæ¬¡é‡‡æ ·å–å¹³å‡ï¼Œå‡å°‘æ³¢åŠ¨
-* è¾“å…¥  ï¼šæ— 
-* è¾“å‡º  ï¼šå¹³å‡åçš„ ADC å€¼
+* º¯ÊıÃû£ºFlame_GetAnalogAverage
+* ÃèÊö  £º¶à´Î²ÉÑùÈ¡Æ½¾ù£¬¼õÉÙ²¨¶¯
+* ÊäÈë  £ºÎŞ
+* Êä³ö  £ºÆ½¾ùºóµÄ ADC Öµ
 *******************************************************************************/
 uint16_t Flame_GetAnalogAverage(void)
 {
@@ -169,25 +167,25 @@ uint16_t Flame_GetAnalogAverage(void)
 
     for (i = 0; i < FLAME_ADC_SAMPLES; i++) {
         sum += Flame_GetAnalog();
-        Delay_us(100);  // ä¸¤æ¬¡é‡‡æ ·é—´éš” 100us
+        Delay_us(100);  // Á½´Î²ÉÑù¼ä¸ô 100us
     }
 
     return (uint16_t)(sum / FLAME_ADC_SAMPLES);
 }
 
 /*******************************************************************************
-* å‡½æ•°åï¼šFlame_GetPercentage
-* æè¿°  ï¼šè·å–ç«ç„°å¼ºåº¦ç™¾åˆ†æ¯”ï¼ˆ0~100%ï¼‰
-* è¾“å…¥  ï¼šæ— 
-* è¾“å‡º  ï¼šç™¾åˆ†æ¯”ï¼Œå€¼è¶Šå¤§è¡¨ç¤ºç«ç„°è¶Šå¼º
-* è¯´æ˜  ï¼šADC å€¼è¶Šå°ï¼ˆç”µå‹è¶Šä½ï¼‰è¡¨ç¤ºç«ç„°è¶Šå¼ºï¼Œæ‰€ä»¥è½¬æ¢ä¸º (1 - adc/4095) * 100
+* º¯ÊıÃû£ºFlame_GetPercentage
+* ÃèÊö  £º»ñÈ¡»ğÑæÇ¿¶È°Ù·Ö±È£¨0~100%£©
+* ÊäÈë  £ºÎŞ
+* Êä³ö  £º°Ù·Ö±È£¬ÖµÔ½´ó±íÊ¾»ğÑæÔ½Ç¿
+* ËµÃ÷  £ºADC ÖµÔ½Ğ¡£¨µçÑ¹Ô½µÍ£©±íÊ¾»ğÑæÔ½Ç¿£¬ËùÒÔ×ª»»Îª (1 - adc/4095) * 100
 *******************************************************************************/
 uint8_t Flame_GetPercentage(void)
 {
     uint16_t adc_value = Flame_GetAnalogAverage();
     float percent = (1.0f - (float)adc_value / 4095.0f) * 100.0f;
 
-    // é˜²æ­¢è´Ÿå€¼æˆ–è¶…è¿‡100
+    // ·ÀÖ¹¸ºÖµ»ò³¬¹ı100
     if (percent < 0) percent = 0;
     if (percent > 100) percent = 100;
 

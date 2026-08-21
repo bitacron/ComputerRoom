@@ -1,18 +1,18 @@
-//?????????
+// µ¥Æ¬»úÍ·ÎÄ¼þ
 #include "stm32f10x.h"
 
-//??????
+// ÍøÂçÉè±¸
 #include "esp8266.h"
 
-//??????
+// Ð­ÒéÎÄ¼þ
 #include "mqtt_client.h"
 #include "mqttkit.h"
 
-//???????
+// Ó²¼þÇý¶¯
 #include "usart.h"
 #include "delay.h"
 
-//C??
+// C ¿â
 #include <string.h>
 #include <stdio.h>
 #include "cJSON.h"
@@ -25,60 +25,57 @@
 #define MQTT_KEEP_ALIVE     60
 #define MQTT_WILL_MSG       "{\"dev\":\"stm32_01\",\"online\":0}"
 
-
 extern unsigned char esp8266_buf[2048];
 
 /*******************************************************************************
-* MQTT_Client_DevLink
-* ????  ????MQTT??????????????
-* ????  ????
-* ???  ????
-*******************************************************************************/		
+* º¯ÊýÃû£ºMQTT_Client_DevLink
+* ÃèÊö  £ºÁ¬½Ó MQTT ·þÎñÆ÷£¨CONNECT Ð¯´ø Last Will£ºÒì³£µôÏß´ú·¢ online:0£©
+* ÊäÈë  £ºÎÞ
+* Êä³ö  £º0-³É¹¦£¬1-Ê§°Ü
+*******************************************************************************/
 _Bool MQTT_Client_DevLink(void)
 {
-	
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};					//????
-
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};	// Ð­Òé°ü
 	unsigned char *dataPtr;
 	char will_topic[48];
 	_Bool status = 1;
-	
-	UsartPrintf(USART_DEBUG, "Mqtt_Client_DevLink----USERNAME: %s,	PASSWORD: %s,	DEVICEID:%s	--- connecting....\r\n"
-                        , MQTT_USERNAME, MQTT_PASSWORD, DEVICEID);
+
+	UsartPrintf(USART_DEBUG,
+		"Mqtt_Client_DevLink----USERNAME: %s,	PASSWORD: %s,	DEVICEID:%s	--- connecting....\r\n",
+		MQTT_USERNAME, MQTT_PASSWORD, DEVICEID);
 	sprintf(will_topic, "room/%s/status", DEVICEID);
-	/* CONNECT Last Will: broker publishes online:0 on abnormal disconnect */
-	if(MQTT_PacketConnect(MQTT_USERNAME, MQTT_PASSWORD, DEVICEID, MQTT_KEEP_ALIVE, 1, MQTT_QOS_LEVEL0,
+	/* CONNECT Last Will£ºÒì³£µôÏßÓÉ broker ´ú·¢ online:0 */
+	if (MQTT_PacketConnect(MQTT_USERNAME, MQTT_PASSWORD, DEVICEID, MQTT_KEEP_ALIVE, 1, MQTT_QOS_LEVEL0,
 						will_topic, MQTT_WILL_MSG, 1, &mqttPacket) == 0)
 	{
-		ESP8266_SendData(mqttPacket._data, mqttPacket._len);			//?????
-		
-		dataPtr = ESP8266_GetIPD(250);									//????????
-		if(dataPtr != NULL)
+		ESP8266_SendData(mqttPacket._data, mqttPacket._len);	// ·¢ËÍÁ¬½Ó°ü
+
+		dataPtr = ESP8266_GetIPD(250);	// µÈ´ý CONNACK
+		if (dataPtr != NULL)
 		{
-			if(MQTT_UnPacketRecv(dataPtr) == MQTT_PKT_CONNACK)
+			if (MQTT_UnPacketRecv(dataPtr) == MQTT_PKT_CONNACK)
 			{
-				switch(MQTT_UnPacketConnectAck(dataPtr))
+				switch (MQTT_UnPacketConnectAck(dataPtr))
 				{
-					case 0:UsartPrintf(USART_DEBUG, "Tips:	??????\r\n");status = 0;break;
-					
-					case 1:UsartPrintf(USART_DEBUG, "WARN:	??????????????\r\n");break;
-					case 2:UsartPrintf(USART_DEBUG, "WARN:	?????????????clientid\r\n");break;
-					case 3:UsartPrintf(USART_DEBUG, "WARN:	?????????????????\r\n");break;
-					case 4:UsartPrintf(USART_DEBUG, "WARN:	??????????????????????\r\n");break;
-					case 5:UsartPrintf(USART_DEBUG, "WARN:	???????????????(????token???)\r\n");break;
-					
-					default:UsartPrintf(USART_DEBUG, "ERR:	??????????????\r\n");break;
+					case 0: UsartPrintf(USART_DEBUG, "Tips:	Á¬½Ó³É¹¦\r\n"); status = 0; break;
+					case 1: UsartPrintf(USART_DEBUG, "WARN:	Á¬½ÓÊ§°Ü£ºÐ­Òé´íÎó\r\n"); break;
+					case 2: UsartPrintf(USART_DEBUG, "WARN:	Á¬½ÓÊ§°Ü£º·Ç·¨µÄ clientId\r\n"); break;
+					case 3: UsartPrintf(USART_DEBUG, "WARN:	Á¬½ÓÊ§°Ü£º·þÎñÆ÷²»¿ÉÓÃ\r\n"); break;
+					case 4: UsartPrintf(USART_DEBUG, "WARN:	Á¬½ÓÊ§°Ü£ºÓÃ»§Ãû»òÃÜÂë´íÎó\r\n"); break;
+					case 5: UsartPrintf(USART_DEBUG, "WARN:	Á¬½ÓÊ§°Ü£ºÎ´ÊÚÈ¨(Èç token ·Ç·¨)\r\n"); break;
+					default: UsartPrintf(USART_DEBUG, "ERR:	Á¬½ÓÊ§°Ü£ºÎ´Öª´íÎó\r\n"); break;
 				}
 			}
 		}
-		
-		MQTT_DeleteBuffer(&mqttPacket);								//???
+
+		MQTT_DeleteBuffer(&mqttPacket);	// ÊÍ·Å×é°ü»º³å
 	}
 	else
+	{
 		UsartPrintf(USART_DEBUG, "WARN:	MQTT_PacketConnect Failed\r\n");
-	
+	}
+
 	return status;
-	
 }
 
 extern uint8_t humi;
@@ -93,56 +90,65 @@ extern uint8_t alarmFlag;
 extern uint8_t fan;
 extern uint8_t led;
 extern volatile uint8_t report_asap;
+
+/*******************************************************************************
+* º¯ÊýÃû£ºMQTT_Client_FillBuf
+* ÃèÊö  £ºÌî³äÉÏ±¨ JSON£¨ÎÂÊª¶È¡¢ÆøÌå¡¢¹âÕÕ¡¢»ðÑæ¡¢±¨¾¯ÓëÖ´ÐÐÆ÷×´Ì¬£©
+* ÊäÈë  £ºbuf-Êä³ö»º³å£¨½¨Òé²»ÉÙÓÚ 256 ×Ö½Ú£©
+* Êä³ö  £ºpayload ×Ö½Ú³¤¶È
+*******************************************************************************/
 unsigned char MQTT_Client_FillBuf(char *buf)
 {
-  snprintf(buf, 256,
-			"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"alarm\":%d,\"fan\":%d,\"led\":%d}",
-			temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, alarmFlag, fan, led);
-  return strlen(buf);
+	snprintf(buf, 256,
+		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"alarm\":%d,\"fan\":%d,\"led\":%d}",
+		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, alarmFlag, fan, led);
+	return strlen(buf);
 }
 
 /*******************************************************************************
-* MQTT_Client_SendData
-* ????  ????????????MQTT??????
-* ????  ????
-* ???  ????
-*******************************************************************************/	
+* º¯ÊýÃû£ºMQTT_Client_SendData
+* ÃèÊö  £ºÏò room/{id}/report ÖÜÆÚÉÏ±¨´«¸ÐÆ÷ÓëÖ´ÐÐÆ÷×´Ì¬
+* ÊäÈë  £ºÎÞ
+* Êä³ö  £ºÎÞ
+*******************************************************************************/
 void MQTT_Client_SendData(void)
 {
-	
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};												//????
-	
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
 	char buf[256];
-  char topic[64]; // MQTT topic
-
+	char topic[64];
 	short body_len = 0, i = 0;
-	
+
 	UsartPrintf(USART_DEBUG, "Tips:	MQTT_Client_SendData-MQTT\r\n");
-	memset(buf, 0, sizeof(buf));//???????????
+	memset(buf, 0, sizeof(buf));
 	sprintf(topic, "room/%s/report", DEVICEID);
-	
-	body_len = MQTT_Client_FillBuf(buf);	//???????????????????????????
-	UsartPrintf(USART_DEBUG,"topic: %s, payload: %s\r\n",topic, buf);
-	if(body_len)
-	{		
-		if(MQTT_PacketSaveData(topic, body_len, NULL, 5, &mqttPacket) == 0)							//???
+
+	body_len = MQTT_Client_FillBuf(buf);
+	UsartPrintf(USART_DEBUG, "topic: %s, payload: %s\r\n", topic, buf);
+	if (body_len)
+	{
+		if (MQTT_PacketSaveData(topic, body_len, NULL, 5, &mqttPacket) == 0)	// ×é PUBLISH °ü
 		{
-			for(; i < body_len; i++){
+			for (; i < body_len; i++)
+			{
 				mqttPacket._data[mqttPacket._len++] = buf[i];
 			}
 			UsartPrintf(USART_DEBUG, "ESP8266_SendData\r\n");
-			ESP8266_SendData(mqttPacket._data, mqttPacket._len);									//??????????
-			MQTT_DeleteBuffer(&mqttPacket);															//???
+			ESP8266_SendData(mqttPacket._data, mqttPacket._len);	// ¾­ ESP8266 ·¢³ö
+			MQTT_DeleteBuffer(&mqttPacket);
 		}
 		else
+		{
 			UsartPrintf(USART_DEBUG, "WARN:EDP_NewBuffer Failed\r\n");
+		}
 	}
-	
 }
 
-/**
- * @brief device online/birth message (once after connect). Liveness via report.
- */
+/*******************************************************************************
+* º¯ÊýÃû£ºMQTT_Client_SendOnline
+* ÃèÊö  £ºÉÏÏßÉùÃ÷£¨º¬Éè±¸ÐÅÏ¢£©£¬Á¬ÉÏºóµ÷ÓÃÒ»´Î£»ÒµÎñ´æ»îÓÉ report ³Ðµ£
+* ÊäÈë  £ºÎÞ
+* Êä³ö  £ºÎÞ
+*******************************************************************************/
 void MQTT_Client_SendOnline(void)
 {
 	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
@@ -159,7 +165,7 @@ void MQTT_Client_SendOnline(void)
 
 	if (body_len > 0 && body_len < (short)sizeof(buf))
 	{
-		/* retain=1 to overwrite retained will online:0 */
+		/* retain=1£¬¸²¸ÇÒÅÖöÖÐ¿ÉÄÜ²ÐÁôµÄ online:0 */
 		if (MQTT_PacketPublish(MQTT_PUBLISH_ID, topic, buf, (uint32)body_len,
 				MQTT_QOS_LEVEL0, 1, 1, &mqttPacket) == 0)
 		{
@@ -174,151 +180,155 @@ void MQTT_Client_SendOnline(void)
 }
 
 /*******************************************************************************
-* MQTT_Client_Publish
-* ????  ?????????
-* ????  ??topic????????????
-*         msg?????????
-* ???  ????
-*******************************************************************************/	
+* º¯ÊýÃû£ºMQTT_Client_Publish
+* ÃèÊö  £º·¢²¼ÈÎÒâ topic/ÏûÏ¢
+* ÊäÈë  £ºtopic-Ö÷Ìâ£¬msg-ÏûÏ¢ÄÚÈÝ
+* Êä³ö  £ºÎÞ
+*******************************************************************************/
 void MQTT_Client_Publish(const char *topic, const char *msg)
 {
+	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};
 
-	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//????
-	
-	//UsartPrintf(USART_DEBUG, "Publish Topic: %s, Msg: %s\r\n", topic, msg);
-	
-	if(MQTT_PacketPublish(MQTT_PUBLISH_ID, topic, msg, strlen(msg), MQTT_QOS_LEVEL0, 0, 1, &mqtt_packet) == 0)
+	if (MQTT_PacketPublish(MQTT_PUBLISH_ID, topic, msg, strlen(msg), MQTT_QOS_LEVEL0, 0, 1, &mqtt_packet) == 0)
 	{
-		ESP8266_SendData(mqtt_packet._data, mqtt_packet._len);					//???????????????
-		
-		MQTT_DeleteBuffer(&mqtt_packet);										//???
+		ESP8266_SendData(mqtt_packet._data, mqtt_packet._len);
+		MQTT_DeleteBuffer(&mqtt_packet);
 	}
-
 }
 
 /*******************************************************************************
-* MQTT_Client_Subscribe
-* ????  ??????MQTT????????topic
-* ????  ???????????Dev_Att_Rep: ?????????; Dev_Att_Acq: ??????????
-* ???  ????
-*******************************************************************************/	
+* º¯ÊýÃû£ºMQTT_Client_Subscribe
+* ÃèÊö  £º°´ÀàÐÍ¶©ÔÄ·þÎñ¶Ë topic
+* ÊäÈë  £ºSub-Dev_Att_Rep ¶©ÔÄ command£»Dev_Att_Acq ¶©ÔÄ reply
+* Êä³ö  £ºÎÞ
+*******************************************************************************/
 void MQTT_Client_Subscribe(u8 Sub)
 {
-	
-	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//????
-	
+	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};
 	char topic_buf[56];
 	const char *topic = topic_buf;
-	switch(Sub)
+
+	switch (Sub)
 	{
-		case Dev_Att_Rep:snprintf(topic_buf, sizeof(topic_buf), "room/%s/command", DEVICEID);
-		     UsartPrintf(USART_DEBUG, "Subscribe Topic: %s\r\n", topic_buf);
-					break;
-		case Dev_Att_Acq:snprintf(topic_buf, sizeof(topic_buf), "room/%s/reply", DEVICEID);
-		     UsartPrintf(USART_DEBUG, "Subscribe Topic: %s\r\n", topic_buf);
-		     break;
-		default:break;
+		case Dev_Att_Rep:
+			snprintf(topic_buf, sizeof(topic_buf), "room/%s/command", DEVICEID);
+			UsartPrintf(USART_DEBUG, "Subscribe Topic: %s\r\n", topic_buf);
+			break;
+		case Dev_Att_Acq:
+			snprintf(topic_buf, sizeof(topic_buf), "room/%s/reply", DEVICEID);
+			UsartPrintf(USART_DEBUG, "Subscribe Topic: %s\r\n", topic_buf);
+			break;
+		default:
+			break;
 	}
 
-	if(MQTT_PacketSubscribe(MQTT_SUBSCRIBE_ID, MQTT_QOS_LEVEL0, &topic, 1, &mqtt_packet) == 0)
+	if (MQTT_PacketSubscribe(MQTT_SUBSCRIBE_ID, MQTT_QOS_LEVEL0, &topic, 1, &mqtt_packet) == 0)
 	{
-		ESP8266_SendData(mqtt_packet._data, mqtt_packet._len);					//???????????????
-		
-		MQTT_DeleteBuffer(&mqtt_packet);										//???
+		ESP8266_SendData(mqtt_packet._data, mqtt_packet._len);	// ·¢ËÍ¶©ÔÄÇëÇó
+		MQTT_DeleteBuffer(&mqtt_packet);
 	}
-
 }
 
 /*******************************************************************************
-* MQTT_Client_RevPro
-* ????  ??MQTT????????????????
-* ????  ??dataPtr?????????????
-* ???  ????
-*******************************************************************************/	
+* º¯ÊýÃû£ºMQTT_Client_RevPro
+* ÃèÊö  £º´¦Àí MQTT ÏÂÐÐ£º½âÎö·´¿ØÖ¸Áî£¨fan/led£©²¢»Ø¸´
+* ÊäÈë  £ºcmd-ESP8266 ÊÕµ½µÄ MQTT Ô­Ê¼ÔØºÉÖ¸Õë
+* Êä³ö  £ºÎÞ
+*******************************************************************************/
 void MQTT_Client_RevPro(unsigned char *cmd)
 {
-
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};								//????
-	
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
 	char *req_payload = NULL;
 	char *cmdid_topic = NULL;
-	
 	unsigned short req_len = 0;
-	
 	unsigned char type = 0;
-	
 	short result = 0;
 
 	type = MQTT_UnPacketRecv(cmd);
 
-	switch(type)
+	switch (type)
 	{
-		case MQTT_PKT_CMD:															//?????·?
-			result = MQTT_UnPacketCmd(cmd, &cmdid_topic, &req_payload, &req_len);	//???topic???????
+		case MQTT_PKT_CMD:	// ÃüÁîÏÂ·¢
+			result = MQTT_UnPacketCmd(cmd, &cmdid_topic, &req_payload, &req_len);	// ½â³ö topic ÓëÏûÏ¢Ìå
 
-			if(result == 0)
+			if (result == 0)
 			{
-				UsartPrintf(USART_DEBUG,"cmdid_topic: %s; req_payload: %s; req_len: %d.\r\n", cmdid_topic, req_payload, req_len);
-				
+				UsartPrintf(USART_DEBUG, "cmdid_topic: %s; req_payload: %s; req_len: %d.\r\n",
+					cmdid_topic, req_payload, req_len);
+
 				char *dp = strchr(req_payload, ':');
-				if(dp != NULL) {
-						dp++;
-						int val = 0;
-						while(*dp >= '0' && *dp <= '9') {
-								val = val*10 + (*dp - '0');
-								dp++;
-						}
-						if(strstr(req_payload, "fan")) {
-							if(val == 0){
-								Relay_OFF();
-								UsartPrintf(USART_DEBUG, "fan = %d, stop the relay\r\n", val);
-							}else if(val == 1){
-								Relay_ON();
-								UsartPrintf(USART_DEBUG, "fan = %d, start the relay\r\n", val);
-							} else {
-								Relay_Turn();
-								UsartPrintf(USART_DEBUG, "fan = %d, turn the relay\r\n", val);
-							}
-						} else if(strstr(req_payload, "led")) {
-							if(val == 0){
-								Led_OFF();
-								UsartPrintf(USART_DEBUG, "led = %d, close the led\r\n", val);
-							}else if(val == 1){
-								Led_ON();
-								UsartPrintf(USART_DEBUG, "led = %d, open the led\r\n", val);
-							} else {
-								Led_Turn();
-								UsartPrintf(USART_DEBUG, "led = %d, turn the led\r\n", val);
-							}
-						}
-						report_asap = 1;
-				}
-				
-				if(MQTT_PacketCmdResp(cmdid_topic, req_payload, &mqttPacket) == 0)	//?????????
+				if (dp != NULL)
 				{
-					ESP8266_SendData(mqttPacket._data, mqttPacket._len);			//???????
-					MQTT_DeleteBuffer(&mqttPacket);									//???
+					dp++;
+					int val = 0;
+					while (*dp >= '0' && *dp <= '9')
+					{
+						val = val * 10 + (*dp - '0');
+						dp++;
+					}
+					if (strstr(req_payload, "fan"))
+					{
+						if (val == 0)
+						{
+							Relay_OFF();
+							UsartPrintf(USART_DEBUG, "fan = %d, stop the relay\r\n", val);
+						}
+						else if (val == 1)
+						{
+							Relay_ON();
+							UsartPrintf(USART_DEBUG, "fan = %d, start the relay\r\n", val);
+						}
+						else
+						{
+							Relay_Turn();
+							UsartPrintf(USART_DEBUG, "fan = %d, turn the relay\r\n", val);
+						}
+					}
+					else if (strstr(req_payload, "led"))
+					{
+						if (val == 0)
+						{
+							Led_OFF();
+							UsartPrintf(USART_DEBUG, "led = %d, close the led\r\n", val);
+						}
+						else if (val == 1)
+						{
+							Led_ON();
+							UsartPrintf(USART_DEBUG, "led = %d, open the led\r\n", val);
+						}
+						else
+						{
+							Led_Turn();
+							UsartPrintf(USART_DEBUG, "led = %d, turn the led\r\n", val);
+						}
+					}
+					report_asap = 1;	// ¾¡¿ìÉÏ±¨×îÐÂÖ´ÐÐÆ÷×´Ì¬
+				}
+
+				if (MQTT_PacketCmdResp(cmdid_topic, req_payload, &mqttPacket) == 0)	// ÃüÁî»Ø¸´×é°ü
+				{
+					ESP8266_SendData(mqttPacket._data, mqttPacket._len);	// »Ø¸´Æ½Ì¨
+					MQTT_DeleteBuffer(&mqttPacket);
 				}
 			}
-		break;
-			
-		case MQTT_PKT_PUBACK:														//????Publish????????????Ack
-			if(MQTT_UnPacketPublishAck(cmd) == 0)
+			break;
+
+		case MQTT_PKT_PUBACK:	// PUBLISH µÄ Ack
+			if (MQTT_UnPacketPublishAck(cmd) == 0)
 				UsartPrintf(USART_DEBUG, "Tips:	MQTT Publish Send OK\r\n");
-		break;
-		
+			break;
+
 		default:
-			UsartPrintf(USART_DEBUG,"Tips:	default\r\n");
+			UsartPrintf(USART_DEBUG, "Tips:	default\r\n");
 			result = -1;
-		break;
+			break;
 	}
 
-	ESP8266_Clear();									//??????
+	ESP8266_Clear();	// Çå¿Õ½ÓÊÕ»º´æ
 
-	if(type == MQTT_PKT_CMD || type == MQTT_PKT_PUBLISH)
+	if (type == MQTT_PKT_CMD || type == MQTT_PKT_PUBLISH)
 	{
 		MQTT_FreeBuffer(cmdid_topic);
 		MQTT_FreeBuffer(req_payload);
 	}
-
 }
