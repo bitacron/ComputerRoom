@@ -93,15 +93,23 @@ extern volatile uint8_t report_asap;
 
 /*******************************************************************************
 * 函数名：MQTT_Client_FillBuf
-* 描述  ：填充上报 JSON（温湿度、气体、光照、火焰、报警与执行器状态）
-* 输入  ：buf-输出缓冲（建议不少于 256 字节）
+* 描述  ：填充上报 JSON；始终包含 measureTime（校时失败则为 0000-00-00 00:00:00）
+* 输入  ：buf-输出缓冲（建议不少于 320 字节）
 * 输出  ：payload 字节长度
 *******************************************************************************/
 unsigned char MQTT_Client_FillBuf(char *buf)
 {
-	snprintf(buf, 256,
-		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"alarm\":%d,\"fan\":%d,\"led\":%d}",
-		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, alarmFlag, fan, led);
+	char measure_time[24];
+
+	/* 始终带 measureTime，便于串口/云端统一观察；失败用占位时间 */
+	if (ESP8266_GetTime(measure_time, sizeof(measure_time)) != 0)
+	{
+		snprintf(measure_time, sizeof(measure_time), "0000-00-00 00:00:00");
+	}
+
+	snprintf(buf, 320,
+		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"alarm\":%d,\"fan\":%d,\"led\":%d,\"measureTime\":\"%s\"}",
+		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, alarmFlag, fan, led, measure_time);
 	return strlen(buf);
 }
 
@@ -114,7 +122,7 @@ unsigned char MQTT_Client_FillBuf(char *buf)
 void MQTT_Client_SendData(void)
 {
 	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
-	char buf[256];
+	char buf[320];
 	char topic[64];
 	short body_len = 0, i = 0;
 

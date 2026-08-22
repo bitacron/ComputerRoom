@@ -50,6 +50,7 @@ public class TokenWebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**").permitAll()
                 .antMatchers("/admin/access/login").permitAll()
+                .antMatchers("/api/time").permitAll()
                 .antMatchers("/service/environment/export").permitAll()
                 .antMatchers("/ws/**").permitAll()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()

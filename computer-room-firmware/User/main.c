@@ -166,10 +166,16 @@ int main(void)
 			fan = Relay_GetState();
 			alarmFlag = Beep_GetState();
 			led = Led_GetState();
-			UsartPrintf(USART_DEBUG,
-				"temp=%d, humi=%d, gasPPM=%d, gasAna=%d,gasDig=%d, alarm=%d, fan=%d, led = %d, ldrDig=%d,ldrAna=%d,ldrPer=%d, flameDig=%d, flameAna=%d, flamePer=%d\r\n",
-				temp, humi, gasPPM, gasAna, gasDig, alarmFlag, fan, led,
-				ldrDig, ldrAna, ldrPer, flameDig, flameAna, flamePer);
+			{
+				char measure_time[24];
+				/* 与 MQTT 上报一致：有校时用墙钟，否则占位 */
+				if (ESP8266_GetTime(measure_time, sizeof(measure_time)) != 0)
+					snprintf(measure_time, sizeof(measure_time), "0000-00-00 00:00:00");
+				UsartPrintf(USART_DEBUG,
+					"measureTime=%s, temp=%d, humi=%d, gasPPM=%d, gasAna=%d,gasDig=%d, alarm=%d, fan=%d, led = %d, ldrDig=%d,ldrAna=%d,ldrPer=%d, flameDig=%d, flameAna=%d, flamePer=%d\r\n",
+					measure_time, temp, humi, gasPPM, gasAna, gasDig, alarmFlag, fan, led,
+					ldrDig, ldrAna, ldrPer, flameDig, flameAna, flamePer);
+			}
 		}
 
 		/* ---- OLED 数值刷新 ---- */
