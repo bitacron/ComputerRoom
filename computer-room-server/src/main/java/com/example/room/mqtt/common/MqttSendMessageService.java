@@ -7,6 +7,7 @@ import com.example.room.mqtt.service.MqttSendCmdService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -40,8 +41,8 @@ public class MqttSendMessageService {
         try {
             Message<String> message = MessageBuilder
                     .withPayload(payload)
-                    .setHeader("mqtt_topic", topic)
-                    .setHeader("mqtt_qos", 0)
+                    .setHeader(MqttHeaders.TOPIC, topic)
+                    .setHeader(MqttHeaders.QOS, 1)
                     .build();
             
             boolean sent = mqttOutputChannel.send(message);

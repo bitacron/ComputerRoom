@@ -11,6 +11,7 @@ import com.example.room.control.service.CommandService;
 import com.example.room.environment.entity.Environment;
 import com.example.room.control.entity.param.DeviceOptionControl;
 import com.example.room.control.entity.param.DeviceOptionQuery;
+import com.example.room.control.entity.vo.ControlResult;
 import com.example.room.control.entity.vo.DeviceOptionVo;
 import com.example.room.control.entity.enums.DeviceCommandEnum;
 import com.example.room.control.entity.enums.DeviceTypeEnum;
@@ -80,18 +81,23 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         );
         List<DeviceOption> records = deviceOptionPage.getRecords();
         List<String> operatorList = records.stream()
-                .map(DeviceOption::getOperatorCode)  // 假设有getOperatorId()方法
+                .map(DeviceOption::getOperatorCode)
+                .filter(StringUtils::isNotBlank)
+                .distinct()
                 .collect(Collectors.toList());
 
-        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
-        userQueryWrapper.lambda().in(User::getUsername, operatorList);
-
-        List<User> userList = userService.list(userQueryWrapper);
-        Map<String, String> userMap = userList.stream()
-                .collect(Collectors.toMap(
-                        User::getUsername,
-                        User::getNickName
-                ));
+        Map<String, String> userMap = new HashMap<>();
+        if (!operatorList.isEmpty()) {
+            QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+            userQueryWrapper.lambda().in(User::getUsername, operatorList);
+            List<User> userList = userService.list(userQueryWrapper);
+            userMap = userList.stream()
+                    .collect(Collectors.toMap(
+                            User::getUsername,
+                            User::getNickName,
+                            (a, b) -> a
+                    ));
+        }
         // 将 DeviceOption 列表转换为 DeviceOptionVo 列表
         List<DeviceOptionVo> voList = new ArrayList<>();
         for (DeviceOption record : records) {
@@ -113,69 +119,125 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
 
 
     @Override
-    public boolean controlDevice(DeviceOptionControl deviceOptionControl, String operatorCode) {
-        String requestId = requestIdGenerator.nextId();
-        String topic = "room" + "/" + deviceOptionControl.getDeviceKey() + "/command";
-
-        // 使用枚举生成消息体
+    public ControlResult controlDevice(DeviceOptionControl deviceOptionControl, String operatorCode) {
+        if (deviceOptionControl == null || StringUtils.isBlank(deviceOptionControl.getDeviceKey())) {
+            throw new IllegalArgumentException("请选择设备");
+        }
         DeviceCommandEnum commandEnum = DeviceCommandEnum.fromCode(deviceOptionControl.getCommand());
         DeviceTypeEnum typeEnum = DeviceTypeEnum.fromCode(deviceOptionControl.getDeviceType());
-        String message = "{\"" + deviceOptionControl.getDeviceType() + "\":" +
-                (commandEnum != null ? commandEnum.getIntValue() : 0) +
-                ",\"cmdId\":\"" + requestId + "\"" +
-                ",\"dev\":\"" + deviceOptionControl.getDeviceKey() + "\"" +
-                "}";
-        boolean success = mqttSendMessageService.sendMessage(topic, message);
-        if (!success) {
-            return false;
+        if (commandEnum == null || typeEnum == null) {
+            throw new IllegalArgumentException("指令无效");
         }
-        // 2. 更新数据库操作记录
+        Device device = deviceService.getByDeviceKey(deviceOptionControl.getDeviceKey());
+        if (device == null) {
+            throw new IllegalStateException("设备不存在");
+        }
+        if (device.getOnlineStatus() == null || device.getOnlineStatus() != 1) {
+            throw new IllegalStateException("设备离线，无法下发指令");
+        }
+
+        String cmdId = requestIdGenerator.nextId();
+        String act = typeEnum.getCode().toLowerCase();
+        int val = commandEnum.getIntValue();
+        String topic = "room/" + deviceOptionControl.getDeviceKey() + "/command";
+        JSONObject payload = new JSONObject();
+        payload.put("cmdId", cmdId);
+        payload.put("dev", deviceOptionControl.getDeviceKey());
+        payload.put("act", act);
+        payload.put("val", val);
+        boolean success = mqttSendMessageService.sendMessage(topic, payload.toJSONString());
+        if (!success) {
+            throw new IllegalStateException("指令发送失败，请稍后重试");
+        }
+
+        Date now = new Date();
         DeviceOption deviceOption = new DeviceOption();
         deviceOption.setDeviceKey(deviceOptionControl.getDeviceKey());
-        assert commandEnum != null;
-        deviceOption.setAction(commandEnum.getValue()+ "-"+typeEnum.getName());
+        deviceOption.setAction(commandEnum.getValue() + "-" + typeEnum.getName());
         deviceOption.setOperatorCode(operatorCode);
-        deviceOption.setGmtCreate(new Date());
+        deviceOption.setGmtCreate(now);
         deviceOption.setIsDeleted(false);
+        this.save(deviceOption);
 
         Command command = new Command();
-        command.setCmdId(requestId);
+        command.setCmdId(cmdId);
         command.setDeviceKey(deviceOptionControl.getDeviceKey());
-        command.setDeviceType(deviceOptionControl.getDeviceType());
+        command.setDeviceType(act);
         command.setCommand(deviceOptionControl.getCommand());
         command.setStatus(1);
-        command.setGmtCreate(new Date());
+        command.setGmtCreate(now);
         command.setIsDeleted(false);
         commandService.save(command);
-        return true;
-        // }
+        return ControlResult.sent(cmdId);
     }
-    // MQTT 回调方法
+
     @Override
     public void onMqttMessage(String topic, String payload) {
         JSONObject json = JSON.parseObject(payload);
-        String deviceKeyStr = "";
-        if (json.containsKey("dev") && json.get("dev") != null) {
-            deviceKeyStr = json.get("dev").toString();
+        String deviceKeyStr = json.getString("dev");
+        if (deviceKeyStr == null) {
+            deviceKeyStr = "";
         }
         Integer fanStatus = json.getInteger("fan");
         Integer ledStatus = json.getInteger("led");
+        Integer result = json.getInteger("result");
+        String act = json.getString("act");
+        Integer val = json.getInteger("val");
         Device device = deviceService.applyActuatorSnapshot(deviceKeyStr, fanStatus, ledStatus);
-        if (json.containsKey("cmdId")) {
+
+        Command command = null;
+        if (json.containsKey("cmdId") && json.get("cmdId") != null) {
             QueryWrapper<Command> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(Command::getCmdId, json.get("cmdId"));
+            queryWrapper.lambda().eq(Command::getCmdId, json.get("cmdId").toString());
+            queryWrapper.lambda().eq(Command::getStatus, 1);
             queryWrapper.lambda().orderByDesc(Command::getGmtCreate);
             queryWrapper.lambda().last("limit 1");
-            Command command = commandService.getOne(queryWrapper);
+            command = commandService.getOne(queryWrapper);
             if (command != null) {
-                command.setStatus(2);
-                commandService.update(command, queryWrapper);
+                boolean gpioMatched = result != null && result == 0;
+                if (gpioMatched && "fan".equalsIgnoreCase(act) && fanStatus != null && val != null) {
+                    gpioMatched = fanStatus.equals(val);
+                } else if (gpioMatched && "led".equalsIgnoreCase(act) && ledStatus != null && val != null) {
+                    gpioMatched = ledStatus.equals(val);
+                }
+                command.setStatus(gpioMatched ? 2 : 3);
+                commandService.updateById(command);
+                pushCommandResult(command, result, fanStatus, ledStatus);
             }
         }
+
         Environment snapshot = deviceService.toRealtimeEnvironment(device);
         if (snapshot != null) {
-            String socketTopic = "/topic/environment/" + deviceKeyStr;
-            webSocketPushUtil.pushToTopic(socketTopic, snapshot);
+            webSocketPushUtil.pushToTopic("/topic/environment/" + deviceKeyStr, snapshot);
         }
+    }
+
+    @Override
+    public void markCommandTimeout(Command command) {
+        if (command == null || command.getStatus() == null || command.getStatus() != 1) {
+            return;
+        }
+        command.setStatus(4);
+        commandService.updateById(command);
+        pushCommandResult(command, null, null, null);
+    }
+
+    private void pushCommandResult(Command command, Integer result, Integer fan, Integer led) {
+        JSONObject body = new JSONObject();
+        body.put("cmdId", command.getCmdId());
+        body.put("deviceKey", command.getDeviceKey());
+        body.put("status", command.getStatus());
+        body.put("act", command.getDeviceType());
+        body.put("command", command.getCommand());
+        if (result != null) {
+            body.put("result", result);
+        }
+        if (fan != null) {
+            body.put("fan", fan);
+        }
+        if (led != null) {
+            body.put("led", led);
+        }
+        webSocketPushUtil.pushToTopic("/topic/command/" + command.getDeviceKey(), body);
     }
 }

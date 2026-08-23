@@ -62,7 +62,8 @@ public class MqttProcessMessageService {
             mqttReceiveReportService.save(dataEntity);
             // 2. 解析并处理环境数据（历史入库 + 刷新 device 当前态）
             processEnvironmentData(payload);
-        } else if (topic.contains("resp")) {
+        } else if (topic.contains("/ack") || topic.contains("resp")) {
+            log.info("收到指令 ACK topic={}, payload={}", topic, payload);
             // 1. 原始JSON直接落库
             MqttReceiveCmdResp dataEntity = new MqttReceiveCmdResp();
             dataEntity.setTopic(topic);

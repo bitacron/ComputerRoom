@@ -39,6 +39,14 @@ export default {
             url: `/service/command/getCommand/${id}`,
             method: 'get'
         })
+    },
+    controlDevice(data) {
+        return request({
+            url: '/service/deviceOption/control',
+            method: 'post',
+            data,
+            timeout: 5000
+        })
     }
 }
 

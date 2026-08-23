@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.room.control.entity.DeviceOption;
 import com.example.room.control.entity.param.DeviceOptionControl;
 import com.example.room.control.entity.param.DeviceOptionQuery;
+import com.example.room.control.entity.vo.ControlResult;
 import com.example.room.control.entity.vo.DeviceOptionVo;
 import com.example.room.control.service.DeviceOptionService;
 import com.example.room.util.Result;
@@ -62,10 +63,13 @@ public class DeviceOptionController {
 
     @ApiOperation("反控操作（登录即可，小程序通用；后续可单独加权限点）")
     @PostMapping("control")
-    public Result<String> controlDevice(@RequestBody DeviceOptionControl deviceOption) {
+    public Result<ControlResult> controlDevice(@RequestBody DeviceOptionControl deviceOption) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return deviceOptionService.controlDevice(deviceOption, username)
-                ? Result.ok("指令已下达")
-                : Result.fail("操作失败，请稍后重试");
+        try {
+            ControlResult result = deviceOptionService.controlDevice(deviceOption, username);
+            return Result.ok(result, "指令已下达");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return Result.fail(e.getMessage());
+        }
     }
 }

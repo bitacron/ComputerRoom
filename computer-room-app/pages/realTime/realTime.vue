@@ -417,7 +417,7 @@ export default {
           data: { deviceKey: this.selectedDeviceKey }
         });
         if (res && res.data) {
-          this.environmentData = res.data;
+          this.applyEnvironmentPush(res.data);
         } else {
           // 接口返回成功但无数据
           this.environmentData = null;
@@ -492,10 +492,12 @@ export default {
 
     sendStompSubscribe() {
       if (!this.socketTask) return;
-      // 动态订阅当前设备的主题
-      const topic = `/topic/environment/${this.selectedDeviceKey}`;
-      const subscribeFrame = `SUBSCRIBE\nid:sub-0\ndestination:${topic}\nack:auto\n\n\0`;
-      this.socketTask.send({ data: subscribeFrame, fail: (err) => console.error('发送 SUBSCRIBE 失败', err) });
+      const envTopic = `/topic/environment/${this.selectedDeviceKey}`;
+      const envFrame = `SUBSCRIBE\nid:sub-0\ndestination:${envTopic}\nack:auto\n\n\0`;
+      this.socketTask.send({ data: envFrame, fail: (err) => console.error('发送 SUBSCRIBE 失败', err) });
+      const cmdTopic = `/topic/command/${this.selectedDeviceKey}`;
+      const cmdFrame = `SUBSCRIBE\nid:sub-1\ndestination:${cmdTopic}\nack:auto\n\n\0`;
+      this.socketTask.send({ data: cmdFrame, fail: (err) => console.error('发送指令订阅失败', err) });
     },
 
     handleStompMessage(data) {
@@ -518,10 +520,12 @@ export default {
             let body = frameStr.substring(bodyStartIndex + 2);
             try {
               const messageData = JSON.parse(body);
-              console.log('收到推送数据:', messageData);
-              this.environmentData = messageData;
-              if (this.error) this.error = null;
-              this.checkPendingCommand(messageData);
+              if (messageData.cmdId && messageData.status != null) {
+                this.handleCommandResult(messageData);
+              } else {
+                this.applyEnvironmentPush(messageData);
+                if (this.error) this.error = null;
+              }
             } catch (e) {
               console.error('解析推送 JSON 失败', e, body);
             }
@@ -535,27 +539,56 @@ export default {
       }
     },
 
-    checkPendingCommand(data) {
-      if (!this.pendingCommand) return;
+    applyEnvironmentPush(data) {
+      if (!data) return;
+      if (this.pendingCommand) {
+        const expected = this.pendingCommand.action === 'on' ? 1 : 0;
+        const actual = this.pendingCommand.deviceType === 'fan' ? data.fanStatus : data.ledStatus;
+        if (actual === expected) {
+          this.environmentData = data;
+          this.handleCommandResult({
+            cmdId: this.pendingCommand.cmdId,
+            status: 2,
+            fan: data.fanStatus,
+            led: data.ledStatus
+          });
+          return;
+        }
+        if (this.environmentData) {
+          if (this.pendingCommand.deviceType === 'fan') {
+            data.fanStatus = this.environmentData.fanStatus;
+          } else if (this.pendingCommand.deviceType === 'led') {
+            data.ledStatus = this.environmentData.ledStatus;
+          }
+        }
+      }
+      this.environmentData = data;
+    },
+
+    handleCommandResult(cmd) {
+      if (!cmd || !this.pendingCommand || cmd.cmdId !== this.pendingCommand.cmdId) {
+        return;
+      }
       const { deviceType, action } = this.pendingCommand;
-      let statusChanged = false;
-      if (deviceType === 'fan') {
-        const newStatus = data.fanStatus;
-        const expected = action === 'on' ? 1 : 0;
-        if (newStatus === expected) statusChanged = true;
-      } else if (deviceType === 'led') {
-        const newStatus = data.ledStatus;
-        const expected = action === 'on' ? 1 : 0;
-        if (newStatus === expected) statusChanged = true;
+      const deviceName = deviceType === 'fan' ? '散热器' : 'LED';
+      if (this.commandTimeout) {
+        clearTimeout(this.commandTimeout);
+        this.commandTimeout = null;
       }
-      if (statusChanged) {
-        if (this.commandTimeout) clearTimeout(this.commandTimeout);
-        const deviceName = deviceType === 'fan' ? '散热器' : 'LED';
+      if (cmd.status === 2) {
+        if (this.environmentData) {
+          if (cmd.fan !== undefined && cmd.fan !== null) this.environmentData.fanStatus = cmd.fan;
+          if (cmd.led !== undefined && cmd.led !== null) this.environmentData.ledStatus = cmd.led;
+        }
         uni.showToast({ title: `${deviceName}${action === 'on' ? '开启' : '关闭'}成功`, icon: 'success' });
-        this.pendingCommand = null;
-        if (deviceType === 'fan') this.fanLoading = false;
-        else this.ledLoading = false;
+      } else if (cmd.status === 3) {
+        uni.showToast({ title: `${deviceName}执行失败`, icon: 'none' });
+      } else if (cmd.status === 4) {
+        uni.showToast({ title: '设备未响应', icon: 'none' });
       }
+      this.pendingCommand = null;
+      this.fanLoading = false;
+      this.ledLoading = false;
     },
 
     handleConnectionError() {
@@ -633,17 +666,17 @@ export default {
           },
           timeout: 3000
         });
-        if (res.code === 20000) {
-          this.pendingCommand = { deviceType: 'fan', action };
+        if (res.code === 20000 && res.data && res.data.cmdId) {
+          this.pendingCommand = { deviceType: 'fan', action, cmdId: res.data.cmdId };
           uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
           this.commandTimeout = setTimeout(() => {
-            if (this.pendingCommand && this.pendingCommand.deviceType === 'fan') {
-              uni.showToast({ title: '设备响应超时，请检查网络或设备状态', icon: 'none' });
+            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
+              uni.showToast({ title: '设备未响应', icon: 'none' });
               this.pendingCommand = null;
               this.fanLoading = false;
               this.commandTimeout = null;
             }
-          }, 5000);
+          }, 8000);
         } else {
           uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
           this.fanLoading = false;
@@ -675,17 +708,17 @@ export default {
           },
           timeout: 3000
         });
-        if (res.code === 20000) {
-          this.pendingCommand = { deviceType: 'led', action };
+        if (res.code === 20000 && res.data && res.data.cmdId) {
+          this.pendingCommand = { deviceType: 'led', action, cmdId: res.data.cmdId };
           uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
           this.commandTimeout = setTimeout(() => {
-            if (this.pendingCommand && this.pendingCommand.deviceType === 'led') {
-              uni.showToast({ title: '设备响应超时，请检查网络或设备状态', icon: 'none' });
+            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
+              uni.showToast({ title: '设备未响应', icon: 'none' });
               this.pendingCommand = null;
               this.ledLoading = false;
               this.commandTimeout = null;
             }
-          }, 5000);
+          }, 8000);
         } else {
           uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
           this.ledLoading = false;

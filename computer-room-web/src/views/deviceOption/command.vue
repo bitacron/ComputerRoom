@@ -47,7 +47,7 @@
       <el-table-column prop="command" label="控制指令" width="100" />
       <el-table-column label="指令状态" width="80">
         <template slot-scope="scope">
-          {{ scope.row.status===1?'已发送':'已成功' }}
+          {{ { 1: '已发送', 2: '执行成功', 3: '执行失败', 4: '超时' }[scope.row.status] || '未知' }}
         </template>
       </el-table-column>
       <el-table-column prop="gmtCreate" label="操作时间" width="160"/>

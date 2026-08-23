@@ -55,7 +55,7 @@ mqtt:
   enabled: true
   broker-url: tcp://localhost:1883
   client-id: iot_mqtt_server
-  receive-topic: +/+/report,resp/room/stm32_01/command,+/+/status,+/+/heartbeat
+  receive-topic: +/+/report,+/+/ack,resp/+/+/command,+/+/status,+/+/heartbeat
   username:
   password:
   qos: 1

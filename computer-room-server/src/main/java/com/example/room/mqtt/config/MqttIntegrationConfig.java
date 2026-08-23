@@ -73,15 +73,15 @@ public class MqttIntegrationConfig {
         adapter.setQos(mqttConfig.getQos());
         adapter.setOutputChannel(mqttInputChannel());
         adapter.setRecoveryInterval(10000);
-        log.info("MQTT接收适配器已创建，Client ID: {}", receiverClientId);
+        log.info("MQTT接收适配器已创建，Client ID: {}，订阅: {}", receiverClientId, mqttConfig.getReceiveTopic());
         return adapter;
     }
 
     @ServiceActivator(inputChannel = "mqttInputChannel")
     @Bean
-    public MessageHandler mqttMessageHandler() {
+    public MessageHandler mqttMessageHandler(MqttMessageProcessor mqttMessageProcessor) {
         log.info("MqttMessageHandler mqttMessageHandler");
-        return new MqttMessageProcessor();
+        return mqttMessageProcessor;
         // return message -> {
         //     String topic = message.getHeaders().get("mqtt_receivedTopic").toString();
         //     String strPayload = (String) message.getPayload();

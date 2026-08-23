@@ -3,8 +3,10 @@ package com.example.room.control.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.room.control.entity.DeviceOption;
+import com.example.room.control.entity.Command;
 import com.example.room.control.entity.param.DeviceOptionControl;
 import com.example.room.control.entity.param.DeviceOptionQuery;
+import com.example.room.control.entity.vo.ControlResult;
 import com.example.room.control.entity.vo.DeviceOptionVo;
 
 /**
@@ -20,7 +22,9 @@ public interface DeviceOptionService extends IService<DeviceOption> {
     // 条件查询分页方法
     Page<DeviceOptionVo> pageQuery(DeviceOptionQuery deviceOptionQuery);
 
-    boolean controlDevice(DeviceOptionControl deviceOption, String operatorCode);
+    ControlResult controlDevice(DeviceOptionControl deviceOption, String operatorCode);
 
     void onMqttMessage(String topic, String payload);
+
+    void markCommandTimeout(Command command);
 }

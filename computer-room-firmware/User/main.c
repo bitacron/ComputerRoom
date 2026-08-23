@@ -203,6 +203,7 @@ int main(void)
 		dataPtr = ESP8266_GetIPD(3);
 		if (dataPtr != NULL) {
 			MQTT_Client_RevPro(dataPtr);
+			MQTT_Client_FlushCmdAck();
 		}
 	}
 }

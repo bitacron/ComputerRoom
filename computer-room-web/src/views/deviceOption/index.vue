@@ -123,7 +123,7 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(() => { // 点击确定，执行then方法
-                deviceOption.deviceOption(id)
+                deviceOption.deleteOptionById(id)
                     .then(response => { // 删除成功
                         // 提示信息
                         this.$message({

@@ -12,5 +12,6 @@ void MQTT_Client_SendOnline(void);               // 上线声明
 void MQTT_Client_Publish(const char *topic, const char *msg); // 通用发布
 void MQTT_Client_Subscribe(u8 Sub);              // 按类型订阅
 void MQTT_Client_RevPro(unsigned char *cmd);     // 处理下行命令
+void MQTT_Client_FlushCmdAck(void);              // 命令处理后再发 ACK，避开 IPD 后立刻 CIPSEND
 
 #endif

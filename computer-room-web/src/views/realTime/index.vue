@@ -180,7 +180,7 @@
               <div class="control-buttons">
                 <el-button
                   :loading="fanLoading"
-                  :disabled="environmentData && environmentData.fanStatus === 1"
+                  :disabled="isActuatorPending('fan') || (environmentData && environmentData.fanStatus === 1)"
                   size="small"
                   type="primary"
                   @click="controlRadiator('on')"
@@ -189,7 +189,7 @@
                 </el-button>
                 <el-button
                   :loading="fanLoading"
-                  :disabled="environmentData && environmentData.fanStatus === 0"
+                  :disabled="isActuatorPending('fan') || (environmentData && environmentData.fanStatus === 0)"
                   size="small"
                   type="danger"
                   @click="controlRadiator('off')"
@@ -213,7 +213,7 @@
               <div class="control-buttons">
                 <el-button
                   :loading="ledLoading"
-                  :disabled="environmentData && environmentData.ledStatus === 1"
+                  :disabled="isActuatorPending('led') || (environmentData && environmentData.ledStatus === 1)"
                   size="small"
                   type="primary"
                   @click="controlLed('on')"
@@ -222,7 +222,7 @@
                 </el-button>
                 <el-button
                   :loading="ledLoading"
-                  :disabled="environmentData && environmentData.ledStatus === 0"
+                  :disabled="isActuatorPending('led') || (environmentData && environmentData.ledStatus === 0)"
                   size="small"
                   type="danger"
                   @click="controlLed('off')"
@@ -234,6 +234,9 @@
           </div>
         </el-col>
       </el-row>
+      <div v-if="pending" class="pending-tip">
+        等待设备响应 {{ pending.act === 'fan' ? '散热器' : 'LED' }} {{ pending.val === 1 ? '开启' : '关闭' }}...
+      </div>
     </el-card>
   </div>
 </template>
@@ -243,6 +246,7 @@ import request from '@/utils/request'
 import SockJS from 'sockjs-client'
 import Stomp from 'stompjs'
 import deviceApi from '@/api/device'
+import deviceOption from '@/api/deviceOption'
 
 export default {
   name: 'RealTimeIndex',
@@ -261,7 +265,8 @@ export default {
       reconnectAttempts: 0,
       fanLoading: false,
       ledLoading: false,
-      pollingTimer: null
+      pollingTimer: null,
+      pending: null
     }
   },
   computed: {
@@ -277,6 +282,7 @@ export default {
   },
   beforeDestroy() {
     this.disconnectWebSocket()
+    this.clearPending()
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer)
     if (this.pollingTimer) clearInterval(this.pollingTimer)
   },
@@ -409,7 +415,7 @@ export default {
           params: { deviceKey: this.selectedDeviceKey }
         })
         if (res.code === 20000 && res.data) {
-          this.environmentData = res.data
+          this.applyEnvironmentPush(res.data)
         } else {
           // 接口返回成功但无数据
           this.environmentData = null
@@ -438,15 +444,22 @@ export default {
         if (this.reconnectTimer) clearTimeout(this.reconnectTimer)
 
         // 订阅当前设备的主题
-        const topic = `/topic/environment/${this.selectedDeviceKey}`
-        this.stompClient.subscribe(topic, (message) => {
+        const envTopic = `/topic/environment/${this.selectedDeviceKey}`
+        this.stompClient.subscribe(envTopic, (message) => {
           try {
             const data = JSON.parse(message.body)
-            console.log('收到推送数据:', data)
-            this.environmentData = data
+            this.applyEnvironmentPush(data)
             if (this.error) this.error = null
           } catch (e) {
             console.error('解析消息失败', e)
+          }
+        })
+        const cmdTopic = `/topic/command/${this.selectedDeviceKey}`
+        this.stompClient.subscribe(cmdTopic, (message) => {
+          try {
+            this.handleCommandResult(JSON.parse(message.body))
+          } catch (e) {
+            console.error('解析指令结果失败', e)
           }
         })
       }, (error) => {
@@ -491,66 +504,108 @@ export default {
     },
 
     // ==================== 设备反控 ====================
-    async controlRadiator(action) {
+    isActuatorPending(act) {
+      return !!(this.pending && this.pending.act === act)
+    },
+    applyEnvironmentPush(data) {
+      if (!data) return
+      if (this.pending) {
+        const expected = this.pending.val
+        const actual = this.pending.act === 'fan' ? data.fanStatus : data.ledStatus
+        if (actual === expected) {
+          this.environmentData = data
+          this.handleCommandResult({
+            cmdId: this.pending.cmdId,
+            status: 2,
+            fan: data.fanStatus,
+            led: data.ledStatus
+          })
+          return
+        }
+        if (this.environmentData) {
+          if (this.pending.act === 'fan') {
+            data.fanStatus = this.environmentData.fanStatus
+          } else if (this.pending.act === 'led') {
+            data.ledStatus = this.environmentData.ledStatus
+          }
+        }
+      }
+      this.environmentData = data
+    },
+    handleCommandResult(cmd) {
+      if (!cmd || !this.pending || cmd.cmdId !== this.pending.cmdId) {
+        return
+      }
+      const name = this.pending.act === 'fan' ? '散热器' : 'LED'
+      const actionText = this.pending.val === 1 ? '开启' : '关闭'
+      if (cmd.status === 2) {
+        if (this.environmentData) {
+          if (cmd.fan !== undefined && cmd.fan !== null) this.environmentData.fanStatus = cmd.fan
+          if (cmd.led !== undefined && cmd.led !== null) this.environmentData.ledStatus = cmd.led
+        }
+        this.$message.success(`${name}${actionText}成功`)
+      } else if (cmd.status === 3) {
+        this.$message.error(`${name}执行失败`)
+      } else if (cmd.status === 4) {
+        this.$message.error('设备未响应')
+      }
+      this.clearPending()
+    },
+    clearPending() {
+      if (this.pending && this.pending.timer) {
+        clearTimeout(this.pending.timer)
+      }
+      this.pending = null
+      this.fanLoading = false
+      this.ledLoading = false
+    },
+    startPending(act, val, cmdId) {
+      if (this.pending && this.pending.timer) {
+        clearTimeout(this.pending.timer)
+      }
+      const timer = setTimeout(() => {
+        if (this.pending && this.pending.cmdId === cmdId) {
+          this.$message.error('设备未响应')
+          this.clearPending()
+        }
+      }, 8000)
+      this.pending = { act, val, cmdId, timer }
+    },
+    async sendControl(act, action) {
       if (!this.selectedDeviceKey) {
         this.$message.warning('请先选择设备')
         return
       }
-      const targetStatus = action === 'on' ? 1 : 0
-      this.fanLoading = true
+      if (this.pending) {
+        this.$message.warning('请等待上一次指令执行完成')
+        return
+      }
+      const val = action === 'on' ? 1 : 0
+      if (act === 'fan') this.fanLoading = true
+      else this.ledLoading = true
       try {
-        const res = await request({
-          url: '/service/deviceOption/control',
-          method: 'post',
-          data: {
-            deviceType: 'fan',
-            deviceKey: this.selectedDeviceKey,
-            command: action
-          },
-          timeout: 2000
+        const res = await deviceOption.controlDevice({
+          deviceType: act,
+          deviceKey: this.selectedDeviceKey,
+          command: action
         })
-        if (res.code === 20000) {
-          if (this.environmentData) this.environmentData.fanStatus = targetStatus
-          this.$message.success(`散热器${action === 'on' ? '开启' : '关闭'}成功`)
+        if (res.code === 20000 && res.data && res.data.cmdId) {
+          this.startPending(act, val, res.data.cmdId)
+          this.$message.info('指令已发送，等待设备响应')
         } else {
           this.$message.error(res.msg || '操作失败')
+          this.clearPending()
         }
       } catch (err) {
-        this.$message.error('操作超时或网络异常，请重试')
-      } finally {
-        this.fanLoading = false
+        this.$message.error((err && err.msg) || '操作失败，请重试')
+        this.clearPending()
       }
     },
-
+    async controlRadiator(action) {
+      await this.sendControl('fan', action)
+    },
     async controlLed(action) {
-      if (!this.selectedDeviceKey) {
-        this.$message.warning('请先选择设备')
-        return
-      }
-      const targetStatus = action === 'on' ? 1 : 0
-      this.ledLoading = true
-      try {
-        const res = await request({
-          url: '/service/deviceOption/control',
-          method: 'post',
-          data: {
-            deviceType: 'led',
-            deviceKey: this.selectedDeviceKey,
-            command: action
-          },
-          timeout: 2000
-        })
-        if (res.code === 20000) {
-          if (this.environmentData) this.environmentData.ledStatus = targetStatus
-          this.$message.success(`LED${action === 'on' ? '打开' : '关闭'}成功`)
-        } else {
-          this.$message.error(res.msg || '操作失败')
-        }
-      } catch (err) {
-        this.$message.error('操作超时或网络异常，请重试')
-      } finally {
-        this.ledLoading = false
-      }
+      await this.sendControl('led', action)
     }
   }
 }
@@ -570,6 +625,12 @@ export default {
   max-width: 900px;
   margin: 0 auto;
   width: 100%;
+}
+
+.pending-tip {
+  margin-top: 12px;
+  color: #E6A23C;
+  font-size: 13px;
 }
 
 .loading-wrapper,
