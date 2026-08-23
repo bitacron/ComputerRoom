@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.room.device.entity.Device;
+import com.example.room.device.service.DeviceService;
 import com.example.room.environment.entity.Environment;
 import com.example.room.environment.entity.dto.EnvironmentQuery;
 import com.example.room.environment.entity.dto.EnvironmentStatisticsQuery;
@@ -12,6 +14,8 @@ import com.example.room.environment.mapper.EnvironmentMapper;
 import com.example.room.environment.service.EnvironmentService;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.StringUtils;
+
+import javax.annotation.Resource;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -30,6 +34,9 @@ import java.util.*;
  */
 @Service
 public class EnvironmentServiceImpl extends ServiceImpl<EnvironmentMapper, Environment> implements EnvironmentService {
+
+    @Resource
+    private DeviceService deviceService;
     @Override
     public Page<Environment> pageQuery(EnvironmentQuery query) {
         if (query == null) {
@@ -100,12 +107,11 @@ public class EnvironmentServiceImpl extends ServiceImpl<EnvironmentMapper, Envir
     }
     @Override
     public Environment getLastData(String deviceKey) {
-        QueryWrapper<Environment> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(Environment::getDeviceKey, deviceKey);
-        queryWrapper.lambda().orderByDesc(Environment::getGmtCreate);
-        queryWrapper.last("limit 1");
-        // Service层
-        return this.getOne(queryWrapper);
+        if (StringUtils.isBlank(deviceKey)) {
+            return getLastData();
+        }
+        Device device = deviceService.getByDeviceKey(deviceKey);
+        return deviceService.toRealtimeEnvironment(device);
     }
 
     @Override

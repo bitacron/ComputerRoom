@@ -2,6 +2,7 @@ package com.example.room.mqtt.common;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.example.room.device.entity.Device;
 import com.example.room.device.service.DeviceService;
 import com.example.room.environment.entity.Environment;
 import com.example.room.control.service.DeviceOptionService;
@@ -59,8 +60,7 @@ public class MqttProcessMessageService {
             dataEntity.setReceiveTime(new Date());
             dataEntity.setDeviceKey(deviceKeyStr);
             mqttReceiveReportService.save(dataEntity);
-            deviceService.reportData(deviceKeyStr);
-            // 2. 解析并处理环境数据
+            // 2. 解析并处理环境数据（历史入库 + 刷新 device 当前态）
             processEnvironmentData(payload);
         } else if (topic.contains("resp")) {
             // 1. 原始JSON直接落库
@@ -70,8 +70,6 @@ public class MqttProcessMessageService {
             dataEntity.setReceiveTime(new Date());
             dataEntity.setDeviceKey(deviceKeyStr);
             mqttReceiveCmdRespService.save(dataEntity);
-            deviceService.reportData(deviceKeyStr);
-            // 2. 解析并处理报警数据
             deviceOptionService.onMqttMessage(topic, payload);
         } else if (topic.contains("status") || topic.contains("heartbeat")) {
             // status: 上线声明 / Last Will 离线；heartbeat 兼容旧固件
@@ -196,12 +194,17 @@ public class MqttProcessMessageService {
 
             // 处理 measureTime：优先用设备侧墙钟（东八区），否则用服务端接收时间
             environment.setGmtMeasurement(parseMeasureTime(jsonObject.get("measureTime")));
-            // 插入到数据库
+            environmentService.save(environment);
+            Device device = deviceService.applyReportSnapshot(deviceKeyStr, environment);
+            Environment snapshot = deviceService.toRealtimeEnvironment(device);
             String socketTopic = "/topic/environment/"+ deviceKeyStr;
-            webSocketPushUtil.pushToTopic(socketTopic, environment);
-            boolean saved = environmentService.save(environment);
+            webSocketPushUtil.pushToTopic(socketTopic, snapshot != null ? snapshot : environment);
         } catch (Exception e) {
-            log.error("处理\"environment数据时发生异常: {}", e.getMessage(), e);
+            log.error("处理environment数据时发生异常: {}", e.getMessage(), e);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            }
+            throw new RuntimeException(e);
         }
     }
 

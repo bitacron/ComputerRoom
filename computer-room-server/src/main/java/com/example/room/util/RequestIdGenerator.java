@@ -1,16 +1,15 @@
 package com.example.room.util;
 
+import cn.hutool.core.util.IdUtil;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
+/**
+ * 反控指令 cmdId。雪花 ID，重启与绕回都不会和历史指令撞号。
+ */
 @Component
 public class RequestIdGenerator {
-    private final AtomicInteger counter = new AtomicInteger(0);
 
     public String nextId() {
-        int val = counter.incrementAndGet() & 0xFFFF; // 保证在 0~65535 之间
-        return String.format("%04X", val); // 输出大写十六进制，如 "00A3"
+        return IdUtil.getSnowflakeNextIdStr();
     }
-
 }

@@ -158,7 +158,21 @@ CREATE TABLE `device`  (
   `last_online_time` datetime NULL DEFAULT NULL COMMENT '最后上线时间',
   `last_offline_time` datetime NULL DEFAULT NULL COMMENT '最后离线时间',
   `last_active_time` datetime NULL DEFAULT NULL COMMENT '最后活跃时间（上报数据时间）',
-  PRIMARY KEY (`id`) USING BTREE
+  `temperature` decimal(5, 2) NULL DEFAULT NULL COMMENT '当前温度',
+  `humidity` decimal(5, 2) NULL DEFAULT NULL COMMENT '当前湿度',
+  `gas_ppm` decimal(5, 2) NULL DEFAULT NULL COMMENT '当前烟雾浓度',
+  `gas_status` tinyint(4) NULL DEFAULT NULL COMMENT '当前烟雾状态（1：有烟雾；0：无烟雾）',
+  `light_status` tinyint(4) NULL DEFAULT NULL COMMENT '当前光照状态（1：无光；0：有光）',
+  `flame_status` tinyint(4) NULL DEFAULT NULL COMMENT '当前火焰状态（1：有火；0：无火）',
+  `light_percentage` decimal(5, 2) NULL DEFAULT NULL COMMENT '当前光照强度（0-100）',
+  `flame_percentage` decimal(5, 2) NULL DEFAULT NULL COMMENT '当前火焰百分比（0-100）',
+  `alarm_status` tinyint(4) NULL DEFAULT NULL COMMENT '当前蜂鸣器报警（1：报警；0：未报警）',
+  `fan_status` tinyint(4) NULL DEFAULT NULL COMMENT '当前散热设备开关（1：开启；0：关闭）',
+  `led_status` tinyint(4) NULL DEFAULT NULL COMMENT '当前 LED 开关（1：开启；0：关闭）',
+  `last_report_time` datetime NULL DEFAULT NULL COMMENT '影子对应的最近一次测量时间',
+  `last_actuator_time` datetime NULL DEFAULT NULL COMMENT '最近一次执行器（风扇/LED）变更时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_device_key`(`device_key`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '设备表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------

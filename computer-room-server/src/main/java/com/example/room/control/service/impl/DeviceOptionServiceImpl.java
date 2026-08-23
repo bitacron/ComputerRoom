@@ -16,7 +16,8 @@ import com.example.room.control.entity.enums.DeviceCommandEnum;
 import com.example.room.control.entity.enums.DeviceTypeEnum;
 import com.example.room.control.mapper.DeviceOptionMapper;
 import com.example.room.control.service.DeviceOptionService;
-import com.example.room.environment.service.EnvironmentService;
+import com.example.room.device.entity.Device;
+import com.example.room.device.service.DeviceService;
 import com.example.room.access.entity.User;
 import com.example.room.access.service.UserService;
 import com.example.room.mqtt.common.MqttSendMessageService;
@@ -28,8 +29,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -45,8 +44,6 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
 
     @Resource
     private MqttSendMessageService mqttSendMessageService;
-    @Resource
-    private EnvironmentService environmentService;
 
     @Resource
     private UserService userService;
@@ -55,7 +52,13 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
     private CommandService commandService;
 
     @Resource
+    private DeviceService deviceService;
+
+    @Resource
     private WebSocketPushUtil webSocketPushUtil;
+
+    @Resource
+    private RequestIdGenerator requestIdGenerator;
     @Override
     public Page<DeviceOptionVo> pageQuery(DeviceOptionQuery deviceOptionQuery) {
         Page<DeviceOption> page = new Page<>(deviceOptionQuery.getCurrentPage(), deviceOptionQuery.getPageSize());
@@ -109,19 +112,9 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
      */
 
 
-    private final ConcurrentHashMap<String, CompletableFuture<Boolean>> pendingRequests = new ConcurrentHashMap<>();
-    private final RequestIdGenerator idGenerator = new RequestIdGenerator();
     @Override
     public boolean controlDevice(DeviceOptionControl deviceOptionControl, String operatorCode) {
-        // 1. send发送MQTT消息到 设备
-
-        String requestId = idGenerator.nextId();
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-
-        // 如果遇到极低概率的冲突（同一ID已存在），可自旋重试
-        while (pendingRequests.putIfAbsent(requestId, future) != null) {
-            requestId = idGenerator.nextId(); // 重新生成
-        }
+        String requestId = requestIdGenerator.nextId();
         String topic = "room" + "/" + deviceOptionControl.getDeviceKey() + "/command";
 
         // 使用枚举生成消息体
@@ -161,26 +154,13 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
     @Override
     public void onMqttMessage(String topic, String payload) {
         JSONObject json = JSON.parseObject(payload);
-        // webSocketPushUtil.pushToTopic("/ws/environment", payload);
         String deviceKeyStr = "";
-        if (json.containsKey("dev")) {
-            Object deviceKey = json.get("dev");
-            deviceKeyStr = deviceKey.toString();
+        if (json.containsKey("dev") && json.get("dev") != null) {
+            deviceKeyStr = json.get("dev").toString();
         }
-        // 重新推送一下环境数据
-        Environment environment = environmentService.getLastData(deviceKeyStr);
-        if (json.containsKey("fan")) {
-            Object fan = json.get("fan");
-            if (fan != null) {
-                environment.setFanStatus(Integer.parseInt(fan.toString()));
-            }
-        }
-        if (json.containsKey("led")) {
-            Object led = json.get("led");
-            if (led != null) {
-                environment.setLedStatus(Integer.parseInt(led.toString()));
-            }
-        }
+        Integer fanStatus = json.getInteger("fan");
+        Integer ledStatus = json.getInteger("led");
+        Device device = deviceService.applyActuatorSnapshot(deviceKeyStr, fanStatus, ledStatus);
         if (json.containsKey("cmdId")) {
             QueryWrapper<Command> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(Command::getCmdId, json.get("cmdId"));
@@ -189,18 +169,13 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
             Command command = commandService.getOne(queryWrapper);
             if (command != null) {
                 command.setStatus(2);
+                commandService.update(command, queryWrapper);
             }
-            commandService.update(command, queryWrapper);
         }
-        String socketTopic = "/topic/environment/"+ deviceKeyStr;
-        webSocketPushUtil.pushToTopic(socketTopic, environment);
-        // if (json.containsKey("cmdId")) {
-        //     Object cmdId = json.get("cmdId").toString();
-        //     CompletableFuture<Boolean> future = pendingRequests.remove(cmdId);
-        //     if (future != null) {
-        //         // 可以进一步检查回复内容是否匹配指令，但一般有 ID 就足够
-        //         future.complete(true);
-        //     }
-        // }
+        Environment snapshot = deviceService.toRealtimeEnvironment(device);
+        if (snapshot != null) {
+            String socketTopic = "/topic/environment/" + deviceKeyStr;
+            webSocketPushUtil.pushToTopic(socketTopic, snapshot);
+        }
     }
 }

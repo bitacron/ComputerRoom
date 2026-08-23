@@ -4,8 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.room.device.entity.Device;
 import com.example.room.device.entity.query.DeviceQuery;
-
-import java.util.Map;
+import com.example.room.environment.entity.Environment;
 
 
 /**
@@ -58,4 +57,22 @@ public interface DeviceService extends IService<Device> {
     void offlineDevice(String deviceKey);
 
     void reportData(String deviceKey);
+
+    /**
+     * 上报刷新设备当前态。更旧的测量包不覆盖影子；
+     * 执行器保护窗口内不覆盖 fan/led。
+     *
+     * @return 当前设备；设备不存在时返回 null
+     */
+    Device applyReportSnapshot(String deviceKey, Environment reported);
+
+    /**
+     * 反控 ACK 局部更新风扇/LED，并刷新 lastActuatorTime。
+     */
+    Device applyActuatorSnapshot(String deviceKey, Integer fanStatus, Integer ledStatus);
+
+    /**
+     * 将设备当前态转成实时页使用的 Environment 形状；尚无快照时返回 null。
+     */
+    Environment toRealtimeEnvironment(Device device);
 }

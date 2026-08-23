@@ -7,11 +7,12 @@ import com.example.room.device.entity.Device;
 import com.example.room.device.entity.query.DeviceQuery;
 import com.example.room.device.mapper.DeviceMapper;
 import com.example.room.device.service.DeviceService;
+import com.example.room.environment.entity.Environment;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.Map;
 
 /**
  * <p>
@@ -23,6 +24,9 @@ import java.util.Map;
  */
 @Service
 public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> implements DeviceService {
+
+    /** 反控 ACK 后，这段时间内上报不覆盖 fan/led，避免旧采样包把新状态打回去 */
+    private static final long ACTUATOR_PROTECT_MS = 15_000L;
 
     @Override
     public Page<Device> pageQuery(DeviceQuery query) {
@@ -144,5 +148,130 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             device.setLastActiveTime(now);
             this.update(device, queryWrapper);
         }
+    }
+
+    @Transactional
+    @Override
+    public Device applyReportSnapshot(String deviceKey, Environment reported) {
+        if (StringUtils.isBlank(deviceKey) || reported == null) {
+            return null;
+        }
+        QueryWrapper<Device> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(Device::getDeviceKey, deviceKey);
+        Device device = this.getOne(queryWrapper);
+        if (device == null) {
+            return null;
+        }
+        Date now = new Date();
+        markOnlineAndActive(device, now);
+
+        Date measureTime = reported.getGmtMeasurement() != null ? reported.getGmtMeasurement() : now;
+        if (device.getLastReportTime() != null && measureTime.before(device.getLastReportTime())) {
+            this.updateById(device);
+            return device;
+        }
+
+        device.setTemperature(reported.getTemperature());
+        device.setHumidity(reported.getHumidity());
+        device.setGasPpm(reported.getGasPpm());
+        device.setGasStatus(reported.getGasStatus());
+        device.setLightStatus(reported.getLightStatus());
+        device.setFlameStatus(reported.getFlameStatus());
+        device.setLightPercentage(reported.getLightPercentage());
+        device.setFlamePercentage(reported.getFlamePercentage());
+        device.setAlarmStatus(reported.getAlarmStatus());
+        if (!inActuatorProtectWindow(device, now)) {
+            device.setFanStatus(reported.getFanStatus());
+            device.setLedStatus(reported.getLedStatus());
+        }
+        device.setLastReportTime(measureTime);
+        this.updateById(device);
+        return device;
+    }
+
+    @Transactional
+    @Override
+    public Device applyActuatorSnapshot(String deviceKey, Integer fanStatus, Integer ledStatus) {
+        if (StringUtils.isBlank(deviceKey)) {
+            return null;
+        }
+        QueryWrapper<Device> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(Device::getDeviceKey, deviceKey);
+        Device device = this.getOne(queryWrapper);
+        if (device == null) {
+            return null;
+        }
+        Date now = new Date();
+        markOnlineAndActive(device, now);
+        boolean actuatorChanged = false;
+        if (fanStatus != null) {
+            device.setFanStatus(fanStatus);
+            actuatorChanged = true;
+        }
+        if (ledStatus != null) {
+            device.setLedStatus(ledStatus);
+            actuatorChanged = true;
+        }
+        if (actuatorChanged) {
+            device.setLastActuatorTime(now);
+        }
+        this.updateById(device);
+        return device;
+    }
+
+    @Override
+    public Environment toRealtimeEnvironment(Device device) {
+        if (device == null) {
+            return null;
+        }
+        if (device.getLastReportTime() == null
+                && device.getTemperature() == null
+                && device.getFanStatus() == null
+                && device.getLedStatus() == null) {
+            return null;
+        }
+        Environment environment = new Environment();
+        environment.setSource(1);
+        environment.setDeviceKey(device.getDeviceKey());
+        if (device.getTemperature() != null) {
+            environment.setTemperature(device.getTemperature());
+        }
+        if (device.getHumidity() != null) {
+            environment.setHumidity(device.getHumidity());
+        }
+        if (device.getGasPpm() != null) {
+            environment.setGasPpm(device.getGasPpm());
+        }
+        environment.setGasStatus(device.getGasStatus());
+        environment.setLightStatus(device.getLightStatus());
+        environment.setFlameStatus(device.getFlameStatus());
+        if (device.getLightPercentage() != null) {
+            environment.setLightPercentage(device.getLightPercentage());
+        }
+        if (device.getFlamePercentage() != null) {
+            environment.setFlamePercentage(device.getFlamePercentage());
+        }
+        environment.setAlarmStatus(device.getAlarmStatus());
+        environment.setFanStatus(device.getFanStatus());
+        environment.setLedStatus(device.getLedStatus());
+        environment.setGmtMeasurement(device.getLastReportTime());
+        environment.setGmtCreate(device.getLastActiveTime());
+        return environment;
+    }
+
+    private void markOnlineAndActive(Device device, Date now) {
+        if (device.getOnlineStatus() == null || device.getOnlineStatus() != 1) {
+            device.setOnlineStatus(1);
+            device.setLastOnlineTime(now);
+        }
+        device.setLastActiveTime(now);
+    }
+
+    private boolean inActuatorProtectWindow(Device device, Date now) {
+        Date lastActuatorTime = device.getLastActuatorTime();
+        if (lastActuatorTime == null) {
+            return false;
+        }
+        return now.getTime() - lastActuatorTime.getTime() < ACTUATOR_PROTECT_MS;
     }
 }

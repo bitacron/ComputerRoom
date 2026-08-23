@@ -47,4 +47,43 @@ public class Device implements Serializable {
     @ApiModelProperty(value = "最后活跃时间（上报数据时间）")
     private Date lastActiveTime;
 
+    @ApiModelProperty(value = "当前温度")
+    private Float temperature;
+
+    @ApiModelProperty(value = "当前湿度")
+    private Float humidity;
+
+    @ApiModelProperty(value = "当前烟雾浓度")
+    private Float gasPpm;
+
+    @ApiModelProperty(value = "当前烟雾状态（1：有烟雾；0：无烟雾）")
+    private Integer gasStatus;
+
+    @ApiModelProperty(value = "当前光照状态（1：无光；0：有光）")
+    private Integer lightStatus;
+
+    @ApiModelProperty(value = "当前火焰状态（1：有火；0：无火）")
+    private Integer flameStatus;
+
+    @ApiModelProperty(value = "当前光照强度（0-100）")
+    private Float lightPercentage;
+
+    @ApiModelProperty(value = "当前火焰百分比（0-100）")
+    private Float flamePercentage;
+
+    @ApiModelProperty(value = "当前蜂鸣器报警（1：报警；0：未报警）")
+    private Integer alarmStatus;
+
+    @ApiModelProperty(value = "当前散热设备开关（1：开启；0：关闭）")
+    private Integer fanStatus;
+
+    @ApiModelProperty(value = "当前 LED 开关（1：开启；0：关闭）")
+    private Integer ledStatus;
+
+    @ApiModelProperty(value = "影子对应的最近一次测量时间")
+    private Date lastReportTime;
+
+    @ApiModelProperty(value = "最近一次执行器（风扇/LED）变更时间")
+    private Date lastActuatorTime;
+
 }
