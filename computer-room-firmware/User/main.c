@@ -35,6 +35,9 @@
  *								        COM-----5V
  *								Led     + ------PB5
  *								        VCC-----3.3V
+ *								KEY1    IO------PB10   (勿接 PB1，与 LDR AO 冲突)
+ *								KEY2    IO------PB11
+ *								        GND-----GND    低电平有效，现未接入主循环
  *								Usart1  RXD-----PA9
  *											  TXD-----PA10
  *								        VCC-----5V
