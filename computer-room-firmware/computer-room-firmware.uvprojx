@@ -889,14 +889,14 @@
               <FilePath>.\NET\onenet.h</FilePath>
             </File>
             <File>
-              <FileName>mqtt_client.c</FileName>
+              <FileName>custom.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\NET\mqtt_client.c</FilePath>
+              <FilePath>.\NET\custom.c</FilePath>
             </File>
             <File>
-              <FileName>mqtt_client.h</FileName>
+              <FileName>custom.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\NET\mqtt_client.h</FilePath>
+              <FilePath>.\NET\custom.h</FilePath>
             </File>
           </Files>
         </Group>
