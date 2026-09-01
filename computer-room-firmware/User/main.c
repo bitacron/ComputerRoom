@@ -37,7 +37,7 @@
  *								        VCC-----3.3V
  *								KEY1    IO------PB10   (勿接 PB1，与 LDR AO 冲突)
  *								KEY2    IO------PB11
- *								        GND-----GND    低电平有效，现未接入主循�?
+ *								        GND-----GND    低电平有效，无锁自复位；KEY1翻继电器，KEY2翻LED
  *								Usart1  RXD-----PA9
  *											  TXD-----PA10
  *								        VCC-----5V
@@ -50,6 +50,7 @@
 #include "delay.h"
 #include "oled.h"
 #include "actuators.h"
+#include "key.h"
 #include "dht11.h"
 #include "mq2.h"
 #include "beep.h"
@@ -101,6 +102,7 @@ int main(void)
 
 	Led_Init();
 	Relay_Init();
+	Key_Init();
 
 	Usart1_Init(115200);
 	Usart2_Init(115200);
@@ -137,6 +139,25 @@ int main(void)
 	while (1)
 	{
 		now = millis();
+
+		/* ---- 本地按键：无锁自复位，按下松开后翻转一次 ---- */
+		{
+			uint8_t keyNum = Key_GetNum();
+			if (keyNum == 1)
+			{
+				Relay_Turn();
+				fan = Relay_GetState();
+				report_asap = 1;
+				UsartPrintf(USART_DEBUG, "KEY1 fan=%d\r\n", fan);
+			}
+			else if (keyNum == 2)
+			{
+				Led_Turn();
+				led = Led_GetState();
+				report_asap = 1;
+				UsartPrintf(USART_DEBUG, "KEY2 led=%d\r\n", led);
+			}
+		}
 
 		/* ---- 采样 + �?地报�? ---- */
 		if ((now - last_sample_ms) >= SAMPLE_PERIOD_MS)
