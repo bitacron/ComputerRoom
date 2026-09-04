@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.room.alarm.service.AlarmRecordService;
 import com.example.room.device.entity.Device;
 import com.example.room.device.service.DeviceService;
 import com.example.room.environment.entity.Environment;
@@ -37,6 +38,19 @@ public class EnvironmentServiceImpl extends ServiceImpl<EnvironmentMapper, Envir
 
     @Resource
     private DeviceService deviceService;
+
+    @Resource
+    private AlarmRecordService alarmRecordService;
+
+    @Override
+    public boolean save(Environment entity) {
+        boolean ok = super.save(entity);
+        if (ok) {
+            alarmRecordService.processEnvironment(entity);
+        }
+        return ok;
+    }
+
     @Override
     public Page<Environment> pageQuery(EnvironmentQuery query) {
         if (query == null) {

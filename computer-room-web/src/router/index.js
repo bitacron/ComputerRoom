@@ -124,6 +124,20 @@ export const asyncRoutes = [
         }
       ]
     },
+
+    // 报警信息
+    {
+      path: '/alarm',
+      component: Layout,
+      children: [
+        {
+          path: 'index',
+          name: 'Alarm',
+          component: () => import('@/views/alarm/index'),
+          meta: { title: '报警信息', icon: 'alarm' }
+        }
+      ]
+    },
   
     // 环境数据管理
     {

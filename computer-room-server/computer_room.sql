@@ -273,4 +273,26 @@ CREATE TABLE `user_device_preference`  (
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '设备表' ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for alarm_record
+-- ----------------------------
+DROP TABLE IF EXISTS `alarm_record`;
+CREATE TABLE `alarm_record`  (
+  `id` bigint(19) NOT NULL COMMENT '报警记录ID',
+  `device_key` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '设备标识',
+  `alarm_type` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '报警类型：TEMP/HUMI/GAS/FLAME',
+  `alarm_level` tinyint(4) NOT NULL DEFAULT 1 COMMENT '等级：1预警 2紧急',
+  `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '报警内容',
+  `status` tinyint(4) NOT NULL DEFAULT 0 COMMENT '状态：0报警中 1已恢复 2已处理',
+  `handler` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '处理人',
+  `handle_time` datetime NULL DEFAULT NULL COMMENT '处理时间',
+  `recover_time` datetime NULL DEFAULT NULL COMMENT '恢复时间',
+  `is_deleted` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '逻辑删除 1（true）已删除， 0（false）未删除',
+  `gmt_create` datetime NOT NULL COMMENT '报警开始时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_device_key`(`device_key`) USING BTREE,
+  INDEX `idx_status`(`status`) USING BTREE,
+  INDEX `idx_gmt_create`(`gmt_create`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '报警记录' ROW_FORMAT = DYNAMIC;
+
 SET FOREIGN_KEY_CHECKS = 1;
