@@ -44,6 +44,7 @@
           <el-option value="HUMI" label="湿度"/>
           <el-option value="GAS" label="烟雾"/>
           <el-option value="FLAME" label="火焰"/>
+          <el-option value="LEAK" label="漏水"/>
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -191,7 +192,7 @@ export default {
   },
   methods: {
     typeText(type) {
-      const map = { TEMP: '温度', HUMI: '湿度', GAS: '烟雾', FLAME: '火焰' }
+      const map = { TEMP: '温度', HUMI: '湿度', GAS: '烟雾', FLAME: '火焰', LEAK: '漏水' }
       return map[type] || type
     },
     levelText(level) {

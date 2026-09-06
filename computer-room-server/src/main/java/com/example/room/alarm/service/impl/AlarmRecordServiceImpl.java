@@ -25,17 +25,20 @@ import java.util.Objects;
 @Service
 public class AlarmRecordServiceImpl extends ServiceImpl<AlarmRecordMapper, AlarmRecord> implements AlarmRecordService {
 
-    /** 与固件蜂鸣器阈值一致：温度 50、湿度 60、烟雾 20、火焰数字量 */
+    /** 与固件蜂鸣器阈值一致：温度 50、湿度 60、烟雾 20、火焰数字量、漏水数字量 */
     private static final float TEMP_THRESHOLD = 50f;
     private static final float HUMI_THRESHOLD = 60f;
     private static final float GAS_PPM_THRESHOLD = 20f;
     /** 火焰模拟量预警阈值（固件蜂鸣器只看数字量，模拟量单独作为 Level 1） */
     private static final float FLAME_PER_THRESHOLD = 50f;
+    /** 漏水模拟量预警阈值（固件蜂鸣器只看数字量，模拟量单独作为 Level 1） */
+    private static final float LEAK_PER_THRESHOLD = 50f;
 
     private static final String TYPE_TEMP = "TEMP";
     private static final String TYPE_HUMI = "HUMI";
     private static final String TYPE_GAS = "GAS";
     private static final String TYPE_FLAME = "FLAME";
+    private static final String TYPE_LEAK = "LEAK";
 
     private static final int LEVEL_WARN = 1;
     private static final int LEVEL_URGENT = 2;
@@ -107,6 +110,7 @@ public class AlarmRecordServiceImpl extends ServiceImpl<AlarmRecordMapper, Alarm
             syncAlarm(deviceKey, TYPE_HUMI, judgeHumi(environment));
             syncAlarm(deviceKey, TYPE_GAS, judgeGas(environment));
             syncAlarm(deviceKey, TYPE_FLAME, judgeFlame(environment));
+            syncAlarm(deviceKey, TYPE_LEAK, judgeLeak(environment));
         } catch (Exception e) {
             log.error("处理报警记录失败, deviceKey={}", environment.getDeviceKey(), e);
         }
@@ -235,6 +239,23 @@ public class AlarmRecordServiceImpl extends ServiceImpl<AlarmRecordMapper, Alarm
         }
         return JudgeResult.of(LEVEL_WARN,
                 String.format("火焰概率 %.1f%%，超过阈值 %.0f%%", env.getFlamePercentage(), FLAME_PER_THRESHOLD));
+    }
+
+    private JudgeResult judgeLeak(Environment env) {
+        boolean digital = env.getLeakStatus() != null && env.getLeakStatus() == 1;
+        boolean analog = env.getLeakPercentage() >= LEAK_PER_THRESHOLD;
+        if (!digital && !analog) {
+            return JudgeResult.normal();
+        }
+        if (digital && analog) {
+            return JudgeResult.of(LEVEL_URGENT,
+                    String.format("漏水数字量报警 + 积水程度 %.1f%%", env.getLeakPercentage()));
+        }
+        if (digital) {
+            return JudgeResult.of(LEVEL_URGENT, "漏水数字量报警");
+        }
+        return JudgeResult.of(LEVEL_WARN,
+                String.format("积水程度 %.1f%%，超过阈值 %.0f%%", env.getLeakPercentage(), LEAK_PER_THRESHOLD));
     }
 
     private int countByStatus(int status) {

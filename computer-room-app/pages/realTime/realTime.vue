@@ -103,7 +103,20 @@
               <text class="value">{{ environmentData.flamePercentage }} %</text>
             </view>
           </view>
-          <!-- 第五行：告警状态 -->
+          <!-- 第五行：漏水状态 + 积水程度 -->
+          <view class="data-row">
+            <view class="info-item">
+              <text class="label">漏水状态：</text>
+              <text :class="['tag', environmentData.leakStatus === 1 ? 'tag-danger' : 'tag-success']">
+                {{ environmentData.leakStatus === 1 ? '检测到积水' : '无积水' }}
+              </text>
+            </view>
+            <view class="info-item">
+              <text class="label">积水程度：</text>
+              <text class="value">{{ environmentData.leakPercentage }} %</text>
+            </view>
+          </view>
+          <!-- 第六行：告警状态 -->
           <view class="data-row">
             <view class="info-item">
               <text class="label">告警状态：</text>
@@ -112,7 +125,7 @@
               </text>
             </view>
           </view>
-          <!-- 第六行：散热器、LED -->
+          <!-- 第七行：散热器、LED -->
           <view class="data-row">
             <view class="info-item">
               <text class="label">散热器：</text>

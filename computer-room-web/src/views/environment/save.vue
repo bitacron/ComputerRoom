@@ -51,6 +51,15 @@
           <el-option :value="0" label="无明火"/>
         </el-select>
       </el-form-item>
+      <el-form-item label="积水程度">
+        <el-input v-model="environment.leakPercentage"/>
+      </el-form-item>
+      <el-form-item label="漏水状态">
+        <el-select v-model="environment.leakStatus" clearable placeholder="请选择">
+          <el-option :value="1" label="有积水"/>
+          <el-option :value="0" label="无积水"/>
+        </el-select>
+      </el-form-item>
       <el-form-item label="蜂鸣器报警状态">
         <el-select v-model="environment.alarmStatus" clearable placeholder="请选择">
           <!--数据类型一定要和取出的json中的一致，否则没法回填.因此，这里value使用动态绑定的值，保证其数据类型是number-->
@@ -103,6 +112,8 @@ export default {
                 flameStatus: '',
                 lightPercentage: '',
                 flamePercentage: '',
+                leakStatus: '',
+                leakPercentage: '',
                 alarmStatus: '',
                 fan: '',
                 ledStatus: '',

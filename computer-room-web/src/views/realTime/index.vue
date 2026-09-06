@@ -126,7 +126,21 @@
           </div>
         </div>
 
-        <!-- 第5行：告警状态 -->
+        <!-- 第5行：漏水状态、积水程度 -->
+        <div class="data-row">
+          <div class="info-item">
+            <span class="label">漏水状态：</span>
+            <el-tag :type="environmentData.leakStatus === 1 ? 'danger' : 'success'" size="small">
+              {{ environmentData.leakStatus === 1 ? '检测到积水' : '无积水' }}
+            </el-tag>
+          </div>
+          <div class="info-item">
+            <span class="label">积水程度：</span>
+            <span class="value">{{ environmentData.leakPercentage }} %</span>
+          </div>
+        </div>
+
+        <!-- 第6行：告警状态 -->
         <div class="data-row">
           <div class="info-item">
             <span class="label">告警状态：</span>
@@ -136,7 +150,7 @@
           </div>
         </div>
 
-        <!-- 第6行：散热器、LED -->
+        <!-- 第7行：散热器、LED -->
         <div class="data-row">
           <div class="info-item">
             <span class="label">散热器：</span>

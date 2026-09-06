@@ -71,6 +71,17 @@ public class EnvironmentExportVO {
     @ColumnWidth(12)
     private String flameStatusStr;
 
+    @ExcelProperty("积水程度 (%)")
+    @ColumnWidth(16)
+    private Float leakPercentage;
+
+    @ExcelIgnore
+    private Integer leakStatus;
+
+    @ExcelProperty("漏水状态")
+    @ColumnWidth(12)
+    private String leakStatusStr;
+
     @ExcelIgnore
     private Integer alarmStatus;
 
@@ -118,6 +129,11 @@ public class EnvironmentExportVO {
     public void setFlameStatus(Integer flameStatus) {
         this.flameStatus = flameStatus;
         this.flameStatusStr = flameStatus != null && flameStatus == 1 ? "有明火" : "无明火";
+    }
+
+    public void setLeakStatus(Integer leakStatus) {
+        this.leakStatus = leakStatus;
+        this.leakStatusStr = leakStatus != null && leakStatus == 1 ? "有积水" : "无积水";
     }
 
     public void setAlarmStatus(Integer alarmStatus) {

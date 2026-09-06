@@ -63,6 +63,12 @@ public class Environment implements Serializable {
     @ApiModelProperty(value = "附近有火焰的百分比（0-100）")
     private float flamePercentage;
 
+    @ApiModelProperty(value = "漏水传感器状态（1：有积水；0：无积水）")
+    private Integer leakStatus;
+
+    @ApiModelProperty(value = "积水程度百分比（0-100）")
+    private float leakPercentage;
+
     @ApiModelProperty(value = "蜂鸣器报警状态（1：报警；0：未报警）")
     private Integer alarmStatus;
 

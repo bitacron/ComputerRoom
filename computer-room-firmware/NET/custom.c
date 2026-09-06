@@ -86,6 +86,8 @@ extern uint8_t ldrDig;
 extern uint8_t ldrPer;
 extern uint8_t flameDig;
 extern uint8_t flamePer;
+extern uint8_t leakDig;
+extern uint8_t leakPer;
 extern uint8_t alarmFlag;
 extern uint8_t fan;
 extern uint8_t led;
@@ -115,9 +117,9 @@ unsigned char MQTT_Client_FillBuf(char *buf)
 
 	fan = Relay_GetState();
 	led = Led_GetState();
-	snprintf(buf, 320,
-		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"alarm\":%d,\"fan\":%d,\"led\":%d,\"measureTime\":\"%s\"}",
-		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, alarmFlag, fan, led, measure_time);
+	snprintf(buf, 360,
+		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"leakDig\":%d,\"leakPer\":%d,\"alarm\":%d,\"fan\":%d,\"led\":%d,\"measureTime\":\"%s\"}",
+		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, leakDig, leakPer, alarmFlag, fan, led, measure_time);
 	return strlen(buf);
 }
 
@@ -130,7 +132,7 @@ unsigned char MQTT_Client_FillBuf(char *buf)
 void MQTT_Client_SendData(void)
 {
 	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
-	char buf[320];
+	char buf[360];
 	char topic[64];
 	short body_len = 0, i = 0;
 

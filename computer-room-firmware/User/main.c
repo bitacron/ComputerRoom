@@ -4,15 +4,16 @@
  * @Author     : Zhmy
  * @Date       : 2026-03-10
  * @Description: 01. DHT11传感器测量温湿度
- *							 02. MQ2烟雾传感器测量烟雾浓度。包�?模拟输出和数字输出。模拟输出转化为PPM，数字输出为1�?0�?
- *							 03. LDR光敏电阻测量光照。包�?模拟输出和数字输出。模拟输出转化为百分比，数字输出�?1�?0�?
- *							 04. Flame�?焰传感器测量�?焰。包�?模拟输出和数字输出。模拟输出转化为百分比，数字输出�?1�?0�?
- *							 05. 蜂鸣器支持自动报警，兼�?�高低电平触发方式的蜂鸣器�?
- *							 06. 继电器远程反控散�?�?，兼容高低电平触发方式的继电器�?
- *							 07. Led�?持远程反控开关灯�?
- *							 08. OLED显示屏显示感知层的数�?�?
- *							 09. ESP8266-01连接Wifi将感知层的�?�别通过MQTT协�??发送给服务�?，并接收服务器的反控指令�?
- *							 10. 串口和PC�?通信调试设�?��?
+ *							 02. MQ2烟雾传感器测量烟雾浓度。包含模拟输出和数字输出。模拟输出转化为PPM，数字输出为1或0。
+ *							 03. LDR光敏电阻测量光照。包含模拟输出和数字输出。模拟输出转化为百分比，数字输出为1或0。
+ *							 04. Flame火焰传感器测量火焰。包含模拟输出和数字输出。模拟输出转化为百分比，数字输出为1或0。
+ *							 05. Leak漏水/雨滴传感器测量积水。包含模拟输出和数字输出。模拟输出转化为百分比，数字输出为1或0。
+ *							 06. 蜂鸣器支持自动报警，兼容高低电平触发方式的蜂鸣器。
+ *							 07. 继电器远程反控散热器，兼容高低电平触发方式的继电器。
+ *							 08. Led支持远程反控开关灯。
+ *							 09. OLED显示屏显示感知层的数据。
+ *							 10. ESP8266-01连接Wifi将感知层的数据通过MQTT协议发送给服务器，并接收服务器的反控指令。
+ *							 11. 串口和PC通信调试设备。
  *								DHT11   DATA----PB14
  *								        VCC-----3.3V
  *								OLED    SCL-----PB8
@@ -27,6 +28,9 @@
  *								Flame   AO------PB0
  *								        DO------PA0
  *								        VCC-----3.3V
+ *								Leak    AO------PA5
+ *								        DO------PA8
+ *								        VCC-----5V
  *								BEEP	  IO------PB12
  *								        VCC-----3.3V
  *								Relay   IN------PA12
@@ -57,6 +61,7 @@
 #include "stdio.h"
 #include "light_dependent_resisto.h"
 #include "flame_sensor.h"
+#include "leak_sensor.h"
 #include "usart.h"
 #include "esp8266.h"
 #include "custom.h"
@@ -69,8 +74,8 @@
 #define OLED_PERIOD_MS      500u
 #define REPORT_PERIOD_MS   5000u
 
-uint8_t temp, humi, ldrDig, alarmFlag, fan, led, flameDig, flamePer, gasDig, ldrPer;
-uint16_t gasPPM;  // MQ2 PPM �?达上千，不可�? uint8_t
+uint8_t temp, humi, ldrDig, alarmFlag, fan, led, flameDig, flamePer, gasDig, ldrPer, leakDig, leakPer;
+uint16_t gasPPM;  // MQ2 PPM 可达上千，不可用 uint8_t
 
 u8 ESP8266_INIT_OK = 0;
 volatile uint8_t report_asap = 0;
@@ -98,6 +103,9 @@ int main(void)
 	LDR_Init_AO();
 	LDR_Init_DO();
 
+	Leak_Init_AO();
+	Leak_Init_DO();
+
 	Beep_Init();
 
 	Led_Init();
@@ -108,7 +116,7 @@ int main(void)
 	Usart2_Init(115200);
 	UsartPrintf(USART_DEBUG, "========================\r\n");
 
-	/* 1ms 系统节拍�?72MHz / (71+1) / (999+1) = 1000Hz */
+	/* 1ms 系统节拍：72MHz / (71+1) / (999+1) = 1000Hz */
 	TIM3_Int_Init(999, 71);
 
 	ESP8266_Init();
@@ -124,13 +132,14 @@ int main(void)
 	Beep_ShortBeep(200);
 	OLED_Clear();
 
-	/* OLED 标�?�只画一次，�?�?里只刷新数�? */
+	/* OLED 标题只画一次，循环里只刷新数值 */
 	OLED_ShowString(1, 1, "Compoter Room!");
 	OLED_ShowString(2, 1, "temp:");
 	OLED_ShowString(2, 9, "humi:");
 	OLED_ShowString(3, 1, "gas:");
 	OLED_ShowString(3, 9, "flame:");
 	OLED_ShowString(4, 1, "ldr:");
+	OLED_ShowString(4, 9, "leak:");
 
 	UsartPrintf(USART_DEBUG, " Hardware init OK\r\n");
 
@@ -159,12 +168,13 @@ int main(void)
 			}
 		}
 
-		/* ---- 采样 + �?地报�? ---- */
+		/* ---- 采样 + 本地报警 ---- */
 		if ((now - last_sample_ms) >= SAMPLE_PERIOD_MS)
 		{
 			uint16_t gasAna;
 			uint16_t ldrAna;
 			uint16_t flameAna;
+			uint16_t leakAna;
 
 			last_sample_ms = now;
 
@@ -182,7 +192,11 @@ int main(void)
 			flameAna = Flame_GetAnalogAverage();
 			flamePer = Flame_GetPercentage();
 
-			if (humi < 60 && temp < 50 && gasPPM < 20 && flameDig == 0) {
+			leakDig = Leak_GetDigital();
+			leakAna = Leak_GetAnalogAverage();
+			leakPer = Leak_GetPercentage();
+
+			if (humi < 60 && temp < 50 && gasPPM < 20 && flameDig == 0 && leakDig == 0) {
 				Beep_Off();
 			} else {
 				Beep_On();
@@ -192,17 +206,18 @@ int main(void)
 			led = Led_GetState();
 			{
 				char measure_time[24];
-				/* �? MQTT 上报一致：有校时用墙钟，否则占�? */
+				/* 与 MQTT 上报一致：有校时用墙钟，否则占位 */
 				if (ESP8266_GetTime(measure_time, sizeof(measure_time)) != 0)
 					snprintf(measure_time, sizeof(measure_time), "0000-00-00 00:00:00");
 				UsartPrintf(USART_DEBUG,
-					"measureTime=%s, temp=%d, humi=%d, gasPPM=%d, gasAna=%d,gasDig=%d, alarm=%d, fan=%d, led = %d, ldrDig=%d,ldrAna=%d,ldrPer=%d, flameDig=%d, flameAna=%d, flamePer=%d\r\n",
+					"measureTime=%s, temp=%d, humi=%d, gasPPM=%d, gasAna=%d,gasDig=%d, alarm=%d, fan=%d, led = %d, ldrDig=%d,ldrAna=%d,ldrPer=%d, flameDig=%d, flameAna=%d, flamePer=%d, leakDig=%d,leakAna=%d,leakPer=%d\r\n",
 					measure_time, temp, humi, gasPPM, gasAna, gasDig, alarmFlag, fan, led,
-					ldrDig, ldrAna, ldrPer, flameDig, flameAna, flamePer);
+					ldrDig, ldrAna, ldrPer, flameDig, flameAna, flamePer,
+					leakDig, leakAna, leakPer);
 			}
 		}
 
-		/* ---- OLED 数值刷�? ---- */
+		/* ---- OLED 数值刷新 ---- */
 		if ((now - last_oled_ms) >= OLED_PERIOD_MS)
 		{
 			last_oled_ms = now;
@@ -211,9 +226,10 @@ int main(void)
 			OLED_ShowNum(3, 5, gasPPM, 4);
 			OLED_ShowNum(3, 15, flameDig, 1);
 			OLED_ShowNum(4, 5, ldrDig, 1);
+			OLED_ShowNum(4, 15, leakDig, 1);
 		}
 
-		/* ---- MQTT 周期上报 / 指令后尽�?上报 ---- */
+		/* ---- MQTT 周期上报 / 指令后尽快上报 ---- */
 		if (report_asap || (now - last_report_ms) >= REPORT_PERIOD_MS)
 		{
 			report_asap = 0;
@@ -223,7 +239,7 @@ int main(void)
 			ESP8266_Clear();
 		}
 
-		/* ---- 每圈�?�?�?下�?? ---- */
+		/* ---- 每圈尝试收一次下行 ---- */
 		dataPtr = ESP8266_GetIPD(3);
 		if (dataPtr != NULL) {
 			MQTT_Client_RevPro(dataPtr);

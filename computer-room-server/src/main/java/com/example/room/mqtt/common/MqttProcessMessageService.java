@@ -102,6 +102,8 @@ public class MqttProcessMessageService {
               "ldrPer": 21,
               "flameDig": 0,
               "flamePer": 0,
+              "leakDig": 0,
+              "leakPer": 0,
               "alarm": 0,
               "fan": 0,
               "led": 0,
@@ -169,6 +171,18 @@ public class MqttProcessMessageService {
                 Object flamePer = jsonObject.get("flamePer");
                 if (flamePer != null) {
                     environment.setFlamePercentage(Float.parseFloat(flamePer.toString()));
+                }
+            }
+            if (jsonObject.containsKey("leakDig")) {
+                Object leakDig = jsonObject.get("leakDig");
+                if (leakDig != null) {
+                    environment.setLeakStatus(Integer.parseInt(leakDig.toString()));
+                }
+            }
+            if (jsonObject.containsKey("leakPer")) {
+                Object leakPer = jsonObject.get("leakPer");
+                if (leakPer != null) {
+                    environment.setLeakPercentage(Float.parseFloat(leakPer.toString()));
                 }
             }
             if (jsonObject.containsKey("alarm")) {

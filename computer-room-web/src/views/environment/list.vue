@@ -89,6 +89,12 @@
           {{ scope.row.flameStatus===1?'有明火':'无明火' }}
         </template>
       </el-table-column>
+      <el-table-column prop="leakPercentage" label="积水程度" width="80" />
+      <el-table-column label="漏水状态" width="80">
+        <template slot-scope="scope">
+          {{ scope.row.leakStatus===1?'有积水':'无积水' }}
+        </template>
+      </el-table-column>
       <el-table-column label="蜂鸣器报警状态" width="80">
         <template slot-scope="scope">
           {{ scope.row.alarmStatus===1?'报警':'未报警' }}

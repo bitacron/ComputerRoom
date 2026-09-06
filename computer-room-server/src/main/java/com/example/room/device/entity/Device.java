@@ -71,6 +71,12 @@ public class Device implements Serializable {
     @ApiModelProperty(value = "当前火焰百分比（0-100）")
     private Float flamePercentage;
 
+    @ApiModelProperty(value = "当前漏水状态（1：有积水；0：无积水）")
+    private Integer leakStatus;
+
+    @ApiModelProperty(value = "当前积水程度百分比（0-100）")
+    private Float leakPercentage;
+
     @ApiModelProperty(value = "当前蜂鸣器报警（1：报警；0：未报警）")
     private Integer alarmStatus;
 

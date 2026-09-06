@@ -68,6 +68,9 @@
       <div class="chart-container" style="margin-top:30px;">
         <div ref="gasChart" class="chart" style="height:350px;"/>
       </div>
+      <div class="chart-container" style="margin-top:30px;">
+        <div ref="leakChart" class="chart" style="height:350px;"/>
+      </div>
     </div>
   </div>
 </template>
@@ -83,11 +86,13 @@ export default {
     return {
       tempHumChart: null,
       gasChart: null,
+      leakChart: null,
       chartData: {
         times: [],
         temperature: [],
         humidity: [],
-        gasPpm: []
+        gasPpm: [],
+        leakPercentage: []
       },
       environmentQuery: {
         begin: '',
@@ -122,6 +127,7 @@ export default {
     window.removeEventListener('resize', this.resizeHandler)
     if (this.tempHumChart) this.tempHumChart.dispose()
     if (this.gasChart) this.gasChart.dispose()
+    if (this.leakChart) this.leakChart.dispose()
   },
   methods: {
     // ==================== 初始化 ====================
@@ -157,6 +163,21 @@ export default {
         yAxis: { type: 'value', name: '浓度(ppm)' },
         series: [
           { name: '烟雾浓度(ppm)', type: 'line', data: [] }
+        ],
+        dataZoom: [
+          { type: 'slider', start: 0, end: 100 },
+          { type: 'inside', start: 0, end: 100 }
+        ]
+      })
+
+      this.leakChart = echarts.init(this.$refs.leakChart)
+      this.leakChart.setOption({
+        title: { text: '积水程度变化', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: [] },
+        yAxis: { type: 'value', name: '程度(%)', min: 0, max: 100 },
+        series: [
+          { name: '积水程度(%)', type: 'line', data: [] }
         ],
         dataZoom: [
           { type: 'slider', start: 0, end: 100 },
@@ -285,6 +306,7 @@ export default {
       const temperature = []
       const humidity = []
       const gasPpm = []
+      const leakPercentage = []
       // 按时间正序展示（原数据可能是倒序，这里先反转）
       records.slice().reverse().forEach(item => {
         const time = item.gmtMeasurement
@@ -292,8 +314,9 @@ export default {
         temperature.push(item.temperature)
         humidity.push(item.humidity)
         gasPpm.push(item.gasPpm)
+        leakPercentage.push(item.leakPercentage)
       })
-      this.chartData = { times, temperature, humidity, gasPpm }
+      this.chartData = { times, temperature, humidity, gasPpm, leakPercentage }
     },
 
     // 更新图表
@@ -309,6 +332,12 @@ export default {
         xAxis: { data: this.chartData.times },
         series: [
           { data: this.chartData.gasPpm }
+        ]
+      })
+      this.leakChart.setOption({
+        xAxis: { data: this.chartData.times },
+        series: [
+          { data: this.chartData.leakPercentage }
         ]
       })
     },
@@ -413,6 +442,7 @@ export default {
     resizeHandler() {
       if (this.tempHumChart) this.tempHumChart.resize()
       if (this.gasChart) this.gasChart.resize()
+      if (this.leakChart) this.leakChart.resize()
     }
   }
 }

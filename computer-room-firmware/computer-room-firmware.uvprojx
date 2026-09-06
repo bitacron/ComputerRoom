@@ -774,6 +774,16 @@
               <FilePath>.\Hardware\flame_sensor.h</FilePath>
             </File>
             <File>
+              <FileName>leak_sensor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Hardware\leak_sensor.c</FilePath>
+            </File>
+            <File>
+              <FileName>leak_sensor.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Hardware\leak_sensor.h</FilePath>
+            </File>
+            <File>
               <FileName>light_dependent_resisto.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Hardware\light_dependent_resisto.c</FilePath>

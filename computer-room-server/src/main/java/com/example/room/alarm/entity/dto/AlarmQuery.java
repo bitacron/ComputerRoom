@@ -13,7 +13,7 @@ public class AlarmQuery implements Serializable {
     @ApiModelProperty(value = "设备标识")
     private String deviceKey;
 
-    @ApiModelProperty(value = "报警类型：TEMP/HUMI/GAS/FLAME")
+    @ApiModelProperty(value = "报警类型：TEMP/HUMI/GAS/FLAME/LEAK")
     private String alarmType;
 
     @ApiModelProperty(value = "等级：1预警 2紧急")

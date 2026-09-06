@@ -179,6 +179,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         device.setFlameStatus(reported.getFlameStatus());
         device.setLightPercentage(reported.getLightPercentage());
         device.setFlamePercentage(reported.getFlamePercentage());
+        device.setLeakStatus(reported.getLeakStatus());
+        device.setLeakPercentage(reported.getLeakPercentage());
         device.setAlarmStatus(reported.getAlarmStatus());
         if (!inActuatorProtectWindow(device, now)) {
             device.setFanStatus(reported.getFanStatus());
@@ -250,6 +252,10 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
         if (device.getFlamePercentage() != null) {
             environment.setFlamePercentage(device.getFlamePercentage());
+        }
+        environment.setLeakStatus(device.getLeakStatus());
+        if (device.getLeakPercentage() != null) {
+            environment.setLeakPercentage(device.getLeakPercentage());
         }
         environment.setAlarmStatus(device.getAlarmStatus());
         environment.setFanStatus(device.getFanStatus());

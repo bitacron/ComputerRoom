@@ -162,7 +162,8 @@ export default {
         { label: '湿度', value: 'humidity', unit: '%' },
         { label: '气体浓度', value: 'gasPpm', unit: 'ppm' },
         { label: '光照强度', value: 'lightPercentage', unit: '%' },
-        { label: '明火概率', value: 'flamePercentage', unit: '%' }
+        { label: '明火概率', value: 'flamePercentage', unit: '%' },
+        { label: '积水程度', value: 'leakPercentage', unit: '%' }
       ],
       currentSensor: 'temperature',
       timeRanges: [
