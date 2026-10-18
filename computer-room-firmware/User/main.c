@@ -109,7 +109,7 @@ int main(void)
 	Beep_Init();
 
 	Led_Init();
-	Relay_Init();
+	CoolingFan_Init();
 	Key_Init();
 
 	Usart1_Init(115200);
@@ -154,8 +154,8 @@ int main(void)
 			uint8_t keyNum = Key_GetNum();
 			if (keyNum == 1)
 			{
-				Relay_Turn();
-				fan = Relay_GetState();
+				CoolingFan_Turn();
+				fan = CoolingFan_GetState();
 				report_asap = 1;
 				UsartPrintf(USART_DEBUG, "KEY1 fan=%d\r\n", fan);
 			}
@@ -201,7 +201,7 @@ int main(void)
 			} else {
 				Beep_On();
 			}
-			fan = Relay_GetState();
+			fan = CoolingFan_GetState();
 			alarmFlag = Beep_GetState();
 			led = Led_GetState();
 			{

@@ -115,7 +115,7 @@ unsigned char MQTT_Client_FillBuf(char *buf)
 		snprintf(measure_time, sizeof(measure_time), "0000-00-00 00:00:00");
 	}
 
-	fan = Relay_GetState();
+	fan = CoolingFan_GetState();
 	led = Led_GetState();
 	snprintf(buf, 360,
 		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"leakDig\":%d,\"leakPer\":%d,\"alarm\":%d,\"fan\":%d,\"led\":%d,\"measureTime\":\"%s\"}",
@@ -259,7 +259,7 @@ static void MQTT_Client_SendCmdAck(const char *cmd_id, const char *act, int val,
 	char payload[192];
 	int n;
 
-	fan = Relay_GetState();
+	fan = CoolingFan_GetState();
 	led = Led_GetState();
 	sprintf(topic, "room/%s/ack", DEVICEID);
 	n = snprintf(payload, sizeof(payload),
@@ -365,13 +365,13 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 					{
 						if (val == 1)
 						{
-							Relay_ON();
+							CoolingFan_ON();
 						}
 						else
 						{
-							Relay_OFF();
+							CoolingFan_OFF();
 						}
-						fan = Relay_GetState();
+						fan = CoolingFan_GetState();
 						exec_result = (fan == val) ? 0 : 3;
 						UsartPrintf(USART_DEBUG, "fan val=%d gpio=%d\r\n", val, fan);
 					}
