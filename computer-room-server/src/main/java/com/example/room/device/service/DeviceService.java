@@ -60,16 +60,16 @@ public interface DeviceService extends IService<Device> {
 
     /**
      * 上报刷新设备当前态。更旧的测量包不覆盖影子；
-     * 执行器保护窗口内不覆盖 fan/led。
+     * 执行器保护窗口内不覆盖 五个执行器。
      *
      * @return 当前设备；设备不存在时返回 null
      */
     Device applyReportSnapshot(String deviceKey, Environment reported);
 
     /**
-     * 反控 ACK 局部更新风扇/LED，并刷新 lastActuatorTime。
+     * 反控 ACK 局部更新五个执行器，并刷新 lastActuatorTime。
      */
-    Device applyActuatorSnapshot(String deviceKey, Integer fanStatus, Integer ledStatus);
+    Device applyActuatorSnapshot(String deviceKey, Integer coolingFanStatus, Integer ledStatus, Integer heaterStatus, Integer humidifierStatus, Integer dehumidifyingFanStatus);
 
     /**
      * 将设备当前态转成实时页使用的 Environment 形状；尚无快照时返回 null。

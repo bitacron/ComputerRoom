@@ -137,7 +137,7 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         }
 
         String cmdId = requestIdGenerator.nextId();
-        String act = typeEnum.getCode().toLowerCase();
+        String act = typeEnum.getCode();
         int val = commandEnum.getIntValue();
         String topic = "room/" + deviceOptionControl.getDeviceKey() + "/command";
         JSONObject payload = new JSONObject();
@@ -178,12 +178,15 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         if (deviceKeyStr == null) {
             deviceKeyStr = "";
         }
-        Integer fanStatus = json.getInteger("fan");
+        Integer coolingFanStatus = json.getInteger("coolingFan");
         Integer ledStatus = json.getInteger("led");
+        Integer heaterStatus = json.getInteger("heater");
+        Integer humidifierStatus = json.getInteger("humidifier");
+        Integer dehumidifyingFanStatus = json.getInteger("dehumidifyingFan");
         Integer result = json.getInteger("result");
         String act = json.getString("act");
         Integer val = json.getInteger("val");
-        Device device = deviceService.applyActuatorSnapshot(deviceKeyStr, fanStatus, ledStatus);
+        Device device = deviceService.applyActuatorSnapshot(deviceKeyStr, coolingFanStatus, ledStatus, heaterStatus, humidifierStatus, dehumidifyingFanStatus);
 
         Command command = null;
         if (json.containsKey("cmdId") && json.get("cmdId") != null) {
@@ -195,14 +198,20 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
             command = commandService.getOne(queryWrapper);
             if (command != null) {
                 boolean gpioMatched = result != null && result == 0;
-                if (gpioMatched && "fan".equalsIgnoreCase(act) && fanStatus != null && val != null) {
-                    gpioMatched = fanStatus.equals(val);
+                if (gpioMatched && "coolingFan".equalsIgnoreCase(act) && coolingFanStatus != null && val != null) {
+                    gpioMatched = coolingFanStatus.equals(val);
                 } else if (gpioMatched && "led".equalsIgnoreCase(act) && ledStatus != null && val != null) {
                     gpioMatched = ledStatus.equals(val);
+                } else if (gpioMatched && "heater".equalsIgnoreCase(act) && heaterStatus != null && val != null) {
+                    gpioMatched = heaterStatus.equals(val);
+                } else if (gpioMatched && "humidifier".equalsIgnoreCase(act) && humidifierStatus != null && val != null) {
+                    gpioMatched = humidifierStatus.equals(val);
+                } else if (gpioMatched && "dehumidifyingFan".equalsIgnoreCase(act) && dehumidifyingFanStatus != null && val != null) {
+                    gpioMatched = dehumidifyingFanStatus.equals(val);
                 }
                 command.setStatus(gpioMatched ? 2 : 3);
                 commandService.updateById(command);
-                pushCommandResult(command, result, fanStatus, ledStatus);
+                pushCommandResult(command, result, coolingFanStatus, ledStatus, heaterStatus, humidifierStatus, dehumidifyingFanStatus);
             }
         }
 
@@ -219,10 +228,10 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         }
         command.setStatus(4);
         commandService.updateById(command);
-        pushCommandResult(command, null, null, null);
+        pushCommandResult(command, null, null, null, null, null, null);
     }
 
-    private void pushCommandResult(Command command, Integer result, Integer fan, Integer led) {
+    private void pushCommandResult(Command command, Integer result, Integer coolingFan, Integer led, Integer heater, Integer humidifier, Integer dehumidifyingFan) {
         JSONObject body = new JSONObject();
         body.put("cmdId", command.getCmdId());
         body.put("deviceKey", command.getDeviceKey());
@@ -232,11 +241,20 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         if (result != null) {
             body.put("result", result);
         }
-        if (fan != null) {
-            body.put("fan", fan);
+        if (coolingFan != null) {
+            body.put("coolingFan", coolingFan);
         }
         if (led != null) {
             body.put("led", led);
+        }
+        if (heater != null) {
+            body.put("heater", heater);
+        }
+        if (humidifier != null) {
+            body.put("humidifier", humidifier);
+        }
+        if (dehumidifyingFan != null) {
+            body.put("dehumidifyingFan", dehumidifyingFan);
         }
         webSocketPushUtil.pushToTopic("/topic/command/" + command.getDeviceKey(), body);
     }

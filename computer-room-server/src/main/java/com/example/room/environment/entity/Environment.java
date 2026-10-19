@@ -72,11 +72,20 @@ public class Environment implements Serializable {
     @ApiModelProperty(value = "蜂鸣器报警状态（1：报警；0：未报警）")
     private Integer alarmStatus;
 
-    @ApiModelProperty(value = "散热设备开关（1：开启；0：关闭）")
-    private Integer fanStatus;
-
     @ApiModelProperty(value = "led灯开关（1：开启；0：关闭）")
     private Integer ledStatus;
+
+    @ApiModelProperty(value = "散热风扇开关（1：开启；0：关闭）")
+    private Integer coolingFanStatus;
+
+    @ApiModelProperty(value = "加热片开关（1：开启；0：关闭）")
+    private Integer heaterStatus;
+
+    @ApiModelProperty(value = "加湿器开关（1：开启；0：关闭）")
+    private Integer humidifierStatus;
+
+    @ApiModelProperty(value = "除湿换气扇开关（1：开启；0：关闭）")
+    private Integer dehumidifyingFanStatus;
 
     @ApiModelProperty(value = "逻辑删除 1（true）已删除， 0（false）未删除")
     @TableLogic

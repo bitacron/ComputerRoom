@@ -10,8 +10,11 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum DeviceTypeEnum {
     
-    FAN("FAN", "风扇", 1),
-    LED("LED", "LED灯", 0);
+    COOLING_FAN("coolingFan", "散热风扇", 1),
+    LED("led", "LED灯", 0),
+    HEATER("heater", "加热片", 2),
+    HUMIDIFIER("humidifier", "加湿器", 3),
+    DEHUMIDIFYING_FAN("dehumidifyingFan", "除湿换气扇", 4);
     
     private final String code;      // 指令代码：ON/OFF
     private final String name;     // 指令值：1/0

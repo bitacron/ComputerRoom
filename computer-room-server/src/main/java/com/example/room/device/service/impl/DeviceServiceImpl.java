@@ -25,7 +25,7 @@ import java.util.Date;
 @Service
 public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> implements DeviceService {
 
-    /** 反控 ACK 后，这段时间内上报不覆盖 fan/led，避免旧采样包把新状态打回去 */
+    /** 反控 ACK 后，这段时间内上报不覆盖 五个执行器，避免旧采样包把新状态打回去 */
     private static final long ACTUATOR_PROTECT_MS = 15_000L;
 
     @Override
@@ -183,8 +183,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         device.setLeakPercentage(reported.getLeakPercentage());
         device.setAlarmStatus(reported.getAlarmStatus());
         if (!inActuatorProtectWindow(device, now)) {
-            device.setFanStatus(reported.getFanStatus());
+            device.setCoolingFanStatus(reported.getCoolingFanStatus());
             device.setLedStatus(reported.getLedStatus());
+            device.setHeaterStatus(reported.getHeaterStatus());
+            device.setHumidifierStatus(reported.getHumidifierStatus());
+            device.setDehumidifyingFanStatus(reported.getDehumidifyingFanStatus());
         }
         device.setLastReportTime(measureTime);
         this.updateById(device);
@@ -193,7 +196,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
     @Transactional
     @Override
-    public Device applyActuatorSnapshot(String deviceKey, Integer fanStatus, Integer ledStatus) {
+    public Device applyActuatorSnapshot(String deviceKey, Integer coolingFanStatus, Integer ledStatus, Integer heaterStatus, Integer humidifierStatus, Integer dehumidifyingFanStatus) {
         if (StringUtils.isBlank(deviceKey)) {
             return null;
         }
@@ -206,12 +209,24 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         Date now = new Date();
         markOnlineAndActive(device, now);
         boolean actuatorChanged = false;
-        if (fanStatus != null) {
-            device.setFanStatus(fanStatus);
+        if (coolingFanStatus != null) {
+            device.setCoolingFanStatus(coolingFanStatus);
             actuatorChanged = true;
         }
         if (ledStatus != null) {
             device.setLedStatus(ledStatus);
+            actuatorChanged = true;
+        }
+        if (heaterStatus != null) {
+            device.setHeaterStatus(heaterStatus);
+            actuatorChanged = true;
+        }
+        if (humidifierStatus != null) {
+            device.setHumidifierStatus(humidifierStatus);
+            actuatorChanged = true;
+        }
+        if (dehumidifyingFanStatus != null) {
+            device.setDehumidifyingFanStatus(dehumidifyingFanStatus);
             actuatorChanged = true;
         }
         if (actuatorChanged) {
@@ -228,8 +243,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
         if (device.getLastReportTime() == null
                 && device.getTemperature() == null
-                && device.getFanStatus() == null
-                && device.getLedStatus() == null) {
+                && device.getCoolingFanStatus() == null
+                && device.getLedStatus() == null
+                && device.getHeaterStatus() == null
+                && device.getHumidifierStatus() == null
+                && device.getDehumidifyingFanStatus() == null) {
             return null;
         }
         Environment environment = new Environment();
@@ -258,8 +276,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             environment.setLeakPercentage(device.getLeakPercentage());
         }
         environment.setAlarmStatus(device.getAlarmStatus());
-        environment.setFanStatus(device.getFanStatus());
+        environment.setCoolingFanStatus(device.getCoolingFanStatus());
         environment.setLedStatus(device.getLedStatus());
+        environment.setHeaterStatus(device.getHeaterStatus());
+        environment.setHumidifierStatus(device.getHumidifierStatus());
+        environment.setDehumidifyingFanStatus(device.getDehumidifyingFanStatus());
         environment.setGmtMeasurement(device.getLastReportTime());
         environment.setGmtCreate(device.getLastActiveTime());
         return environment;

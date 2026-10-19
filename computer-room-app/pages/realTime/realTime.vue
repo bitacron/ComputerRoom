@@ -125,21 +125,44 @@
               </text>
             </view>
           </view>
-          <!-- 第七行：散热器、LED -->
+          <!-- 执行器状态：LED、散热风扇/加热片、加湿器/除湿换气扇 -->
           <view class="data-row">
-            <view class="info-item">
-              <text class="label">散热器：</text>
-              <text :class="['tag', environmentData.fanStatus === 1 ? 'tag-primary' : 'tag-info']">
-                {{ environmentData.fanStatus === 1 ? '开启' : '关闭' }}
-              </text>
-            </view>
-            <view class="info-item">
+            <view class="info-item full-width">
               <text class="label">LED：</text>
               <text :class="['tag', environmentData.ledStatus === 1 ? 'tag-warning' : 'tag-info']">
                 {{ environmentData.ledStatus === 1 ? '开启' : '关闭' }}
               </text>
             </view>
           </view>
+          <view class="data-row">
+            <view class="info-item">
+              <text class="label">散热风扇：</text>
+              <text :class="['tag', environmentData.coolingFanStatus === 1 ? 'tag-primary' : 'tag-info']">
+                {{ environmentData.coolingFanStatus === 1 ? '开启' : '关闭' }}
+              </text>
+            </view>
+            <view class="info-item">
+              <text class="label">加热片：</text>
+              <text :class="['tag', environmentData.heaterStatus === 1 ? 'tag-warning' : 'tag-info']">
+                {{ environmentData.heaterStatus === 1 ? '开启' : '关闭' }}
+              </text>
+            </view>
+          </view>
+          <view class="data-row">
+            <view class="info-item">
+              <text class="label">加湿器：</text>
+              <text :class="['tag', environmentData.humidifierStatus === 1 ? 'tag-warning' : 'tag-info']">
+                {{ environmentData.humidifierStatus === 1 ? '开启' : '关闭' }}
+              </text>
+            </view>
+            <view class="info-item">
+              <text class="label">除湿换气扇：</text>
+              <text :class="['tag', environmentData.dehumidifyingFanStatus === 1 ? 'tag-warning' : 'tag-info']">
+                {{ environmentData.dehumidifyingFanStatus === 1 ? '开启' : '关闭' }}
+              </text>
+            </view>
+          </view>
+
           <!-- 第七行：测量时间 -->
           <view class="data-row">
             <view class="info-item full-width">
@@ -157,33 +180,6 @@
         <text>设备反控</text>
       </view>
       <view class="card-body">
-        <!-- 散热器控制 -->
-        <view class="control-row">
-          <view class="control-icon">
-            <image 
-              :src="fanIcon" 
-              class="fan-icon-img" 
-              :class="environmentData && environmentData.fanStatus === 1 ? 'fan-animate' : 'fan-static'"
-              mode="aspectFit"
-            />
-          </view>
-          <view class="control-info">
-            <view class="control-label">散热器</view>
-            <view class="control-status">当前状态: {{ environmentData && environmentData.fanStatus === 1 ? '开启' : '关闭' }}</view>
-            <view class="button-group">
-              <button 
-                class="btn btn-primary" 
-                :disabled="fanLoading || (pendingCommand && pendingCommand.deviceType === 'fan') || (environmentData && environmentData.fanStatus === 1)"
-                @click="controlRadiator('on')"
-              >打开</button>
-              <button 
-                class="btn btn-danger" 
-                :disabled="fanLoading || (pendingCommand && pendingCommand.deviceType === 'fan') || (environmentData && environmentData.fanStatus === 0)"
-                @click="controlRadiator('off')"
-              >关闭</button>
-            </view>
-          </view>
-        </view>
         <!-- LED 控制 -->
         <view class="control-row">
           <view class="control-icon">
@@ -217,9 +213,111 @@
             </view>
           </view>
         </view>
+        <view class="control-pair">
+          <!-- 散热风扇控制 -->
+          <view class="control-row">
+            <view class="control-icon">
+              <image
+                :src="fanIcon"
+                class="fan-icon-img"
+                :class="environmentData && environmentData.coolingFanStatus === 1 ? 'fan-animate' : 'fan-static'"
+                mode="aspectFit"
+              />
+            </view>
+            <view class="control-info">
+              <view class="control-label">散热风扇</view>
+              <view class="control-status">当前状态: {{ environmentData && environmentData.coolingFanStatus === 1 ? '开启' : '关闭' }}</view>
+              <view class="button-group">
+                <button
+                  class="btn btn-primary"
+                  :disabled="coolingFanLoading || (pendingCommand && pendingCommand.deviceType === 'coolingFan') || (environmentData && environmentData.coolingFanStatus === 1)"
+                  @click="controlRadiator('on')"
+                >打开</button>
+                <button
+                  class="btn btn-danger"
+                  :disabled="coolingFanLoading || (pendingCommand && pendingCommand.deviceType === 'coolingFan') || (environmentData && environmentData.coolingFanStatus === 0)"
+                  @click="controlRadiator('off')"
+                >关闭</button>
+              </view>
+            </view>
+          </view>
+          <!-- 加热片控制 -->
+          <view class="control-row">
+            <view class="control-icon">
+              <text class="actuator-symbol">♨</text>
+            </view>
+            <view class="control-info">
+              <view class="control-label">加热片</view>
+              <view class="control-status">当前状态: {{ environmentData && environmentData.heaterStatus === 1 ? '开启' : '关闭' }}</view>
+              <view class="button-group">
+                <button
+                  class="btn btn-primary"
+                  :disabled="heaterLoading || (pendingCommand && pendingCommand.deviceType === 'heater') || (environmentData && environmentData.heaterStatus === 1)"
+                  @click="controlHeater('on')"
+                >打开</button>
+                <button
+                  class="btn btn-danger"
+                  :disabled="heaterLoading || (pendingCommand && pendingCommand.deviceType === 'heater') || (environmentData && environmentData.heaterStatus === 0)"
+                  @click="controlHeater('off')"
+                >关闭</button>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="control-pair">
+          <!-- 加湿器控制 -->
+          <view class="control-row">
+            <view class="control-icon">
+              <text class="actuator-symbol">💧</text>
+            </view>
+            <view class="control-info">
+              <view class="control-label">加湿器</view>
+              <view class="control-status">当前状态: {{ environmentData && environmentData.humidifierStatus === 1 ? '开启' : '关闭' }}</view>
+              <view class="button-group">
+                <button
+                  class="btn btn-primary"
+                  :disabled="humidifierLoading || (pendingCommand && pendingCommand.deviceType === 'humidifier') || (environmentData && environmentData.humidifierStatus === 1)"
+                  @click="controlHumidifier('on')"
+                >打开</button>
+                <button
+                  class="btn btn-danger"
+                  :disabled="humidifierLoading || (pendingCommand && pendingCommand.deviceType === 'humidifier') || (environmentData && environmentData.humidifierStatus === 0)"
+                  @click="controlHumidifier('off')"
+                >关闭</button>
+              </view>
+            </view>
+          </view>
+          <!-- 除湿换气扇控制 -->
+          <view class="control-row">
+            <view class="control-icon">
+              <image
+                :src="fanIcon"
+                class="fan-icon-img"
+                :class="environmentData && environmentData.dehumidifyingFanStatus === 1 ? 'fan-animate' : 'fan-static'"
+                mode="aspectFit"
+              />
+            </view>
+            <view class="control-info">
+              <view class="control-label">除湿换气扇</view>
+              <view class="control-status">当前状态: {{ environmentData && environmentData.dehumidifyingFanStatus === 1 ? '开启' : '关闭' }}</view>
+              <view class="button-group">
+                <button
+                  class="btn btn-primary"
+                  :disabled="dehumidifyingFanLoading || (pendingCommand && pendingCommand.deviceType === 'dehumidifyingFan') || (environmentData && environmentData.dehumidifyingFanStatus === 1)"
+                  @click="controlDehumidifyingFan('on')"
+                >打开</button>
+                <button
+                  class="btn btn-danger"
+                  :disabled="dehumidifyingFanLoading || (pendingCommand && pendingCommand.deviceType === 'dehumidifyingFan') || (environmentData && environmentData.dehumidifyingFanStatus === 0)"
+                  @click="controlDehumidifyingFan('off')"
+                >关闭</button>
+              </view>
+            </view>
+          </view>
+        </view>
         <!-- 等待指令提示 -->
         <view v-if="pendingCommand" class="pending-tip">
-          <text>⏳ 等待设备响应 {{ pendingCommand.deviceType === 'fan' ? '散热器' : 'LED' }} {{ pendingCommand.action === 'on' ? '开启' : '关闭' }} 指令...</text>
+          <text>⏳ 等待设备响应 {{ pendingCommand.deviceType === 'coolingFan' ? '散热风扇' : pendingCommand.deviceType === 'heater' ? '加热片' : pendingCommand.deviceType === 'humidifier' ? '加湿器' : pendingCommand.deviceType === 'dehumidifyingFan' ? '除湿换气扇' : 'LED' }} {{ pendingCommand.action === 'on' ? '开启' : '关闭' }} 指令...</text>
         </view>
       </view>
     </view>
@@ -258,8 +356,11 @@ export default {
       // 反控等待确认
       pendingCommand: null,
       commandTimeout: null,
-      fanLoading: false,
+      coolingFanLoading: false,
       ledLoading: false,
+      heaterLoading: false,
+      humidifierLoading: false,
+      dehumidifyingFanLoading: false,
       pollingTimer: null
     };
   },
@@ -556,22 +657,34 @@ export default {
       if (!data) return;
       if (this.pendingCommand) {
         const expected = this.pendingCommand.action === 'on' ? 1 : 0;
-        const actual = this.pendingCommand.deviceType === 'fan' ? data.fanStatus : data.ledStatus;
+        let actual = this.pendingCommand.deviceType === 'coolingFan' ? data.coolingFanStatus : data.ledStatus;
+        if (this.pendingCommand.deviceType === 'heater') actual = data.heaterStatus;
+        if (this.pendingCommand.deviceType === 'humidifier') actual = data.humidifierStatus;
+        if (this.pendingCommand.deviceType === 'dehumidifyingFan') actual = data.dehumidifyingFanStatus;
         if (actual === expected) {
           this.environmentData = data;
           this.handleCommandResult({
             cmdId: this.pendingCommand.cmdId,
             status: 2,
-            fan: data.fanStatus,
-            led: data.ledStatus
+            coolingFan: data.coolingFanStatus,
+            led: data.ledStatus,
+            heater: data.heaterStatus,
+            humidifier: data.humidifierStatus,
+            dehumidifyingFan: data.dehumidifyingFanStatus
           });
           return;
         }
         if (this.environmentData) {
-          if (this.pendingCommand.deviceType === 'fan') {
-            data.fanStatus = this.environmentData.fanStatus;
+          if (this.pendingCommand.deviceType === 'coolingFan') {
+            data.coolingFanStatus = this.environmentData.coolingFanStatus;
           } else if (this.pendingCommand.deviceType === 'led') {
             data.ledStatus = this.environmentData.ledStatus;
+          } else if (this.pendingCommand.deviceType === 'heater') {
+            data.heaterStatus = this.environmentData.heaterStatus;
+          } else if (this.pendingCommand.deviceType === 'humidifier') {
+            data.humidifierStatus = this.environmentData.humidifierStatus;
+          } else if (this.pendingCommand.deviceType === 'dehumidifyingFan') {
+            data.dehumidifyingFanStatus = this.environmentData.dehumidifyingFanStatus;
           }
         }
       }
@@ -583,15 +696,18 @@ export default {
         return;
       }
       const { deviceType, action } = this.pendingCommand;
-      const deviceName = deviceType === 'fan' ? '散热器' : 'LED';
+      const deviceName = deviceType === 'coolingFan' ? '散热风扇' : deviceType === 'heater' ? '加热片' : deviceType === 'humidifier' ? '加湿器' : deviceType === 'dehumidifyingFan' ? '除湿换气扇' : 'LED';
       if (this.commandTimeout) {
         clearTimeout(this.commandTimeout);
         this.commandTimeout = null;
       }
       if (cmd.status === 2) {
         if (this.environmentData) {
-          if (cmd.fan !== undefined && cmd.fan !== null) this.environmentData.fanStatus = cmd.fan;
+          if (cmd.coolingFan !== undefined && cmd.coolingFan !== null) this.environmentData.coolingFanStatus = cmd.coolingFan;
           if (cmd.led !== undefined && cmd.led !== null) this.environmentData.ledStatus = cmd.led;
+          if (cmd.heater !== undefined && cmd.heater !== null) this.environmentData.heaterStatus = cmd.heater;
+          if (cmd.humidifier !== undefined && cmd.humidifier !== null) this.environmentData.humidifierStatus = cmd.humidifier;
+          if (cmd.dehumidifyingFan !== undefined && cmd.dehumidifyingFan !== null) this.environmentData.dehumidifyingFanStatus = cmd.dehumidifyingFan;
         }
         uni.showToast({ title: `${deviceName}${action === 'on' ? '开启' : '关闭'}成功`, icon: 'success' });
       } else if (cmd.status === 3) {
@@ -600,8 +716,11 @@ export default {
         uni.showToast({ title: '设备未响应', icon: 'none' });
       }
       this.pendingCommand = null;
-      this.fanLoading = false;
+      this.coolingFanLoading = false;
       this.ledLoading = false;
+      this.heaterLoading = false;
+      this.humidifierLoading = false;
+      this.dehumidifyingFanLoading = false;
     },
 
     handleConnectionError() {
@@ -667,36 +786,36 @@ export default {
         uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
         return;
       }
-      this.fanLoading = true;
+      this.coolingFanLoading = true;
       try {
         const res = await request({
           url: '/service/deviceOption/control',
           method: 'POST',
           data: {
-            deviceType: 'fan',
+            deviceType: 'coolingFan',
             deviceKey: this.selectedDeviceKey,
             command: action
           },
           timeout: 3000
         });
         if (res.code === 20000 && res.data && res.data.cmdId) {
-          this.pendingCommand = { deviceType: 'fan', action, cmdId: res.data.cmdId };
+          this.pendingCommand = { deviceType: 'coolingFan', action, cmdId: res.data.cmdId };
           uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
           this.commandTimeout = setTimeout(() => {
             if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
               uni.showToast({ title: '设备未响应', icon: 'none' });
               this.pendingCommand = null;
-              this.fanLoading = false;
+              this.coolingFanLoading = false;
               this.commandTimeout = null;
             }
           }, 8000);
         } else {
           uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
-          this.fanLoading = false;
+          this.coolingFanLoading = false;
         }
       } catch (err) {
         uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
-        this.fanLoading = false;
+        this.coolingFanLoading = false;
       }
     },
 
@@ -740,12 +859,142 @@ export default {
         uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
         this.ledLoading = false;
       }
+    },
+
+    async controlHeater(action) {
+      if (!this.selectedDeviceKey) {
+        uni.showToast({ title: '请先选择设备', icon: 'none' });
+        return;
+      }
+      if (this.pendingCommand) {
+        uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
+        return;
+      }
+      this.heaterLoading = true;
+      try {
+        const res = await request({
+          url: '/service/deviceOption/control',
+          method: 'POST',
+          data: {
+            deviceType: 'heater',
+            deviceKey: this.selectedDeviceKey,
+            command: action
+          },
+          timeout: 3000
+        });
+        if (res.code === 20000 && res.data && res.data.cmdId) {
+          this.pendingCommand = { deviceType: 'heater', action, cmdId: res.data.cmdId };
+          uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
+          this.commandTimeout = setTimeout(() => {
+            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
+              uni.showToast({ title: '设备未响应', icon: 'none' });
+              this.pendingCommand = null;
+              this.heaterLoading = false;
+              this.commandTimeout = null;
+            }
+          }, 8000);
+        } else {
+          uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
+          this.heaterLoading = false;
+        }
+      } catch (err) {
+        uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
+        this.heaterLoading = false;
+      }
+    },
+
+    async controlHumidifier(action) {
+      if (!this.selectedDeviceKey) {
+        uni.showToast({ title: '请先选择设备', icon: 'none' });
+        return;
+      }
+      if (this.pendingCommand) {
+        uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
+        return;
+      }
+      this.humidifierLoading = true;
+      try {
+        const res = await request({
+          url: '/service/deviceOption/control',
+          method: 'POST',
+          data: {
+            deviceType: 'humidifier',
+            deviceKey: this.selectedDeviceKey,
+            command: action
+          },
+          timeout: 3000
+        });
+        if (res.code === 20000 && res.data && res.data.cmdId) {
+          this.pendingCommand = { deviceType: 'humidifier', action, cmdId: res.data.cmdId };
+          uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
+          this.commandTimeout = setTimeout(() => {
+            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
+              uni.showToast({ title: '设备未响应', icon: 'none' });
+              this.pendingCommand = null;
+              this.humidifierLoading = false;
+              this.commandTimeout = null;
+            }
+          }, 8000);
+        } else {
+          uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
+          this.humidifierLoading = false;
+        }
+      } catch (err) {
+        uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
+        this.humidifierLoading = false;
+      }
+    },
+
+    async controlDehumidifyingFan(action) {
+      if (!this.selectedDeviceKey) {
+        uni.showToast({ title: '请先选择设备', icon: 'none' });
+        return;
+      }
+      if (this.pendingCommand) {
+        uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
+        return;
+      }
+      this.dehumidifyingFanLoading = true;
+      try {
+        const res = await request({
+          url: '/service/deviceOption/control',
+          method: 'POST',
+          data: {
+            deviceType: 'dehumidifyingFan',
+            deviceKey: this.selectedDeviceKey,
+            command: action
+          },
+          timeout: 3000
+        });
+        if (res.code === 20000 && res.data && res.data.cmdId) {
+          this.pendingCommand = { deviceType: 'dehumidifyingFan', action, cmdId: res.data.cmdId };
+          uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
+          this.commandTimeout = setTimeout(() => {
+            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
+              uni.showToast({ title: '设备未响应', icon: 'none' });
+              this.pendingCommand = null;
+              this.dehumidifyingFanLoading = false;
+              this.commandTimeout = null;
+            }
+          }, 8000);
+        } else {
+          uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
+          this.dehumidifyingFanLoading = false;
+        }
+      } catch (err) {
+        uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
+        this.dehumidifyingFanLoading = false;
+      }
     }
   }
 };
 </script>
 
 <style scoped>
+.actuator-symbol {
+  font-size: 56rpx;
+}
+
 /* 全局变量 */
 :root {
   --primary-color: #409eff;
@@ -943,6 +1192,29 @@ export default {
 .tag-info {
   background-color: #f4f4f5;
   color: var(--info-color);
+}
+
+
+.control-pair {
+  display: flex;
+  gap: 24rpx;
+}
+
+.control-pair .control-row {
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.control-pair .control-icon {
+  align-self: center;
+  margin-right: 0;
+  margin-bottom: 16rpx;
+}
+
+.control-pair .control-info {
+  text-align: center;
 }
 
 /* 控制项布局 */

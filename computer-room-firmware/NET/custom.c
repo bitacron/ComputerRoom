@@ -89,13 +89,16 @@ extern uint8_t flamePer;
 extern uint8_t leakDig;
 extern uint8_t leakPer;
 extern uint8_t alarmFlag;
-extern uint8_t fan;
+extern uint8_t coolingFan;
 extern uint8_t led;
+extern uint8_t heater;
+extern uint8_t humidifier;
+extern uint8_t dehumidifyingFan;
 extern volatile uint8_t report_asap;
 
 static volatile uint8_t cmd_ack_pending = 0;
 static char pending_ack_cmd_id[24];
-static char pending_ack_act[8];
+static char pending_ack_act[24];
 static int pending_ack_val;
 static int pending_ack_result;
 
@@ -105,7 +108,7 @@ static int pending_ack_result;
 * ????  ??buf-????????????????? 320 ????
 * ???  ??payload ??????
 *******************************************************************************/
-unsigned char MQTT_Client_FillBuf(char *buf)
+unsigned short MQTT_Client_FillBuf(char *buf)
 {
 	char measure_time[24];
 
@@ -115,11 +118,14 @@ unsigned char MQTT_Client_FillBuf(char *buf)
 		snprintf(measure_time, sizeof(measure_time), "0000-00-00 00:00:00");
 	}
 
-	fan = CoolingFan_GetState();
+	coolingFan = CoolingFan_GetState();
 	led = Led_GetState();
-	snprintf(buf, 360,
-		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"leakDig\":%d,\"leakPer\":%d,\"alarm\":%d,\"fan\":%d,\"led\":%d,\"measureTime\":\"%s\"}",
-		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, leakDig, leakPer, alarmFlag, fan, led, measure_time);
+	heater = Heater_GetState();
+	humidifier = Humidifier_GetState();
+	dehumidifyingFan = DehumidifyingFan_GetState();
+	snprintf(buf, 512,
+		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"leakDig\":%d,\"leakPer\":%d,\"alarm\":%d,\"coolingFan\":%d,\"led\":%d,\"heater\":%d,\"humidifier\":%d,\"dehumidifyingFan\":%d,\"measureTime\":\"%s\"}",
+		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, leakDig, leakPer, alarmFlag, coolingFan, led, heater, humidifier, dehumidifyingFan, measure_time);
 	return strlen(buf);
 }
 
@@ -132,7 +138,7 @@ unsigned char MQTT_Client_FillBuf(char *buf)
 void MQTT_Client_SendData(void)
 {
 	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
-	char buf[360];
+	char buf[512];
 	char topic[64];
 	short body_len = 0, i = 0;
 
@@ -249,22 +255,25 @@ void MQTT_Client_Subscribe(u8 Sub)
 
 /*******************************************************************************
 * ????????MQTT_Client_RevPro
-* ????  ?????? MQTT ?????????????????fan/led???????
+* ????  ?????? MQTT ?????????????????coolingFan/led???????
 * ????  ??cmd-ESP8266 ????? MQTT ????????
 * ???  ????
 *******************************************************************************/
 static void MQTT_Client_SendCmdAck(const char *cmd_id, const char *act, int val, int result)
 {
 	char topic[48];
-	char payload[192];
+	char payload[256];
 	int n;
 
-	fan = CoolingFan_GetState();
+	coolingFan = CoolingFan_GetState();
 	led = Led_GetState();
+	heater = Heater_GetState();
+	humidifier = Humidifier_GetState();
+	dehumidifyingFan = DehumidifyingFan_GetState();
 	sprintf(topic, "room/%s/ack", DEVICEID);
 	n = snprintf(payload, sizeof(payload),
-		"{\"cmdId\":\"%s\",\"dev\":\"%s\",\"act\":\"%s\",\"val\":%d,\"result\":%d,\"fan\":%d,\"led\":%d}",
-		cmd_id ? cmd_id : "", DEVICEID, act ? act : "", val, result, fan, led);
+		"{\"cmdId\":\"%s\",\"dev\":\"%s\",\"act\":\"%s\",\"val\":%d,\"result\":%d,\"coolingFan\":%d,\"led\":%d,\"heater\":%d,\"humidifier\":%d,\"dehumidifyingFan\":%d}",
+		cmd_id ? cmd_id : "", DEVICEID, act ? act : "", val, result, coolingFan, led, heater, humidifier, dehumidifyingFan);
 	if (n > 0 && n < (int)sizeof(payload))
 	{
 		UsartPrintf(USART_DEBUG, "ack topic: %s, payload: %s\r\n", topic, payload);
@@ -361,7 +370,7 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 					{
 						exec_result = 2;
 					}
-					else if (strcmp(act, "fan") == 0)
+					else if (strcmp(act, "coolingFan") == 0)
 					{
 						if (val == 1)
 						{
@@ -371,9 +380,9 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 						{
 							CoolingFan_OFF();
 						}
-						fan = CoolingFan_GetState();
-						exec_result = (fan == val) ? 0 : 3;
-						UsartPrintf(USART_DEBUG, "fan val=%d gpio=%d\r\n", val, fan);
+						coolingFan = CoolingFan_GetState();
+						exec_result = (coolingFan == val) ? 0 : 3;
+						UsartPrintf(USART_DEBUG, "coolingFan val=%d gpio=%d\r\n", val, coolingFan);
 					}
 					else if (strcmp(act, "led") == 0)
 					{
@@ -388,6 +397,51 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 						led = Led_GetState();
 						exec_result = (led == val) ? 0 : 3;
 						UsartPrintf(USART_DEBUG, "led val=%d gpio=%d\r\n", val, led);
+					}
+					else if (strcmp(act, "heater") == 0)
+					{
+						if (val == 1)
+						{
+							Heater_ON();
+						}
+						else
+						{
+							Heater_OFF();
+						}
+
+						heater = Heater_GetState();
+						exec_result = (heater == val) ? 0 : 3;
+						UsartPrintf(USART_DEBUG, "heater val=%d gpio=%d\r\n", val, heater);
+					}
+					else if (strcmp(act, "humidifier") == 0)
+					{
+						if (val == 1)
+						{
+							Humidifier_ON();
+						}
+						else
+						{
+							Humidifier_OFF();
+						}
+
+						humidifier = Humidifier_GetState();
+						exec_result = (humidifier == val) ? 0 : 3;
+						UsartPrintf(USART_DEBUG, "humidifier val=%d gpio=%d\r\n", val, humidifier);
+					}
+					else if (strcmp(act, "dehumidifyingFan") == 0)
+					{
+						if (val == 1)
+						{
+							DehumidifyingFan_ON();
+						}
+						else
+						{
+							DehumidifyingFan_OFF();
+						}
+
+						dehumidifyingFan = DehumidifyingFan_GetState();
+						exec_result = (dehumidifyingFan == val) ? 0 : 3;
+						UsartPrintf(USART_DEBUG, "dehumidifyingFan val=%d gpio=%d\r\n", val, dehumidifyingFan);
 					}
 					else
 					{

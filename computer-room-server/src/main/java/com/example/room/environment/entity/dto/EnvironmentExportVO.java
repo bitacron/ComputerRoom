@@ -90,18 +90,39 @@ public class EnvironmentExportVO {
     private String alarmStatusStr;
 
     @ExcelIgnore
-    private Integer fanStatus;
-
-    @ExcelProperty("散热设备")
-    @ColumnWidth(12)
-    private String fanStatusStr;
-
-    @ExcelIgnore
     private Integer ledStatus;
 
     @ExcelProperty("LED 开关")
     @ColumnWidth(12)
     private String ledStatusStr;
+
+    @ExcelIgnore
+    private Integer coolingFanStatus;
+
+    @ExcelProperty("散热风扇")
+    @ColumnWidth(12)
+    private String coolingFanStatusStr;
+
+    @ExcelIgnore
+    private Integer heaterStatus;
+
+    @ExcelProperty("加热片开关")
+    @ColumnWidth(12)
+    private String heaterStatusStr;
+
+    @ExcelIgnore
+    private Integer humidifierStatus;
+
+    @ExcelProperty("加湿器开关")
+    @ColumnWidth(12)
+    private String humidifierStatusStr;
+
+    @ExcelIgnore
+    private Integer dehumidifyingFanStatus;
+
+    @ExcelProperty("除湿换气扇开关")
+    @ColumnWidth(12)
+    private String dehumidifyingFanStatusStr;
 
     @ExcelProperty("检测时间")
     @ColumnWidth(20)
@@ -141,14 +162,29 @@ public class EnvironmentExportVO {
         this.alarmStatusStr = alarmStatus != null && alarmStatus == 1 ? "报警" : "未报警";
     }
 
-    public void setFanStatus(Integer fanStatus) {
-        this.fanStatus = fanStatus;
-        this.fanStatusStr = fanStatus != null && fanStatus == 1 ? "开启" : "关闭";
+    public void setCoolingFanStatus(Integer coolingFanStatus) {
+        this.coolingFanStatus = coolingFanStatus;
+        this.coolingFanStatusStr = coolingFanStatus != null && coolingFanStatus == 1 ? "开启" : "关闭";
     }
 
     public void setLedStatus(Integer ledStatus) {
         this.ledStatus = ledStatus;
         this.ledStatusStr = ledStatus != null && ledStatus == 1 ? "开启" : "关闭";
+    }
+
+    public void setHeaterStatus(Integer heaterStatus) {
+        this.heaterStatus = heaterStatus;
+        this.heaterStatusStr = heaterStatus != null && heaterStatus == 1 ? "开启" : "关闭";
+    }
+
+    public void setHumidifierStatus(Integer humidifierStatus) {
+        this.humidifierStatus = humidifierStatus;
+        this.humidifierStatusStr = humidifierStatus != null && humidifierStatus == 1 ? "开启" : "关闭";
+    }
+
+    public void setDehumidifyingFanStatus(Integer dehumidifyingFanStatus) {
+        this.dehumidifyingFanStatus = dehumidifyingFanStatus;
+        this.dehumidifyingFanStatusStr = dehumidifyingFanStatus != null && dehumidifyingFanStatus == 1 ? "开启" : "关闭";
     }
 
 }

@@ -80,11 +80,20 @@ public class Device implements Serializable {
     @ApiModelProperty(value = "当前蜂鸣器报警（1：报警；0：未报警）")
     private Integer alarmStatus;
 
-    @ApiModelProperty(value = "当前散热设备开关（1：开启；0：关闭）")
-    private Integer fanStatus;
-
     @ApiModelProperty(value = "当前 LED 开关（1：开启；0：关闭）")
     private Integer ledStatus;
+
+    @ApiModelProperty(value = "当前散热风扇开关（1：开启；0：关闭）")
+    private Integer coolingFanStatus;
+
+    @ApiModelProperty(value = "加热片开关（1：开启；0：关闭）")
+    private Integer heaterStatus;
+
+    @ApiModelProperty(value = "加湿器开关（1：开启；0：关闭）")
+    private Integer humidifierStatus;
+
+    @ApiModelProperty(value = "除湿换气扇开关（1：开启；0：关闭）")
+    private Integer dehumidifyingFanStatus;
 
     @ApiModelProperty(value = "影子对应的最近一次测量时间")
     private Date lastReportTime;

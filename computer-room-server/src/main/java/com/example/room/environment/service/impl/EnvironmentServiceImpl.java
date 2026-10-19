@@ -141,8 +141,8 @@ public class EnvironmentServiceImpl extends ServiceImpl<EnvironmentMapper, Envir
         String[] headers = {
                 "序号", "数据来源", "上报设备", "温度(°C)", "湿度(%)",
                 "烟雾浓度", "烟雾状态", "光照亮度(%)", "光照状态",
-                "明火概率(%)", "火焰状态", "蜂鸣器报警", "散热设备",
-                "LED开关", "检测时间", "添加时间"
+                "明火概率(%)", "火焰状态", "蜂鸣器报警", "LED开关",
+                "散热风扇", "加热片开关", "加湿器开关", "除湿换气扇开关", "检测时间", "添加时间"
         };
 
         // 写入数据
@@ -179,8 +179,11 @@ public class EnvironmentServiceImpl extends ServiceImpl<EnvironmentMapper, Envir
             row.add(env.getFlamePercentage());
             row.add(env.getFlameStatus() != null && env.getFlameStatus() == 1 ? "有明火" : "无明火");
             row.add(env.getAlarmStatus() != null && env.getAlarmStatus() == 1 ? "报警" : "未报警");
-            row.add(env.getFanStatus() != null && env.getFanStatus() == 1 ? "开启" : "关闭");
             row.add(env.getLedStatus() != null && env.getLedStatus() == 1 ? "开启" : "关闭");
+            row.add(env.getCoolingFanStatus() != null && env.getCoolingFanStatus() == 1 ? "开启" : "关闭");
+            row.add(env.getHeaterStatus() != null && env.getHeaterStatus() == 1 ? "开启" : "关闭");
+            row.add(env.getHumidifierStatus() != null && env.getHumidifierStatus() == 1 ? "开启" : "关闭");
+            row.add(env.getDehumidifyingFanStatus() != null && env.getDehumidifyingFanStatus() == 1 ? "开启" : "关闭");
             row.add(formatDate(env.getGmtMeasurement()));
             row.add(formatDate(env.getGmtCreate()));
             dataList.add(row);

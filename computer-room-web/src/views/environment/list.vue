@@ -100,14 +100,29 @@
           {{ scope.row.alarmStatus===1?'报警':'未报警' }}
         </template>
       </el-table-column>
-      <el-table-column label="散热设备开关" width="80">
-        <template slot-scope="scope">
-          {{ scope.row.fanStatus===1?'开启':'关闭' }}
-        </template>
-      </el-table-column>
       <el-table-column label="led开关" width="80">
         <template slot-scope="scope">
           {{ scope.row.ledStatus===1?'开启':'关闭' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="散热风扇开关" width="80">
+        <template slot-scope="scope">
+          {{ scope.row.coolingFanStatus===1?'开启':'关闭' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="加热片开关" width="80">
+        <template slot-scope="scope">
+          {{ scope.row.heaterStatus===1?'开启':'关闭' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="加湿器开关" width="80">
+        <template slot-scope="scope">
+          {{ scope.row.humidifierStatus===1?'开启':'关闭' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="除湿换气扇开关" width="80">
+        <template slot-scope="scope">
+          {{ scope.row.dehumidifyingFanStatus===1?'开启':'关闭' }}
         </template>
       </el-table-column>
       <el-table-column prop="gmtMeasurement" label="检测时间" width="160"/>

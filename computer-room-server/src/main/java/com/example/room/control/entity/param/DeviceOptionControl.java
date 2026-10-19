@@ -17,7 +17,7 @@ public class DeviceOptionControl implements Serializable {
     @ApiModelProperty(value = "设备指令-ON、OFF")
     private String command;
 
-    @ApiModelProperty(value = "设备类型")
+    @ApiModelProperty(value = "设备类型：coolingFan、led、heater、humidifier、dehumidifyingFan")
     private String deviceType;
 
 }

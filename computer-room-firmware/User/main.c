@@ -33,15 +33,22 @@
  *								        VCC-----5V
  *								BEEP	  IO------PB12
  *								        VCC-----3.3V
- *								Relay   IN------PA12
+ *								Led relay IN ------PB5
  *								        VCC-----5V
- *  							        NO------Radiator
+ *								CoolingFan relay IN------PA12
+ *								        VCC-----5V
+ *  							        NO------CoolingFan
  *								        COM-----5V
- *								Led     + ------PB5
- *								        VCC-----3.3V
+ *								Heater relay IN----------PB7
+ *								Humidifier relay IN------PA11
+ *								DehumidifyingFan relay IN-PB15
  *								KEY1    IO------PB10   (勿接 PB1，与 LDR AO 冲突)
  *								KEY2    IO------PB11
- *								        GND-----GND    低电平有效，无锁自复位；KEY1翻继电器，KEY2翻LED
+ *								        GND-----GND    低电平有效，无锁自复位；KEY1翻LED，KEY2翻散热风扇
+ *								KEY3    IO------PA6    Heater
+ *								KEY4    IO------PA7    Humidifier
+ *								KEY5    IO------PB6    DehumidifyingFan
+ *								KEY3-KEY5 buttons connect to GND; active-low, momentary
  *								Usart1  RXD-----PA9
  *											  TXD-----PA10
  *								        VCC-----5V
@@ -74,7 +81,7 @@
 #define OLED_PERIOD_MS      500u
 #define REPORT_PERIOD_MS   5000u
 
-uint8_t temp, humi, ldrDig, alarmFlag, fan, led, flameDig, flamePer, gasDig, ldrPer, leakDig, leakPer;
+uint8_t temp, humi, ldrDig, alarmFlag, coolingFan, led, heater, humidifier, dehumidifyingFan, flameDig, flamePer, gasDig, ldrPer, leakDig, leakPer;
 uint16_t gasPPM;  // MQ2 PPM 可达上千，不可用 uint8_t
 
 u8 ESP8266_INIT_OK = 0;
@@ -110,6 +117,9 @@ int main(void)
 
 	Led_Init();
 	CoolingFan_Init();
+	Heater_Init();
+	Humidifier_Init();
+	DehumidifyingFan_Init();
 	Key_Init();
 
 	Usart1_Init(115200);
@@ -154,17 +164,38 @@ int main(void)
 			uint8_t keyNum = Key_GetNum();
 			if (keyNum == 1)
 			{
-				CoolingFan_Turn();
-				fan = CoolingFan_GetState();
-				report_asap = 1;
-				UsartPrintf(USART_DEBUG, "KEY1 fan=%d\r\n", fan);
-			}
-			else if (keyNum == 2)
-			{
 				Led_Turn();
 				led = Led_GetState();
 				report_asap = 1;
-				UsartPrintf(USART_DEBUG, "KEY2 led=%d\r\n", led);
+				UsartPrintf(USART_DEBUG, "KEY1 led=%d\r\n", led);
+			}
+			else if (keyNum == 2)
+			{
+				CoolingFan_Turn();
+				coolingFan = CoolingFan_GetState();
+				report_asap = 1;
+				UsartPrintf(USART_DEBUG, "KEY2 coolingFan=%d\r\n", coolingFan);
+			}
+			else if (keyNum == 3)
+			{
+				Heater_Turn();
+				heater = Heater_GetState();
+				report_asap = 1;
+				UsartPrintf(USART_DEBUG, "KEY3 heater=%d\r\n", heater);
+			}
+			else if (keyNum == 4)
+			{
+				Humidifier_Turn();
+				humidifier = Humidifier_GetState();
+				report_asap = 1;
+				UsartPrintf(USART_DEBUG, "KEY4 humidifier=%d\r\n", humidifier);
+			}
+			else if (keyNum == 5)
+			{
+				DehumidifyingFan_Turn();
+				dehumidifyingFan = DehumidifyingFan_GetState();
+				report_asap = 1;
+				UsartPrintf(USART_DEBUG, "KEY5 dehumidifyingFan=%d\r\n", dehumidifyingFan);
 			}
 		}
 
@@ -201,17 +232,20 @@ int main(void)
 			} else {
 				Beep_On();
 			}
-			fan = CoolingFan_GetState();
+			coolingFan = CoolingFan_GetState();
 			alarmFlag = Beep_GetState();
 			led = Led_GetState();
+			heater = Heater_GetState();
+			humidifier = Humidifier_GetState();
+			dehumidifyingFan = DehumidifyingFan_GetState();
 			{
 				char measure_time[24];
 				/* 与 MQTT 上报一致：有校时用墙钟，否则占位 */
 				if (ESP8266_GetTime(measure_time, sizeof(measure_time)) != 0)
 					snprintf(measure_time, sizeof(measure_time), "0000-00-00 00:00:00");
 				UsartPrintf(USART_DEBUG,
-					"measureTime=%s, temp=%d, humi=%d, gasPPM=%d, gasAna=%d,gasDig=%d, alarm=%d, fan=%d, led = %d, ldrDig=%d,ldrAna=%d,ldrPer=%d, flameDig=%d, flameAna=%d, flamePer=%d, leakDig=%d,leakAna=%d,leakPer=%d\r\n",
-					measure_time, temp, humi, gasPPM, gasAna, gasDig, alarmFlag, fan, led,
+					"measureTime=%s, temp=%d, humi=%d, gasPPM=%d, gasAna=%d,gasDig=%d, alarm=%d, coolingFan=%d, led = %d, ldrDig=%d,ldrAna=%d,ldrPer=%d, flameDig=%d, flameAna=%d, flamePer=%d, leakDig=%d,leakAna=%d,leakPer=%d\r\n",
+					measure_time, temp, humi, gasPPM, gasAna, gasDig, alarmFlag, coolingFan, led,
 					ldrDig, ldrAna, ldrPer, flameDig, flameAna, flamePer,
 					leakDig, leakAna, leakPer);
 			}

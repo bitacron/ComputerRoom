@@ -150,18 +150,40 @@
           </div>
         </div>
 
-        <!-- 第7行：散热器、LED -->
+        <!-- 执行器状态：LED、散热风扇/加热片、加湿器/除湿换气扇 -->
         <div class="data-row">
-          <div class="info-item">
-            <span class="label">散热器：</span>
-            <el-tag :type="environmentData.fanStatus === 1 ? 'primary' : 'info'" size="small">
-              {{ environmentData.fanStatus === 1 ? '开启' : '关闭' }}
-            </el-tag>
-          </div>
-          <div class="info-item">
+          <div class="info-item full-width">
             <span class="label">LED：</span>
             <el-tag :type="environmentData.ledStatus === 1 ? 'primary' : 'info'" size="small">
               {{ environmentData.ledStatus === 1 ? '开启' : '关闭' }}
+            </el-tag>
+          </div>
+        </div>
+        <div class="data-row">
+          <div class="info-item">
+            <span class="label">散热风扇：</span>
+            <el-tag :type="environmentData.coolingFanStatus === 1 ? 'primary' : 'info'" size="small">
+              {{ environmentData.coolingFanStatus === 1 ? '开启' : '关闭' }}
+            </el-tag>
+          </div>
+          <div class="info-item">
+            <span class="label">加热片：</span>
+            <el-tag :type="environmentData.heaterStatus === 1 ? 'primary' : 'info'" size="small">
+              {{ environmentData.heaterStatus === 1 ? '开启' : '关闭' }}
+            </el-tag>
+          </div>
+        </div>
+        <div class="data-row">
+          <div class="info-item">
+            <span class="label">加湿器：</span>
+            <el-tag :type="environmentData.humidifierStatus === 1 ? 'primary' : 'info'" size="small">
+              {{ environmentData.humidifierStatus === 1 ? '开启' : '关闭' }}
+            </el-tag>
+          </div>
+          <div class="info-item">
+            <span class="label">除湿换气扇：</span>
+            <el-tag :type="environmentData.dehumidifyingFanStatus === 1 ? 'primary' : 'info'" size="small">
+              {{ environmentData.dehumidifyingFanStatus === 1 ? '开启' : '关闭' }}
             </el-tag>
           </div>
         </div>
@@ -182,40 +204,8 @@
         <span>设备反控</span>
       </div>
       <el-row :gutter="20">
-        <!-- 散热器控制 -->
-        <el-col :span="12">
-          <div class="control-item">
-            <div class="control-icon">
-              <svg-icon :class="[environmentData && environmentData.fanStatus === 1 ? 'fan-on' : 'fan-off']" icon-class="fan" />
-            </div>
-            <div class="control-info">
-              <div class="control-label">散热器</div>
-              <div class="control-status">当前状态: {{ fanStatusText }}</div>
-              <div class="control-buttons">
-                <el-button
-                  :loading="fanLoading"
-                  :disabled="isActuatorPending('fan') || (environmentData && environmentData.fanStatus === 1)"
-                  size="small"
-                  type="primary"
-                  @click="controlRadiator('on')"
-                >
-                  打开
-                </el-button>
-                <el-button
-                  :loading="fanLoading"
-                  :disabled="isActuatorPending('fan') || (environmentData && environmentData.fanStatus === 0)"
-                  size="small"
-                  type="danger"
-                  @click="controlRadiator('off')"
-                >
-                  关闭
-                </el-button>
-              </div>
-            </div>
-          </div>
-        </el-col>
         <!-- LED 控制 -->
-        <el-col :span="12">
+        <el-col :span="24">
           <div class="control-item">
             <div class="control-icon">
               <svg-icon v-if="environmentData && environmentData.ledStatus === 1" icon-class="led-on" class="led-on" />
@@ -247,9 +237,137 @@
             </div>
           </div>
         </el-col>
+        <!-- 散热风扇控制 -->
+        <el-col :span="12">
+          <div class="control-item">
+            <div class="control-icon">
+              <svg-icon :class="[environmentData && environmentData.coolingFanStatus === 1 ? 'fan-on' : 'fan-off']" icon-class="fan" />
+            </div>
+            <div class="control-info">
+              <div class="control-label">散热风扇</div>
+              <div class="control-status">当前状态: {{ coolingFanStatusText }}</div>
+              <div class="control-buttons">
+                <el-button
+                  :loading="coolingFanLoading"
+                  :disabled="isActuatorPending('coolingFan') || (environmentData && environmentData.coolingFanStatus === 1)"
+                  size="small"
+                  type="primary"
+                  @click="controlRadiator('on')"
+                >
+                  打开
+                </el-button>
+                <el-button
+                  :loading="coolingFanLoading"
+                  :disabled="isActuatorPending('coolingFan') || (environmentData && environmentData.coolingFanStatus === 0)"
+                  size="small"
+                  type="danger"
+                  @click="controlRadiator('off')"
+                >
+                  关闭
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <!-- 加热片控制 -->
+        <el-col :span="12">
+          <div class="control-item">
+            <div class="control-icon">
+              <span class="actuator-symbol">♨</span>
+            </div>
+            <div class="control-info">
+              <div class="control-label">加热片</div>
+              <div class="control-status">当前状态: {{ heaterStatusText }}</div>
+              <div class="control-buttons">
+                <el-button
+                  :loading="heaterLoading"
+                  :disabled="isActuatorPending('heater') || (environmentData && environmentData.heaterStatus === 1)"
+                  size="small"
+                  type="primary"
+                  @click="controlHeater('on')"
+                >
+                  打开
+                </el-button>
+                <el-button
+                  :loading="heaterLoading"
+                  :disabled="isActuatorPending('heater') || (environmentData && environmentData.heaterStatus === 0)"
+                  size="small"
+                  type="danger"
+                  @click="controlHeater('off')"
+                >
+                  关闭
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <!-- 加湿器控制 -->
+        <el-col :span="12">
+          <div class="control-item">
+            <div class="control-icon">
+              <span class="actuator-symbol">💧</span>
+            </div>
+            <div class="control-info">
+              <div class="control-label">加湿器</div>
+              <div class="control-status">当前状态: {{ humidifierStatusText }}</div>
+              <div class="control-buttons">
+                <el-button
+                  :loading="humidifierLoading"
+                  :disabled="isActuatorPending('humidifier') || (environmentData && environmentData.humidifierStatus === 1)"
+                  size="small"
+                  type="primary"
+                  @click="controlHumidifier('on')"
+                >
+                  打开
+                </el-button>
+                <el-button
+                  :loading="humidifierLoading"
+                  :disabled="isActuatorPending('humidifier') || (environmentData && environmentData.humidifierStatus === 0)"
+                  size="small"
+                  type="danger"
+                  @click="controlHumidifier('off')"
+                >
+                  关闭
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <!-- 除湿换气扇控制 -->
+        <el-col :span="12">
+          <div class="control-item">
+            <div class="control-icon">
+              <svg-icon :class="[environmentData && environmentData.dehumidifyingFanStatus === 1 ? 'fan-on' : 'fan-off']" icon-class="fan" />
+            </div>
+            <div class="control-info">
+              <div class="control-label">除湿换气扇</div>
+              <div class="control-status">当前状态: {{ dehumidifyingFanStatusText }}</div>
+              <div class="control-buttons">
+                <el-button
+                  :loading="dehumidifyingFanLoading"
+                  :disabled="isActuatorPending('dehumidifyingFan') || (environmentData && environmentData.dehumidifyingFanStatus === 1)"
+                  size="small"
+                  type="primary"
+                  @click="controlDehumidifyingFan('on')"
+                >
+                  打开
+                </el-button>
+                <el-button
+                  :loading="dehumidifyingFanLoading"
+                  :disabled="isActuatorPending('dehumidifyingFan') || (environmentData && environmentData.dehumidifyingFanStatus === 0)"
+                  size="small"
+                  type="danger"
+                  @click="controlDehumidifyingFan('off')"
+                >
+                  关闭
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </el-col>
       </el-row>
       <div v-if="pending" class="pending-tip">
-        等待设备响应 {{ pending.act === 'fan' ? '散热器' : 'LED' }} {{ pending.val === 1 ? '开启' : '关闭' }}...
+        等待设备响应 {{ pending.act === 'coolingFan' ? '散热风扇' : pending.act === 'heater' ? '加热片' : pending.act === 'humidifier' ? '加湿器' : pending.act === 'dehumidifyingFan' ? '除湿换气扇' : 'LED' }} {{ pending.val === 1 ? '开启' : '关闭' }}...
       </div>
     </el-card>
   </div>
@@ -277,18 +395,30 @@ export default {
       stompClient: null,
       reconnectTimer: null,
       reconnectAttempts: 0,
-      fanLoading: false,
+      coolingFanLoading: false,
       ledLoading: false,
+      heaterLoading: false,
+      humidifierLoading: false,
+      dehumidifyingFanLoading: false,
       pollingTimer: null,
       pending: null
     }
   },
   computed: {
-    fanStatusText() {
-      return this.environmentData && this.environmentData.fanStatus === 1 ? '开启' : '关闭'
+    coolingFanStatusText() {
+      return this.environmentData && this.environmentData.coolingFanStatus === 1 ? '开启' : '关闭'
     },
     ledStatusText() {
       return this.environmentData && this.environmentData.ledStatus === 1 ? '开启' : '关闭'
+    },
+    heaterStatusText() {
+      return this.environmentData && this.environmentData.heaterStatus === 1 ? '开启' : '关闭'
+    },
+    humidifierStatusText() {
+      return this.environmentData && this.environmentData.humidifierStatus === 1 ? '开启' : '关闭'
+    },
+    dehumidifyingFanStatusText() {
+      return this.environmentData && this.environmentData.dehumidifyingFanStatus === 1 ? '开启' : '关闭'
     }
   },
   mounted() {
@@ -525,22 +655,34 @@ export default {
       if (!data) return
       if (this.pending) {
         const expected = this.pending.val
-        const actual = this.pending.act === 'fan' ? data.fanStatus : data.ledStatus
+        let actual = this.pending.act === 'coolingFan' ? data.coolingFanStatus : data.ledStatus
+        if (this.pending.act === 'heater') actual = data.heaterStatus
+        if (this.pending.act === 'humidifier') actual = data.humidifierStatus
+        if (this.pending.act === 'dehumidifyingFan') actual = data.dehumidifyingFanStatus
         if (actual === expected) {
           this.environmentData = data
           this.handleCommandResult({
             cmdId: this.pending.cmdId,
             status: 2,
-            fan: data.fanStatus,
-            led: data.ledStatus
+            coolingFan: data.coolingFanStatus,
+            led: data.ledStatus,
+            heater: data.heaterStatus,
+            humidifier: data.humidifierStatus,
+            dehumidifyingFan: data.dehumidifyingFanStatus
           })
           return
         }
         if (this.environmentData) {
-          if (this.pending.act === 'fan') {
-            data.fanStatus = this.environmentData.fanStatus
+          if (this.pending.act === 'coolingFan') {
+            data.coolingFanStatus = this.environmentData.coolingFanStatus
           } else if (this.pending.act === 'led') {
             data.ledStatus = this.environmentData.ledStatus
+          } else if (this.pending.act === 'heater') {
+            data.heaterStatus = this.environmentData.heaterStatus
+          } else if (this.pending.act === 'humidifier') {
+            data.humidifierStatus = this.environmentData.humidifierStatus
+          } else if (this.pending.act === 'dehumidifyingFan') {
+            data.dehumidifyingFanStatus = this.environmentData.dehumidifyingFanStatus
           }
         }
       }
@@ -550,12 +692,15 @@ export default {
       if (!cmd || !this.pending || cmd.cmdId !== this.pending.cmdId) {
         return
       }
-      const name = this.pending.act === 'fan' ? '散热器' : 'LED'
+      const name = this.pending.act === 'coolingFan' ? '散热风扇' : this.pending.act === 'heater' ? '加热片' : this.pending.act === 'humidifier' ? '加湿器' : this.pending.act === 'dehumidifyingFan' ? '除湿换气扇' : 'LED'
       const actionText = this.pending.val === 1 ? '开启' : '关闭'
       if (cmd.status === 2) {
         if (this.environmentData) {
-          if (cmd.fan !== undefined && cmd.fan !== null) this.environmentData.fanStatus = cmd.fan
+          if (cmd.coolingFan !== undefined && cmd.coolingFan !== null) this.environmentData.coolingFanStatus = cmd.coolingFan
           if (cmd.led !== undefined && cmd.led !== null) this.environmentData.ledStatus = cmd.led
+          if (cmd.heater !== undefined && cmd.heater !== null) this.environmentData.heaterStatus = cmd.heater
+          if (cmd.humidifier !== undefined && cmd.humidifier !== null) this.environmentData.humidifierStatus = cmd.humidifier
+          if (cmd.dehumidifyingFan !== undefined && cmd.dehumidifyingFan !== null) this.environmentData.dehumidifyingFanStatus = cmd.dehumidifyingFan
         }
         this.$message.success(`${name}${actionText}成功`)
       } else if (cmd.status === 3) {
@@ -570,8 +715,11 @@ export default {
         clearTimeout(this.pending.timer)
       }
       this.pending = null
-      this.fanLoading = false
+      this.coolingFanLoading = false
       this.ledLoading = false
+      this.heaterLoading = false
+      this.humidifierLoading = false
+      this.dehumidifyingFanLoading = false
     },
     startPending(act, val, cmdId) {
       if (this.pending && this.pending.timer) {
@@ -595,7 +743,10 @@ export default {
         return
       }
       const val = action === 'on' ? 1 : 0
-      if (act === 'fan') this.fanLoading = true
+      if (act === 'coolingFan') this.coolingFanLoading = true
+      else if (act === 'heater') this.heaterLoading = true
+      else if (act === 'humidifier') this.humidifierLoading = true
+      else if (act === 'dehumidifyingFan') this.dehumidifyingFanLoading = true
       else this.ledLoading = true
       try {
         const res = await deviceOption.controlDevice({
@@ -616,16 +767,29 @@ export default {
       }
     },
     async controlRadiator(action) {
-      await this.sendControl('fan', action)
+      await this.sendControl('coolingFan', action)
     },
     async controlLed(action) {
       await this.sendControl('led', action)
+    },
+    async controlHeater(action) {
+      await this.sendControl('heater', action)
+    },
+    async controlHumidifier(action) {
+      await this.sendControl('humidifier', action)
+    },
+    async controlDehumidifyingFan(action) {
+      await this.sendControl('dehumidifyingFan', action)
     }
   }
 }
 </script>
 
 <style scoped>
+.actuator-symbol {
+  font-size: 32px;
+}
+
 .real-time-container {
   padding: 20px;
   display: flex;

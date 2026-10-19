@@ -11,6 +11,9 @@ void Actuators_Init(void)
 {
     Led_Init();
     CoolingFan_Init();
+    Heater_Init();
+    Humidifier_Init();
+    DehumidifyingFan_Init();
 }
 
 /*******************************************************************************
@@ -185,5 +188,173 @@ uint8_t CoolingFan_GetState(void)
     return (pin_level == Bit_SET) ? 1 : 0;   // 高电平表示吸合
 #else
     return (pin_level == Bit_RESET) ? 1 : 0; // 低电平表示吸合
+#endif
+}
+
+/*******************************************************************************
+* Heater relay output on PB7
+*******************************************************************************/
+void Heater_Init(void)
+{
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+#if HEATER_RELAY_ON_LEVEL == 1
+    GPIO_ResetBits(GPIOB, GPIO_Pin_7);
+#else
+    GPIO_SetBits(GPIOB, GPIO_Pin_7);
+#endif
+}
+
+void Heater_ON(void)
+{
+#if HEATER_RELAY_ON_LEVEL == 1
+    GPIO_SetBits(GPIOB, GPIO_Pin_7);
+#else
+    GPIO_ResetBits(GPIOB, GPIO_Pin_7);
+#endif
+}
+
+void Heater_OFF(void)
+{
+#if HEATER_RELAY_ON_LEVEL == 1
+    GPIO_ResetBits(GPIOB, GPIO_Pin_7);
+#else
+    GPIO_SetBits(GPIOB, GPIO_Pin_7);
+#endif
+}
+
+void Heater_Turn(void)
+{
+    if (Heater_GetState() == 1)
+        Heater_OFF();
+    else
+        Heater_ON();
+}
+
+uint8_t Heater_GetState(void)
+{
+    uint8_t pin_level = GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_7);
+#if HEATER_RELAY_ON_LEVEL == 1
+    return (pin_level == Bit_SET) ? 1 : 0;
+#else
+    return (pin_level == Bit_RESET) ? 1 : 0;
+#endif
+}
+
+/*******************************************************************************
+* Humidifier relay output on PA11
+*******************************************************************************/
+void Humidifier_Init(void)
+{
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+#if HUMIDIFIER_RELAY_ON_LEVEL == 1
+    GPIO_ResetBits(GPIOA, GPIO_Pin_11);
+#else
+    GPIO_SetBits(GPIOA, GPIO_Pin_11);
+#endif
+}
+
+void Humidifier_ON(void)
+{
+#if HUMIDIFIER_RELAY_ON_LEVEL == 1
+    GPIO_SetBits(GPIOA, GPIO_Pin_11);
+#else
+    GPIO_ResetBits(GPIOA, GPIO_Pin_11);
+#endif
+}
+
+void Humidifier_OFF(void)
+{
+#if HUMIDIFIER_RELAY_ON_LEVEL == 1
+    GPIO_ResetBits(GPIOA, GPIO_Pin_11);
+#else
+    GPIO_SetBits(GPIOA, GPIO_Pin_11);
+#endif
+}
+
+void Humidifier_Turn(void)
+{
+    if (Humidifier_GetState() == 1)
+        Humidifier_OFF();
+    else
+        Humidifier_ON();
+}
+
+uint8_t Humidifier_GetState(void)
+{
+    uint8_t pin_level = GPIO_ReadOutputDataBit(GPIOA, GPIO_Pin_11);
+#if HUMIDIFIER_RELAY_ON_LEVEL == 1
+    return (pin_level == Bit_SET) ? 1 : 0;
+#else
+    return (pin_level == Bit_RESET) ? 1 : 0;
+#endif
+}
+
+/*******************************************************************************
+* Dehumidifying fan relay output on PB15
+*******************************************************************************/
+void DehumidifyingFan_Init(void)
+{
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+#if DEHUMIDIFYING_FAN_RELAY_ON_LEVEL == 1
+    GPIO_ResetBits(GPIOB, GPIO_Pin_15);
+#else
+    GPIO_SetBits(GPIOB, GPIO_Pin_15);
+#endif
+}
+
+void DehumidifyingFan_ON(void)
+{
+#if DEHUMIDIFYING_FAN_RELAY_ON_LEVEL == 1
+    GPIO_SetBits(GPIOB, GPIO_Pin_15);
+#else
+    GPIO_ResetBits(GPIOB, GPIO_Pin_15);
+#endif
+}
+
+void DehumidifyingFan_OFF(void)
+{
+#if DEHUMIDIFYING_FAN_RELAY_ON_LEVEL == 1
+    GPIO_ResetBits(GPIOB, GPIO_Pin_15);
+#else
+    GPIO_SetBits(GPIOB, GPIO_Pin_15);
+#endif
+}
+
+void DehumidifyingFan_Turn(void)
+{
+    if (DehumidifyingFan_GetState() == 1)
+        DehumidifyingFan_OFF();
+    else
+        DehumidifyingFan_ON();
+}
+
+uint8_t DehumidifyingFan_GetState(void)
+{
+    uint8_t pin_level = GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_15);
+#if DEHUMIDIFYING_FAN_RELAY_ON_LEVEL == 1
+    return (pin_level == Bit_SET) ? 1 : 0;
+#else
+    return (pin_level == Bit_RESET) ? 1 : 0;
 #endif
 }

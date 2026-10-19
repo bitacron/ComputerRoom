@@ -13,7 +13,19 @@
 #define KEY2_PIN        GPIO_Pin_11
 #define KEY2_RCC        RCC_APB2Periph_GPIOB
 
+#define KEY3_PORT       GPIOA
+#define KEY3_PIN        GPIO_Pin_6
+#define KEY3_RCC        RCC_APB2Periph_GPIOA
+
+#define KEY4_PORT       GPIOA
+#define KEY4_PIN        GPIO_Pin_7
+#define KEY4_RCC        RCC_APB2Periph_GPIOA
+
+#define KEY5_PORT       GPIOB
+#define KEY5_PIN        GPIO_Pin_6
+#define KEY5_RCC        RCC_APB2Periph_GPIOB
+
 void Key_Init(void);       // 按键 GPIO 初始化（KEY1-PB10 / KEY2-PB11）
-uint8_t Key_GetNum(void);  // 读键值：1/2，无键返回 0
+uint8_t Key_GetNum(void);  // Returns 1-5 for KEY1-KEY5; 0 when none is pressed.
 
 #endif

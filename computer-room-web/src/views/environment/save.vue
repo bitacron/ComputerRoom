@@ -67,14 +67,32 @@
           <el-option :value="0" label="未报警"/>
         </el-select>
       </el-form-item>
-      <el-form-item label="散热设备开关">
-        <el-select v-model="environment.fanStatus" clearable placeholder="请选择">
+      <el-form-item label="led灯开关">
+        <el-select v-model="environment.ledStatus" clearable placeholder="请选择">
           <el-option :value="1" label="开启"/>
           <el-option :value="0" label="关闭"/>
         </el-select>
       </el-form-item>
-      <el-form-item label="led灯开关">
-        <el-select v-model="environment.ledStatus" clearable placeholder="请选择">
+      <el-form-item label="散热风扇开关">
+        <el-select v-model="environment.coolingFanStatus" clearable placeholder="请选择">
+          <el-option :value="1" label="开启"/>
+          <el-option :value="0" label="关闭"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="加热片开关">
+        <el-select v-model="environment.heaterStatus" clearable placeholder="请选择">
+          <el-option :value="1" label="开启"/>
+          <el-option :value="0" label="关闭"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="加湿器开关">
+        <el-select v-model="environment.humidifierStatus" clearable placeholder="请选择">
+          <el-option :value="1" label="开启"/>
+          <el-option :value="0" label="关闭"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="除湿换气扇开关">
+        <el-select v-model="environment.dehumidifyingFanStatus" clearable placeholder="请选择">
           <el-option :value="1" label="开启"/>
           <el-option :value="0" label="关闭"/>
         </el-select>
@@ -115,8 +133,11 @@ export default {
                 leakStatus: '',
                 leakPercentage: '',
                 alarmStatus: '',
-                fan: '',
                 ledStatus: '',
+                coolingFanStatus: '',
+                heaterStatus: '',
+                humidifierStatus: '',
+                dehumidifyingFanStatus: '',
                 source: 2
             },
             BASE_API: process.env.BASE_API, // 获取dev.en.js的地址

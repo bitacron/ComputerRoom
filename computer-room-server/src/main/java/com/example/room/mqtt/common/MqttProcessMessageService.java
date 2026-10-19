@@ -105,8 +105,11 @@ public class MqttProcessMessageService {
               "leakDig": 0,
               "leakPer": 0,
               "alarm": 0,
-              "fan": 0,
+              "coolingFan": 0,
               "led": 0,
+              "heater": 0,
+              "humidifier": 0,
+              "dehumidifyingFan": 0,
               "measureTime": "2026-08-22 17:05:01"
             }
             无 measureTime 时 gmtMeasurement 使用服务端接收时刻。
@@ -191,16 +194,34 @@ public class MqttProcessMessageService {
                     environment.setAlarmStatus(Integer.parseInt(beep.toString()));
                 }
             }
-            if (jsonObject.containsKey("fan")) {
-                Object fan = jsonObject.get("fan");
-                if (fan != null) {
-                    environment.setFanStatus(Integer.parseInt(fan.toString()));
+            if (jsonObject.containsKey("coolingFan")) {
+                Object coolingFan = jsonObject.get("coolingFan");
+                if (coolingFan != null) {
+                    environment.setCoolingFanStatus(Integer.parseInt(coolingFan.toString()));
                 }
             }
             if (jsonObject.containsKey("led")) {
                 Object led = jsonObject.get("led");
                 if (led != null) {
                     environment.setLedStatus(Integer.parseInt(led.toString()));
+                }
+            }
+            if (jsonObject.containsKey("heater")) {
+                Object heater = jsonObject.get("heater");
+                if (heater != null) {
+                    environment.setHeaterStatus(Integer.parseInt(heater.toString()));
+                }
+            }
+            if (jsonObject.containsKey("humidifier")) {
+                Object humidifier = jsonObject.get("humidifier");
+                if (humidifier != null) {
+                    environment.setHumidifierStatus(Integer.parseInt(humidifier.toString()));
+                }
+            }
+            if (jsonObject.containsKey("dehumidifyingFan")) {
+                Object dehumidifyingFan = jsonObject.get("dehumidifyingFan");
+                if (dehumidifyingFan != null) {
+                    environment.setDehumidifyingFanStatus(Integer.parseInt(dehumidifyingFan.toString()));
                 }
             }
             // 设置默认值
