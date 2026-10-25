@@ -180,6 +180,13 @@
         <text>设备反控</text>
       </view>
       <view class="card-body">
+        <view v-if="modeSupported" class="mode-row">
+          <text class="control-label">控制模式</text>
+          <radio-group class="mode-options" @change="controlMode">
+            <label><radio value="0" :checked="environmentData.mode === 0" :disabled="controlsDisabled" color="#409eff" />手动</label>
+            <label><radio value="1" :checked="environmentData.mode === 1" :disabled="controlsDisabled" color="#409eff" />自动</label>
+          </radio-group>
+        </view>
         <!-- LED 控制 -->
         <view class="control-row">
           <view class="control-icon">
@@ -202,12 +209,12 @@
             <view class="button-group">
               <button 
                 class="btn btn-primary" 
-                :disabled="ledLoading || (pendingCommand && pendingCommand.deviceType === 'led') || (environmentData && environmentData.ledStatus === 1)"
+                :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.ledStatus === 1)"
                 @click="controlLed('on')"
               >打开</button>
               <button 
                 class="btn btn-danger" 
-                :disabled="ledLoading || (pendingCommand && pendingCommand.deviceType === 'led') || (environmentData && environmentData.ledStatus === 0)"
+                :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.ledStatus === 0)"
                 @click="controlLed('off')"
               >关闭</button>
             </view>
@@ -230,12 +237,12 @@
               <view class="button-group">
                 <button
                   class="btn btn-primary"
-                  :disabled="coolingFanLoading || (pendingCommand && pendingCommand.deviceType === 'coolingFan') || (environmentData && environmentData.coolingFanStatus === 1)"
+                  :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.coolingFanStatus === 1)"
                   @click="controlRadiator('on')"
                 >打开</button>
                 <button
                   class="btn btn-danger"
-                  :disabled="coolingFanLoading || (pendingCommand && pendingCommand.deviceType === 'coolingFan') || (environmentData && environmentData.coolingFanStatus === 0)"
+                  :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.coolingFanStatus === 0)"
                   @click="controlRadiator('off')"
                 >关闭</button>
               </view>
@@ -252,12 +259,12 @@
               <view class="button-group">
                 <button
                   class="btn btn-primary"
-                  :disabled="heaterLoading || (pendingCommand && pendingCommand.deviceType === 'heater') || (environmentData && environmentData.heaterStatus === 1)"
+                  :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.heaterStatus === 1)"
                   @click="controlHeater('on')"
                 >打开</button>
                 <button
                   class="btn btn-danger"
-                  :disabled="heaterLoading || (pendingCommand && pendingCommand.deviceType === 'heater') || (environmentData && environmentData.heaterStatus === 0)"
+                  :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.heaterStatus === 0)"
                   @click="controlHeater('off')"
                 >关闭</button>
               </view>
@@ -276,12 +283,12 @@
               <view class="button-group">
                 <button
                   class="btn btn-primary"
-                  :disabled="humidifierLoading || (pendingCommand && pendingCommand.deviceType === 'humidifier') || (environmentData && environmentData.humidifierStatus === 1)"
+                  :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.humidifierStatus === 1)"
                   @click="controlHumidifier('on')"
                 >打开</button>
                 <button
                   class="btn btn-danger"
-                  :disabled="humidifierLoading || (pendingCommand && pendingCommand.deviceType === 'humidifier') || (environmentData && environmentData.humidifierStatus === 0)"
+                  :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.humidifierStatus === 0)"
                   @click="controlHumidifier('off')"
                 >关闭</button>
               </view>
@@ -303,12 +310,12 @@
               <view class="button-group">
                 <button
                   class="btn btn-primary"
-                  :disabled="dehumidifyingFanLoading || (pendingCommand && pendingCommand.deviceType === 'dehumidifyingFan') || (environmentData && environmentData.dehumidifyingFanStatus === 1)"
+                  :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.dehumidifyingFanStatus === 1)"
                   @click="controlDehumidifyingFan('on')"
                 >打开</button>
                 <button
                   class="btn btn-danger"
-                  :disabled="dehumidifyingFanLoading || (pendingCommand && pendingCommand.deviceType === 'dehumidifyingFan') || (environmentData && environmentData.dehumidifyingFanStatus === 0)"
+                  :disabled="controlsDisabled || (environmentData && environmentData.mode !== 1 && environmentData.dehumidifyingFanStatus === 0)"
                   @click="controlDehumidifyingFan('off')"
                 >关闭</button>
               </view>
@@ -317,7 +324,7 @@
         </view>
         <!-- 等待指令提示 -->
         <view v-if="pendingCommand" class="pending-tip">
-          <text>⏳ 等待设备响应 {{ pendingCommand.deviceType === 'coolingFan' ? '散热风扇' : pendingCommand.deviceType === 'heater' ? '加热片' : pendingCommand.deviceType === 'humidifier' ? '加湿器' : pendingCommand.deviceType === 'dehumidifyingFan' ? '除湿换气扇' : 'LED' }} {{ pendingCommand.action === 'on' ? '开启' : '关闭' }} 指令...</text>
+          <text>⏳ 等待设备响应 {{ pendingCommand.deviceType === 'mode' ? '控制模式' : pendingCommand.deviceType === 'coolingFan' ? '散热风扇' : pendingCommand.deviceType === 'heater' ? '加热片' : pendingCommand.deviceType === 'humidifier' ? '加湿器' : pendingCommand.deviceType === 'dehumidifyingFan' ? '除湿换气扇' : 'LED' }} {{ pendingCommand.deviceType === 'mode' ? (pendingCommand.action === 'on' ? '自动' : '手动') : (pendingCommand.action === 'on' ? '开启' : '关闭') }} 指令...</text>
         </view>
       </view>
     </view>
@@ -364,6 +371,14 @@ export default {
       pollingTimer: null
     };
   },
+  computed: {
+    modeSupported() {
+      return this.environmentData && (this.environmentData.mode === 0 || this.environmentData.mode === 1);
+    },
+    controlsDisabled() {
+      return !!this.pendingCommand || !this.selectedDeviceKey || !this.environmentData || this.environmentData.onlineStatus === 0;
+    }
+  },
   onShow() {
     // 页面显示：加载设备列表
     this.init();
@@ -372,12 +387,12 @@ export default {
     this.disconnectWebSocket();
     this.stopPolling();
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    if (this.commandTimeout) clearTimeout(this.commandTimeout);
+    this.clearPending();
   },
   onUnload() {
     this.disconnectWebSocket();
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    if (this.commandTimeout) clearTimeout(this.commandTimeout);
+    this.clearPending();
   },
   methods: {
     // ==================== 初始化 ====================
@@ -493,6 +508,7 @@ export default {
 
     // 切换设备时的核心逻辑
     onDeviceChange(deviceKey) {
+      this.clearPending();
       if (!deviceKey) {
         // 清空所有数据，断开连接
         this.environmentData = null;
@@ -654,73 +670,40 @@ export default {
     },
 
     applyEnvironmentPush(data) {
-      if (!data) return;
-      if (this.pendingCommand) {
-        const expected = this.pendingCommand.action === 'on' ? 1 : 0;
-        let actual = this.pendingCommand.deviceType === 'coolingFan' ? data.coolingFanStatus : data.ledStatus;
-        if (this.pendingCommand.deviceType === 'heater') actual = data.heaterStatus;
-        if (this.pendingCommand.deviceType === 'humidifier') actual = data.humidifierStatus;
-        if (this.pendingCommand.deviceType === 'dehumidifyingFan') actual = data.dehumidifyingFanStatus;
-        if (actual === expected) {
-          this.environmentData = data;
-          this.handleCommandResult({
-            cmdId: this.pendingCommand.cmdId,
-            status: 2,
-            coolingFan: data.coolingFanStatus,
-            led: data.ledStatus,
-            heater: data.heaterStatus,
-            humidifier: data.humidifierStatus,
-            dehumidifyingFan: data.dehumidifyingFanStatus
-          });
-          return;
-        }
-        if (this.environmentData) {
-          if (this.pendingCommand.deviceType === 'coolingFan') {
-            data.coolingFanStatus = this.environmentData.coolingFanStatus;
-          } else if (this.pendingCommand.deviceType === 'led') {
-            data.ledStatus = this.environmentData.ledStatus;
-          } else if (this.pendingCommand.deviceType === 'heater') {
-            data.heaterStatus = this.environmentData.heaterStatus;
-          } else if (this.pendingCommand.deviceType === 'humidifier') {
-            data.humidifierStatus = this.environmentData.humidifierStatus;
-          } else if (this.pendingCommand.deviceType === 'dehumidifyingFan') {
-            data.dehumidifyingFanStatus = this.environmentData.dehumidifyingFanStatus;
-          }
-        }
-      }
+      if (!data || (data.deviceKey && data.deviceKey !== this.selectedDeviceKey)) return;
       this.environmentData = data;
     },
 
     handleCommandResult(cmd) {
-      if (!cmd || !this.pendingCommand || cmd.cmdId !== this.pendingCommand.cmdId) {
+      const pending = this.pendingCommand;
+      if (!cmd || !pending || (cmd.deviceKey && cmd.deviceKey !== pending.deviceKey)) return;
+      if (!pending.cmdId) {
+        pending.earlyResults[cmd.cmdId] = cmd;
         return;
       }
-      const { deviceType, action } = this.pendingCommand;
-      const deviceName = deviceType === 'coolingFan' ? '散热风扇' : deviceType === 'heater' ? '加热片' : deviceType === 'humidifier' ? '加湿器' : deviceType === 'dehumidifyingFan' ? '除湿换气扇' : 'LED';
-      if (this.commandTimeout) {
-        clearTimeout(this.commandTimeout);
-        this.commandTimeout = null;
-      }
+      if (cmd.cmdId !== pending.cmdId || ![2, 3, 4].includes(cmd.status)) return;
       if (cmd.status === 2) {
+        const fields = { coolingFan: 'coolingFanStatus', led: 'ledStatus', heater: 'heaterStatus', humidifier: 'humidifierStatus', dehumidifyingFan: 'dehumidifyingFanStatus', mode: 'mode' };
         if (this.environmentData) {
-          if (cmd.coolingFan !== undefined && cmd.coolingFan !== null) this.environmentData.coolingFanStatus = cmd.coolingFan;
-          if (cmd.led !== undefined && cmd.led !== null) this.environmentData.ledStatus = cmd.led;
-          if (cmd.heater !== undefined && cmd.heater !== null) this.environmentData.heaterStatus = cmd.heater;
-          if (cmd.humidifier !== undefined && cmd.humidifier !== null) this.environmentData.humidifierStatus = cmd.humidifier;
-          if (cmd.dehumidifyingFan !== undefined && cmd.dehumidifyingFan !== null) this.environmentData.dehumidifyingFanStatus = cmd.dehumidifyingFan;
+          Object.keys(fields).forEach(key => {
+            if (cmd[key] !== undefined && cmd[key] !== null) this.$set(this.environmentData, fields[key], cmd[key]);
+          });
         }
-        uni.showToast({ title: `${deviceName}${action === 'on' ? '开启' : '关闭'}成功`, icon: 'success' });
-      } else if (cmd.status === 3) {
-        uni.showToast({ title: `${deviceName}执行失败`, icon: 'none' });
-      } else if (cmd.status === 4) {
-        uni.showToast({ title: '设备未响应', icon: 'none' });
+        const title = pending.deviceType === 'mode'
+          ? (cmd.mode === 1 ? '已切换为自动模式' : '已切换为手动模式')
+          : (pending.wasAuto && cmd.mode === 0 ? '操作成功，已切换为手动模式' : '操作成功');
+        uni.showToast({ title, icon: 'none' });
+      } else {
+        uni.showToast({ title: cmd.status === 4 ? '设备未响应，结果未确认' : '设备执行失败', icon: 'none' });
       }
+      this.clearPending();
+    },
+
+    clearPending() {
+      if (this.commandTimeout) clearTimeout(this.commandTimeout);
+      this.commandTimeout = null;
       this.pendingCommand = null;
-      this.coolingFanLoading = false;
-      this.ledLoading = false;
-      this.heaterLoading = false;
-      this.humidifierLoading = false;
-      this.dehumidifyingFanLoading = false;
+      this.coolingFanLoading = this.ledLoading = this.heaterLoading = this.humidifierLoading = this.dehumidifyingFanLoading = false;
     },
 
     handleConnectionError() {
@@ -777,220 +760,54 @@ export default {
     },
 
     // ========== 设备反控 ==========
-    async controlRadiator(action) {
-      if (!this.selectedDeviceKey) {
-        uni.showToast({ title: '请先选择设备', icon: 'none' });
-        return;
-      }
-      if (this.pendingCommand) {
-        uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
-        return;
-      }
-      this.coolingFanLoading = true;
+    async sendControl(deviceType, action) {
+      if (this.controlsDisabled) return;
+      const pending = { deviceType, action, deviceKey: this.selectedDeviceKey, cmdId: null, earlyResults: {}, wasAuto: this.environmentData.mode === 1 };
+      this.pendingCommand = pending;
       try {
         const res = await request({
           url: '/service/deviceOption/control',
           method: 'POST',
-          data: {
-            deviceType: 'coolingFan',
-            deviceKey: this.selectedDeviceKey,
-            command: action
-          },
+          data: { deviceType, deviceKey: pending.deviceKey, command: action },
           timeout: 3000
         });
-        if (res.code === 20000 && res.data && res.data.cmdId) {
-          this.pendingCommand = { deviceType: 'coolingFan', action, cmdId: res.data.cmdId };
-          uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
-          this.commandTimeout = setTimeout(() => {
-            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
-              uni.showToast({ title: '设备未响应', icon: 'none' });
-              this.pendingCommand = null;
-              this.coolingFanLoading = false;
-              this.commandTimeout = null;
-            }
-          }, 8000);
-        } else {
-          uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
-          this.coolingFanLoading = false;
-        }
+        if (this.pendingCommand !== pending) return;
+        if (res.code !== 20000 || !res.data || !res.data.cmdId) throw new Error(res.msg || '操作失败');
+        pending.cmdId = res.data.cmdId;
+        this.commandTimeout = setTimeout(() => {
+          if (this.pendingCommand === pending) {
+            uni.showToast({ title: '设备未响应，结果未确认', icon: 'none' });
+            this.clearPending();
+            this.fetchData();
+          }
+        }, 8000);
+        if (pending.earlyResults[pending.cmdId]) this.handleCommandResult(pending.earlyResults[pending.cmdId]);
       } catch (err) {
-        uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
-        this.coolingFanLoading = false;
+        if (this.pendingCommand !== pending) return;
+        uni.showToast({ title: err.msg || err.message || '操作失败', icon: 'none' });
+        this.clearPending();
       }
     },
-
-    async controlLed(action) {
-      if (!this.selectedDeviceKey) {
-        uni.showToast({ title: '请先选择设备', icon: 'none' });
-        return;
-      }
-      if (this.pendingCommand) {
-        uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
-        return;
-      }
-      this.ledLoading = true;
-      try {
-        const res = await request({
-          url: '/service/deviceOption/control',
-          method: 'POST',
-          data: {
-            deviceType: 'led',
-            deviceKey: this.selectedDeviceKey,
-            command: action
-          },
-          timeout: 3000
-        });
-        if (res.code === 20000 && res.data && res.data.cmdId) {
-          this.pendingCommand = { deviceType: 'led', action, cmdId: res.data.cmdId };
-          uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
-          this.commandTimeout = setTimeout(() => {
-            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
-              uni.showToast({ title: '设备未响应', icon: 'none' });
-              this.pendingCommand = null;
-              this.ledLoading = false;
-              this.commandTimeout = null;
-            }
-          }, 8000);
-        } else {
-          uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
-          this.ledLoading = false;
-        }
-      } catch (err) {
-        uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
-        this.ledLoading = false;
-      }
+    controlMode(event) {
+      const value = Number(event.detail.value);
+      if (this.modeSupported && value !== this.environmentData.mode) this.sendControl('mode', value === 1 ? 'on' : 'off');
     },
+    controlRadiator(action) { return this.sendControl('coolingFan', action); },
+    controlLed(action) { return this.sendControl('led', action); },
+    controlHeater(action) { return this.sendControl('heater', action); },
+    controlHumidifier(action) { return this.sendControl('humidifier', action); },
+    controlDehumidifyingFan(action) { return this.sendControl('dehumidifyingFan', action); }
 
-    async controlHeater(action) {
-      if (!this.selectedDeviceKey) {
-        uni.showToast({ title: '请先选择设备', icon: 'none' });
-        return;
-      }
-      if (this.pendingCommand) {
-        uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
-        return;
-      }
-      this.heaterLoading = true;
-      try {
-        const res = await request({
-          url: '/service/deviceOption/control',
-          method: 'POST',
-          data: {
-            deviceType: 'heater',
-            deviceKey: this.selectedDeviceKey,
-            command: action
-          },
-          timeout: 3000
-        });
-        if (res.code === 20000 && res.data && res.data.cmdId) {
-          this.pendingCommand = { deviceType: 'heater', action, cmdId: res.data.cmdId };
-          uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
-          this.commandTimeout = setTimeout(() => {
-            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
-              uni.showToast({ title: '设备未响应', icon: 'none' });
-              this.pendingCommand = null;
-              this.heaterLoading = false;
-              this.commandTimeout = null;
-            }
-          }, 8000);
-        } else {
-          uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
-          this.heaterLoading = false;
-        }
-      } catch (err) {
-        uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
-        this.heaterLoading = false;
-      }
-    },
-
-    async controlHumidifier(action) {
-      if (!this.selectedDeviceKey) {
-        uni.showToast({ title: '请先选择设备', icon: 'none' });
-        return;
-      }
-      if (this.pendingCommand) {
-        uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
-        return;
-      }
-      this.humidifierLoading = true;
-      try {
-        const res = await request({
-          url: '/service/deviceOption/control',
-          method: 'POST',
-          data: {
-            deviceType: 'humidifier',
-            deviceKey: this.selectedDeviceKey,
-            command: action
-          },
-          timeout: 3000
-        });
-        if (res.code === 20000 && res.data && res.data.cmdId) {
-          this.pendingCommand = { deviceType: 'humidifier', action, cmdId: res.data.cmdId };
-          uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
-          this.commandTimeout = setTimeout(() => {
-            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
-              uni.showToast({ title: '设备未响应', icon: 'none' });
-              this.pendingCommand = null;
-              this.humidifierLoading = false;
-              this.commandTimeout = null;
-            }
-          }, 8000);
-        } else {
-          uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
-          this.humidifierLoading = false;
-        }
-      } catch (err) {
-        uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
-        this.humidifierLoading = false;
-      }
-    },
-
-    async controlDehumidifyingFan(action) {
-      if (!this.selectedDeviceKey) {
-        uni.showToast({ title: '请先选择设备', icon: 'none' });
-        return;
-      }
-      if (this.pendingCommand) {
-        uni.showToast({ title: '请等待上一次指令执行完成', icon: 'none' });
-        return;
-      }
-      this.dehumidifyingFanLoading = true;
-      try {
-        const res = await request({
-          url: '/service/deviceOption/control',
-          method: 'POST',
-          data: {
-            deviceType: 'dehumidifyingFan',
-            deviceKey: this.selectedDeviceKey,
-            command: action
-          },
-          timeout: 3000
-        });
-        if (res.code === 20000 && res.data && res.data.cmdId) {
-          this.pendingCommand = { deviceType: 'dehumidifyingFan', action, cmdId: res.data.cmdId };
-          uni.showToast({ title: '指令已发送，等待设备响应...', icon: 'none', duration: 2000 });
-          this.commandTimeout = setTimeout(() => {
-            if (this.pendingCommand && this.pendingCommand.cmdId === res.data.cmdId) {
-              uni.showToast({ title: '设备未响应', icon: 'none' });
-              this.pendingCommand = null;
-              this.dehumidifyingFanLoading = false;
-              this.commandTimeout = null;
-            }
-          }, 8000);
-        } else {
-          uni.showToast({ title: res.msg || '操作失败', icon: 'none' });
-          this.dehumidifyingFanLoading = false;
-        }
-      } catch (err) {
-        uni.showToast({ title: err.msg || '控制超时或失败', icon: 'none' });
-        this.dehumidifyingFanLoading = false;
-      }
-    }
   }
 };
 </script>
 
 <style scoped>
+.mode-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20rpx; padding: 24rpx 0; border-bottom: 1rpx solid #f0f0f0; }
+.mode-options { display: flex; gap: 24rpx; }
+.mode-options label { display: flex; align-items: center; font-size: 28rpx; }
+.mode-row .control-label { margin: 0; }
+
 .actuator-symbol {
   font-size: 56rpx;
 }

@@ -32,6 +32,9 @@ public class Device implements Serializable {
     @ApiModelProperty(value = "设备唯一标识（用户自定义或系统生成）")
     private String deviceKey;
 
+    @TableField("control_mode")
+    private Integer mode;
+
     @ApiModelProperty(value = "设备名称（用户自定义）")
     private String deviceName;
 

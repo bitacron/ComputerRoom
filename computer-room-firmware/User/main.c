@@ -61,6 +61,7 @@
 #include "delay.h"
 #include "oled.h"
 #include "actuators.h"
+#include "control.h"
 #include "key.h"
 #include "dht11.h"
 #include "mq2.h"
@@ -94,6 +95,7 @@ int main(void)
 	uint32_t last_oled_ms;
 	uint32_t last_report_ms;
 	uint32_t now;
+    uint8_t displayed_mode = 255;
 
 	ADC1_Init();
 	ADC2_Init();
@@ -137,13 +139,14 @@ int main(void)
 	MQTT_Client_Subscribe(Dev_Att_Rep);
 
 	MQTT_Client_SendOnline();
+    report_asap = 1;
 
 	OLED_ShowString(1, 1, "Init_Finish");
 	Beep_ShortBeep(200);
 	OLED_Clear();
 
 	/* OLED 标题只画一次，循环里只刷新数值 */
-	OLED_ShowString(1, 1, "Compoter Room!");
+	OLED_ShowString(1, 1, "Mode: MANUAL    ");
 	OLED_ShowString(2, 1, "temp:");
 	OLED_ShowString(2, 9, "humi:");
 	OLED_ShowString(3, 1, "gas:");
@@ -162,6 +165,11 @@ int main(void)
 		/* ---- 本地按键：无锁自复位，按下松开后翻转一次 ---- */
 		{
 			uint8_t keyNum = Key_GetNum();
+            if (keyNum >= 1 && keyNum <= 5) {
+                const char *sources[] = { "KEY1", "KEY2", "KEY3", "KEY4", "KEY5" };
+                Control_SetMode(CONTROL_MANUAL, sources[keyNum - 1]);
+            }
+            if (keyNum == 6) Control_SetMode(!Control_GetMode(), "KEY6");
 			if (keyNum == 1)
 			{
 				Led_Turn();
@@ -202,14 +210,15 @@ int main(void)
 		/* ---- 采样 + 本地报警 ---- */
 		if ((now - last_sample_ms) >= SAMPLE_PERIOD_MS)
 		{
-			uint16_t gasAna;
+			uint8_t climate_valid;
+            uint16_t gasAna;
 			uint16_t ldrAna;
 			uint16_t flameAna;
 			uint16_t leakAna;
 
 			last_sample_ms = now;
 
-			DHT11_ReadData(&temp, &humi);
+			climate_valid = DHT11_ReadData(&temp, &humi);
 
 			gasAna = MQ2_GetAnalogAverage(ADC_Channel_1, 10);
 			gasPPM = (uint16_t)MQ2_GetGasPPM();
@@ -232,7 +241,8 @@ int main(void)
 			} else {
 				Beep_On();
 			}
-			coolingFan = CoolingFan_GetState();
+			Control_AutoUpdate(temp, humi, ldrPer, climate_valid);
+            coolingFan = CoolingFan_GetState();
 			alarmFlag = Beep_GetState();
 			led = Led_GetState();
 			heater = Heater_GetState();
@@ -244,14 +254,19 @@ int main(void)
 				if (ESP8266_GetTime(measure_time, sizeof(measure_time)) != 0)
 					snprintf(measure_time, sizeof(measure_time), "0000-00-00 00:00:00");
 				UsartPrintf(USART_DEBUG,
-					"measureTime=%s, temp=%d, humi=%d, gasPPM=%d, gasAna=%d,gasDig=%d, alarm=%d, coolingFan=%d, led = %d, ldrDig=%d,ldrAna=%d,ldrPer=%d, flameDig=%d, flameAna=%d, flamePer=%d, leakDig=%d,leakAna=%d,leakPer=%d\r\n",
-					measure_time, temp, humi, gasPPM, gasAna, gasDig, alarmFlag, coolingFan, led,
+					"mode=%d, measureTime=%s, temp=%d, humi=%d, gasPPM=%d, gasAna=%d,gasDig=%d, alarm=%d, coolingFan=%d, led = %d, ldrDig=%d,ldrAna=%d,ldrPer=%d, flameDig=%d, flameAna=%d, flamePer=%d, leakDig=%d,leakAna=%d,leakPer=%d\r\n",
+					Control_GetMode(),  measure_time, temp, humi, gasPPM, gasAna, gasDig, alarmFlag, coolingFan, led,
 					ldrDig, ldrAna, ldrPer, flameDig, flameAna, flamePer,
 					leakDig, leakAna, leakPer);
 			}
 		}
 
-		/* ---- OLED 数值刷新 ---- */
+		if (displayed_mode != Control_GetMode()) {
+            displayed_mode = Control_GetMode();
+            OLED_ShowString(1, 1, displayed_mode ? "Mode: AUTO      " : "Mode: MANUAL    ");
+        }
+
+        /* ---- OLED 数值刷新 ---- */
 		if ((now - last_oled_ms) >= OLED_PERIOD_MS)
 		{
 			last_oled_ms = now;

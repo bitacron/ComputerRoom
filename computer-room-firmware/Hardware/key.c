@@ -1,73 +1,41 @@
-#include "stm32f10x.h"                  // Device header
-#include "delay.h"
+#include "stm32f10x.h"
 #include "key.h"
+#include "timer.h"
 
-/*******************************************************************************
-* 函数名：Key_Init
-* 描述  ：按键初始化，KEY1(PB10) / KEY2(PB11) / KEY3(PA6) / KEY4(PA7) / KEY5(PB6) 上拉输入
-*         低电平有效：按键一端接对应 GPIO，另一端接 GND
-* 输入  ：无
-* 输出  ：无
-*******************************************************************************/
+static GPIO_TypeDef *const ports[] = { KEY1_PORT, KEY2_PORT, KEY3_PORT, KEY4_PORT, KEY5_PORT, KEY6_PORT };
+static const uint16_t pins[] = { KEY1_PIN, KEY2_PIN, KEY3_PIN, KEY4_PIN, KEY5_PIN, KEY6_PIN };
+static uint8_t raw[6], stable[6];
+static uint32_t changed_at[6];
+
 void Key_Init(void)
 {
-	RCC_APB2PeriphClockCmd(KEY1_RCC | KEY2_RCC | KEY3_RCC | KEY4_RCC | KEY5_RCC, ENABLE);
-
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-	GPIO_InitStructure.GPIO_Pin = KEY1_PIN | KEY2_PIN | KEY5_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(KEY1_PORT, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = KEY3_PIN | KEY4_PIN;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_InitTypeDef init;
+    uint8_t i;
+    RCC_APB2PeriphClockCmd(KEY1_RCC | KEY2_RCC | KEY3_RCC | KEY4_RCC | KEY5_RCC | KEY6_RCC, ENABLE);
+    init.GPIO_Mode = GPIO_Mode_IPU;
+    init.GPIO_Speed = GPIO_Speed_2MHz;
+    for (i = 0; i < 6; i++) {
+        init.GPIO_Pin = pins[i];
+        GPIO_Init(ports[i], &init);
+        raw[i] = stable[i] = 1;
+        changed_at[i] = 0;
+    }
 }
 
-/*******************************************************************************
-* 函数名：Key_GetNum
-* 描述  ：检测按键（低电平有效，带消抖）；未按下返回 0
-* 输入  ：无
-* 输出  ：1-KEY1(PB10)，2-KEY2(PB11)，0-无按键
-*******************************************************************************/
 uint8_t Key_GetNum(void)
 {
-	uint8_t KeyNum = 0;
-	if (GPIO_ReadInputDataBit(KEY1_PORT, KEY1_PIN) == 0)
-	{
-		Delay_ms(20);
-		while (GPIO_ReadInputDataBit(KEY1_PORT, KEY1_PIN) == 0);
-		Delay_ms(20);
-		KeyNum = 1;
-	}
-	if (GPIO_ReadInputDataBit(KEY2_PORT, KEY2_PIN) == 0)
-	{
-		Delay_ms(20);
-		while (GPIO_ReadInputDataBit(KEY2_PORT, KEY2_PIN) == 0);
-		Delay_ms(20);
-		KeyNum = 2;
-	}
-
-	if (GPIO_ReadInputDataBit(KEY3_PORT, KEY3_PIN) == 0)
-	{
-		Delay_ms(20);
-		while (GPIO_ReadInputDataBit(KEY3_PORT, KEY3_PIN) == 0);
-		Delay_ms(20);
-		KeyNum = 3;
-	}
-	if (GPIO_ReadInputDataBit(KEY4_PORT, KEY4_PIN) == 0)
-	{
-		Delay_ms(20);
-		while (GPIO_ReadInputDataBit(KEY4_PORT, KEY4_PIN) == 0);
-		Delay_ms(20);
-		KeyNum = 4;
-	}
-	if (GPIO_ReadInputDataBit(KEY5_PORT, KEY5_PIN) == 0)
-	{
-		Delay_ms(20);
-		while (GPIO_ReadInputDataBit(KEY5_PORT, KEY5_PIN) == 0);
-		Delay_ms(20);
-		KeyNum = 5;
-	}
-
-	return KeyNum;
+    uint8_t i, level;
+    uint32_t now = millis();
+    for (i = 0; i < 6; i++) {
+        level = GPIO_ReadInputDataBit(ports[i], pins[i]);
+        if (level != raw[i]) {
+            raw[i] = level;
+            changed_at[i] = now;
+        }
+        if (level != stable[i] && (uint32_t)(now - changed_at[i]) >= 20u) {
+            stable[i] = level;
+            if (level == 1) return i + 1;
+        }
+    }
+    return 0;
 }

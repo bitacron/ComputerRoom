@@ -145,15 +145,12 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         payload.put("dev", deviceOptionControl.getDeviceKey());
         payload.put("act", act);
         payload.put("val", val);
-        boolean success = mqttSendMessageService.sendMessage(topic, payload.toJSONString());
-        if (!success) {
-            throw new IllegalStateException("指令发送失败，请稍后重试");
-        }
-
         Date now = new Date();
         DeviceOption deviceOption = new DeviceOption();
         deviceOption.setDeviceKey(deviceOptionControl.getDeviceKey());
-        deviceOption.setAction(commandEnum.getValue() + "-" + typeEnum.getName());
+        deviceOption.setAction(typeEnum == DeviceTypeEnum.MODE
+                ? (val == 1 ? "切换自动模式" : "切换手动模式")
+                : commandEnum.getValue() + "-" + typeEnum.getName());
         deviceOption.setOperatorCode(operatorCode);
         deviceOption.setGmtCreate(now);
         deviceOption.setIsDeleted(false);
@@ -168,6 +165,11 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         command.setGmtCreate(now);
         command.setIsDeleted(false);
         commandService.save(command);
+        if (!mqttSendMessageService.sendMessage(topic, payload.toJSONString())) {
+            command.setStatus(3);
+            commandService.updateById(command);
+            throw new IllegalStateException("指令发送失败，请稍后重试");
+        }
         return ControlResult.sent(cmdId);
     }
 
@@ -183,35 +185,36 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         Integer heaterStatus = json.getInteger("heater");
         Integer humidifierStatus = json.getInteger("humidifier");
         Integer dehumidifyingFanStatus = json.getInteger("dehumidifyingFan");
+        Integer mode = json.getInteger("mode");
+        if (mode != null && mode != 0 && mode != 1) mode = null;
+        if (!("room/" + deviceKeyStr + "/ack").equals(topic)) return;
         Integer result = json.getInteger("result");
         String act = json.getString("act");
         Integer val = json.getInteger("val");
-        Device device = deviceService.applyActuatorSnapshot(deviceKeyStr, coolingFanStatus, ledStatus, heaterStatus, humidifierStatus, dehumidifyingFanStatus);
+        Device device = mode == null
+                ? deviceService.applyActuatorSnapshot(deviceKeyStr, coolingFanStatus, ledStatus, heaterStatus, humidifierStatus, dehumidifyingFanStatus)
+                : deviceService.applyActuatorSnapshot(deviceKeyStr, coolingFanStatus, ledStatus, heaterStatus, humidifierStatus, dehumidifyingFanStatus, mode);
 
         Command command = null;
         if (json.containsKey("cmdId") && json.get("cmdId") != null) {
             QueryWrapper<Command> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(Command::getCmdId, json.get("cmdId").toString());
             queryWrapper.lambda().eq(Command::getStatus, 1);
+            queryWrapper.lambda().eq(Command::getDeviceKey, deviceKeyStr);
             queryWrapper.lambda().orderByDesc(Command::getGmtCreate);
             queryWrapper.lambda().last("limit 1");
             command = commandService.getOne(queryWrapper);
             if (command != null) {
-                boolean gpioMatched = result != null && result == 0;
-                if (gpioMatched && "coolingFan".equalsIgnoreCase(act) && coolingFanStatus != null && val != null) {
-                    gpioMatched = coolingFanStatus.equals(val);
-                } else if (gpioMatched && "led".equalsIgnoreCase(act) && ledStatus != null && val != null) {
-                    gpioMatched = ledStatus.equals(val);
-                } else if (gpioMatched && "heater".equalsIgnoreCase(act) && heaterStatus != null && val != null) {
-                    gpioMatched = heaterStatus.equals(val);
-                } else if (gpioMatched && "humidifier".equalsIgnoreCase(act) && humidifierStatus != null && val != null) {
-                    gpioMatched = humidifierStatus.equals(val);
-                } else if (gpioMatched && "dehumidifyingFan".equalsIgnoreCase(act) && dehumidifyingFanStatus != null && val != null) {
-                    gpioMatched = dehumidifyingFanStatus.equals(val);
-                }
+                DeviceCommandEnum expected = DeviceCommandEnum.fromCode(command.getCommand());
+                Integer actual = json.getInteger(act == null ? "" : act);
+                boolean gpioMatched = result != null && result == 0 && val != null
+                        && command.getDeviceKey().equals(deviceKeyStr)
+                        && command.getDeviceType().equals(act)
+                        && actual != null && actual.equals(val)
+                        && (expected == null || expected.getIntValue() == val);
                 command.setStatus(gpioMatched ? 2 : 3);
                 commandService.updateById(command);
-                pushCommandResult(command, result, coolingFanStatus, ledStatus, heaterStatus, humidifierStatus, dehumidifyingFanStatus);
+                pushCommandResult(command, result, coolingFanStatus, ledStatus, heaterStatus, humidifierStatus, dehumidifyingFanStatus, mode);
             }
         }
 
@@ -228,16 +231,17 @@ public class DeviceOptionServiceImpl extends ServiceImpl<DeviceOptionMapper, Dev
         }
         command.setStatus(4);
         commandService.updateById(command);
-        pushCommandResult(command, null, null, null, null, null, null);
+        pushCommandResult(command, null, null, null, null, null, null, null);
     }
 
-    private void pushCommandResult(Command command, Integer result, Integer coolingFan, Integer led, Integer heater, Integer humidifier, Integer dehumidifyingFan) {
+    private void pushCommandResult(Command command, Integer result, Integer coolingFan, Integer led, Integer heater, Integer humidifier, Integer dehumidifyingFan, Integer mode) {
         JSONObject body = new JSONObject();
         body.put("cmdId", command.getCmdId());
         body.put("deviceKey", command.getDeviceKey());
         body.put("status", command.getStatus());
         body.put("act", command.getDeviceType());
         body.put("command", command.getCommand());
+        if (mode != null) body.put("mode", mode);
         if (result != null) {
             body.put("result", result);
         }

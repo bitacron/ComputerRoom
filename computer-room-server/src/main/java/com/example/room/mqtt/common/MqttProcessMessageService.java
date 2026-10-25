@@ -116,6 +116,8 @@ public class MqttProcessMessageService {
              */
             // 如果包含其中任意一个字段，则插入数据
             Environment environment = new Environment();
+            Integer mode = jsonObject.getInteger("mode");
+            if (mode != null && (mode == 0 || mode == 1)) environment.setMode(mode);
             // 设置默认值
             environment.setSource(1); // 来源：1上报
             environment.setGmtCreate(new Date());

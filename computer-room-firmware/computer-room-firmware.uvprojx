@@ -744,6 +744,11 @@
               <FilePath>.\Hardware\beep.h</FilePath>
             </File>
             <File>
+              <FileName>control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Hardware\control.c</FilePath>
+            </File>
+            <File>
               <FileName>actuators.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Hardware\actuators.c</FilePath>

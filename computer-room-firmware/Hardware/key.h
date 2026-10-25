@@ -3,8 +3,8 @@
 
 #include "stm32f10x.h"
 
-// ========== Òı½Å¶¨Òå£¨Çë¸ù¾İÊµ¼ÊÁ¬½ÓĞŞ¸Ä£©==========
-// KEY1 Ô­½Ó PB1£¬Óë LDR AO£¨ADC1_IN9£©³åÍ»£¬¸Äµ½ PB10£¨Óë KEY2 Í¬¿ÚÏàÁÚ£¬USART3 Î´ÓÃ£©
+// ========== å¼•è„šå®šä¹‰ï¼ˆè¯·æ ¹æ®å®é™…è¿æ¥ä¿®æ”¹ï¼‰==========
+// KEY1 åŸæ¥ PB1ï¼Œä¸ LDR AOï¼ˆADC1_IN9ï¼‰å†²çªï¼Œæ”¹åˆ° PB10ï¼ˆä¸ KEY2 åŒå£ç›¸é‚»ï¼ŒUSART3 æœªç”¨ï¼‰
 #define KEY1_PORT       GPIOB
 #define KEY1_PIN        GPIO_Pin_10
 #define KEY1_RCC        RCC_APB2Periph_GPIOB
@@ -25,7 +25,11 @@
 #define KEY5_PIN        GPIO_Pin_6
 #define KEY5_RCC        RCC_APB2Periph_GPIOB
 
-void Key_Init(void);       // °´¼ü GPIO ³õÊ¼»¯£¨KEY1-PB10 / KEY2-PB11£©
-uint8_t Key_GetNum(void);  // Returns 1-5 for KEY1-KEY5; 0 when none is pressed.
+#define KEY6_PORT GPIOC
+#define KEY6_PIN GPIO_Pin_13
+#define KEY6_RCC RCC_APB2Periph_GPIOC
+
+void Key_Init(void);       // æŒ‰é”® GPIO åˆå§‹åŒ–ï¼ˆKEY1-PB10 / KEY2-PB11ï¼‰
+uint8_t Key_GetNum(void);  // Returns 1-6 for KEY1-KEY6; 0 when none is pressed.
 
 #endif

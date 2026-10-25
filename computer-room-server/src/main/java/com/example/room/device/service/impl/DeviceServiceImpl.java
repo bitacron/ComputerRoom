@@ -166,7 +166,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         markOnlineAndActive(device, now);
 
         Date measureTime = reported.getGmtMeasurement() != null ? reported.getGmtMeasurement() : now;
-        if (device.getLastReportTime() != null && measureTime.before(device.getLastReportTime())) {
+        boolean hasMode = reported.getMode() != null && (reported.getMode() == 0 || reported.getMode() == 1);
+        if (!hasMode && device.getLastReportTime() != null && measureTime.before(device.getLastReportTime())) {
             this.updateById(device);
             return device;
         }
@@ -182,7 +183,9 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         device.setLeakStatus(reported.getLeakStatus());
         device.setLeakPercentage(reported.getLeakPercentage());
         device.setAlarmStatus(reported.getAlarmStatus());
-        if (!inActuatorProtectWindow(device, now)) {
+        // New firmware reports live GPIO and mode together, including local key events.
+        if (hasMode) device.setMode(reported.getMode());
+        if (hasMode || !inActuatorProtectWindow(device, now)) {
             device.setCoolingFanStatus(reported.getCoolingFanStatus());
             device.setLedStatus(reported.getLedStatus());
             device.setHeaterStatus(reported.getHeaterStatus());
@@ -197,6 +200,12 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Transactional
     @Override
     public Device applyActuatorSnapshot(String deviceKey, Integer coolingFanStatus, Integer ledStatus, Integer heaterStatus, Integer humidifierStatus, Integer dehumidifyingFanStatus) {
+        return applyActuatorSnapshot(deviceKey, coolingFanStatus, ledStatus, heaterStatus, humidifierStatus, dehumidifyingFanStatus, null);
+    }
+
+    @Transactional
+    @Override
+    public Device applyActuatorSnapshot(String deviceKey, Integer coolingFanStatus, Integer ledStatus, Integer heaterStatus, Integer humidifierStatus, Integer dehumidifyingFanStatus, Integer mode) {
         if (StringUtils.isBlank(deviceKey)) {
             return null;
         }
@@ -209,6 +218,10 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         Date now = new Date();
         markOnlineAndActive(device, now);
         boolean actuatorChanged = false;
+        if (mode != null && (mode == 0 || mode == 1)) {
+            device.setMode(mode);
+            actuatorChanged = true;
+        }
         if (coolingFanStatus != null) {
             device.setCoolingFanStatus(coolingFanStatus);
             actuatorChanged = true;
@@ -242,6 +255,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return null;
         }
         if (device.getLastReportTime() == null
+                && device.getMode() == null
                 && device.getTemperature() == null
                 && device.getCoolingFanStatus() == null
                 && device.getLedStatus() == null
@@ -252,6 +266,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
         Environment environment = new Environment();
         environment.setSource(1);
+        environment.setMode(device.getMode());
+        environment.setOnlineStatus(device.getOnlineStatus());
         environment.setDeviceKey(device.getDeviceKey());
         if (device.getTemperature() != null) {
             environment.setTemperature(device.getTemperature());

@@ -7,25 +7,25 @@
 #define DHT11_PIN GPIO_Pin_14
 
 /*******************************************************************************
-* ��������DHT11_GPIO_OUT
-* ����  ���� DHT11 DATA��PB14������Ϊ�������
+* 函数名：DHT11_GPIO_OUT
+* 描述  ：将 DHT11 DATA（PB14）配置为推挽输出
 *******************************************************************************/
 void DHT11_GPIO_OUT(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);    //��������GPIO������APB2
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);    //开启挂载GPIO的总线APB2
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; //�������������Ҳ����Ч
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; //推挽输出，输入也是有效
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);		
 }
 
 
 /*******************************************************************************
-* ��������DHT11_GPIO_IN
-* ����  ���� DHT11 DATA��PB14������Ϊ��������
+* 函数名：DHT11_GPIO_IN
+* 描述  ：将 DHT11 DATA（PB14）配置为浮空输入
 *******************************************************************************/
 void DHT11_GPIO_IN(void)
 {
@@ -34,15 +34,15 @@ void DHT11_GPIO_IN(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14;	
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; //�������룬���������
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; //浮空输入，不可以输出
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);					
 }
 
 /*******************************************************************************
-* ��������DHT11_ReadByte
-* ����  ���ӵ����߶�ȡ 1 �ֽ�����
-* ���  ����ȡ�����ֽ�
+* 函数名：DHT11_ReadByte
+* 描述  ：从单总线读取 1 字节数据
+* 输出  ：读取到的字节
 *******************************************************************************/
 uint8_t DHT11_ReadByte(void)
 {
@@ -51,11 +51,11 @@ uint8_t DHT11_ReadByte(void)
 	
 	uint8_t retry = 0;	
 	uint8_t i;
-	//����������ʮ��Ϊ����
+	//二进数除以十即为数据
 
 	for(i=0;i<8;i++)
 	{
-		//����׼���źŵ͵�ƽ50us
+		//消耗准备信号低电平50us
 		while(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_14)==0&&retry<100)
 		{
 			Delay_us(1);	
@@ -63,26 +63,26 @@ uint8_t DHT11_ReadByte(void)
 		}
 		retry=0;
 
-		//��Ȼ0�źų���ʱ��Ϊ28us��retryѭ���ǳ����
-		//��������,�൱�����һֱ��0�Ļ����Ա�����ʱ�����Ķ��ʱ��
-		Delay_us(30);//�����0����temp=0�����ã���0����Ȼ�ڸߵ�ƽʱ����
+		//虽然0信号持续时间为28us，retry循环非常巧妙，
+		//避免问题,相当于如果一直是0的话可以避免延时带来的多出时间
+		Delay_us(30);//如果是0，那temp=0起作用，非0，仍然在高电平时间内
 		
-		//��Ϊ���������0�Ļ�����ʱ��̣�����Ԥ��0���򻯴��롣
+		//因为如果数据是0的话持续时间短，故先预置0，简化代码。
 		
-		temp=0;//�����ź�0��temp=0
-		//����0�źŸߵ�ƽ����28us������1�źŸߵ�ƽ70us����ʱ30us��ȷ������0��1
+		temp=0;//数字信号0，temp=0
+		//数字0信号高电平持续28us，数字1信号高电平70us，延时30us以确认数字0或1
 		if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_14)==1) 
 		{
 			temp=1;
 		}			
-			//����1�źŸߵ�ƽʣ��40us
+			//数字1信号高电平剩余40us
 		while(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_14)==1&&retry<100)
 		{		
 			Delay_us(1);
 			retry++;
 		}
 		retry=0;
-		//<<=���Ƹ�ֵ���ţ�|=�Ȼ��ٸ�ֵ���õ�1λ���ݣ���8bit
+		//<<=左移赋值符号，|=先或再赋值，得到1位数据，即8bit
 		ReadDat<<=1;
 		ReadDat|=temp;
 	}	
@@ -91,58 +91,60 @@ uint8_t DHT11_ReadByte(void)
 }
 
 /*******************************************************************************
-* ��������DHT11_ReadData
-* ����  ����ȡ��ʪ�ȣ�У��ͨ����д�� temp��humi ָ���ֵ��ʧ���򱣳�ԭֵ
-* ����  ��temp-�¶�ָ�룬humi-ʪ��ָ��
+* 函数名：DHT11_ReadData
+* 描述  ：读取温湿度；校验通过才写入 temp、humi 指向的值，失败则保持原值
+* 输入  ：temp-温度指针，humi-湿度指针
 *******************************************************************************/
-void DHT11_ReadData(uint8_t *temp, uint8_t *humi)
+uint8_t DHT11_ReadData(uint8_t *temp, uint8_t *humi)
 {
     uint8_t i,data[5];
 		uint8_t retry=0;
 
-	//stm32 PB14����Ϊ��������Ϳ�ʼ�źŵ͵�ƽ18ms���ߵ�ƽ40us
+	//stm32 PB14设置为输出，发送开始信号低电平18ms，高电平40us
 	DHT11_GPIO_OUT();
-	GPIO_ResetBits(GPIOB,GPIO_Pin_14);//�������������ƽ
-	Delay_ms(18);//��֤dht11���յ���ʼ�ź�
+	GPIO_ResetBits(GPIOB,GPIO_Pin_14);//拉低引脚输出电平
+	Delay_ms(18);//保证dht11能收到起始信号
 
-	GPIO_SetBits(GPIOB,GPIO_Pin_14);//�������������ƽ
-	Delay_us(40);//��ʱ40us���ȴ�dht11��Ӧ�ź�
+	GPIO_SetBits(GPIOB,GPIO_Pin_14);//拉高引脚输出电平
+	Delay_us(40);//延时40us，等待dht11响应信号
 
-	//stm32 PB14����Ϊ���룬��鲢������Ӧ�źŵ͵�ƽ80us���ߵ�ƽ80us
-	DHT11_GPIO_IN();//���Բ��л���ֱ������ߵ�ƽ������Ҳ�ǿ�����
+	//stm32 PB14设置为输入，检查并接收响应信号低电平80us，高电平80us
+	DHT11_GPIO_IN();//可以不切换，直接输出高电平，输入也是开启的
 	Delay_us(20);
-	//��ʱ20us��dht11��Ӧ�͵�ƽ80us����ʣ60us������Ƿ��ǵ͵�ƽ��ȷ���Ƿ�����Ӧ�ź�
+	//延时20us，dht11响应低电平80us，还剩60us，检查是否是低电平以确定是否有响应信号
 
 	if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_14)==0)
-	{	//��һ��ѭ��������Ӧ�͵�ƽ60us
-		while(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_14)==0&&retry<100)//������Ӧ�źŵ͵�ƽʣ��60us
+	{	//第一个循环消耗响应低电平60us
+		while(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_14)==0&&retry<100)//接收响应信号低电平剩余60us
 		{
 			Delay_us(1);
 			retry++;		
 		}
 
-		retry=0;//����100us�Զ��������У����⿨��
-		//����dht11����80us
-		while(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_14)==1&&retry<100)//������Ӧ�źŸߵ�ƽ80us
+		retry=0;//超过100us自动向下运行，以免卡死
+		//消耗dht11拉高80us
+		while(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_14)==1&&retry<100)//接收响应信号高电平80us
 		{
 			Delay_us(1);
 			retry++;			
 		}
 		retry=0;
 		
-		//����8�ֽ�����,ÿ����1bit֮ǰ�Ƚ�������50us
-		//������5λ���ݣ�40bit
+		//接收8字节数据,每传送1bit之前先进行拉低50us
+		//接收了5位数据，40bit
 		for(i=0;i<5;i++)
 		{
 			data[i]=DHT11_ReadByte();
 		}
-		Delay_us(50);//DHT11��������50us��Ϊһ�ֽڽ����źţ�����ʹ���������
+		Delay_us(50);//DHT11拉低总线50us作为一字节结束信号，或者使用以下语句
         if ((data[0] + data[1] + data[2] + data[3]) == data[4])
         {
             *humi = data[0];
             *temp = data[2];
+            return 1;
         }	
 	}
 
+    return 0;
 }
 

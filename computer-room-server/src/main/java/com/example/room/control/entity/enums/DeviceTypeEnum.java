@@ -12,6 +12,7 @@ public enum DeviceTypeEnum {
     
     COOLING_FAN("coolingFan", "散热风扇", 1),
     LED("led", "LED灯", 0),
+    MODE("mode", "控制模式", 5),
     HEATER("heater", "加热片", 2),
     HUMIDIFIER("humidifier", "加湿器", 3),
     DEHUMIDIFYING_FAN("dehumidifyingFan", "除湿换气扇", 4);

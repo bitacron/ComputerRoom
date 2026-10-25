@@ -3,9 +3,9 @@
 
 #include "stm32f10x.h"                  // Device header
 
-void DHT11_GPIO_OUT(void);                          // DATA ½ÅÅäÖÃÎªÍÆÍìÊä³ö
-void DHT11_GPIO_IN(void);                           // DATA ½ÅÅäÖÃÎª¸¡¿ÕÊäÈë
-uint8_t DHT11_ReadByte(void);                       // ¶ÁÈ¡ 1 ×Ö½Ú
-void DHT11_ReadData(uint8_t *temp, uint8_t *humi);  // ¶ÁÈ¡ÎÂÊª¶È£¨Ğ£ÑéÊ§°ÜÔò²»¸üĞÂ£©
+void DHT11_GPIO_OUT(void);                          // DATA è„šé…ç½®ä¸ºæ¨æŒ½è¾“å‡º
+void DHT11_GPIO_IN(void);                           // DATA è„šé…ç½®ä¸ºæµ®ç©ºè¾“å…¥
+uint8_t DHT11_ReadByte(void);                       // è¯»å– 1 å­—èŠ‚
+uint8_t DHT11_ReadData(uint8_t *temp, uint8_t *humi);  // è¯»å–æ¸©æ¹¿åº¦ï¼ˆæ ¡éªŒå¤±è´¥åˆ™ä¸æ›´æ–°ï¼‰
 
 #endif

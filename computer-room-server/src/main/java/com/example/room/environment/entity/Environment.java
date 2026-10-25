@@ -39,6 +39,12 @@ public class Environment implements Serializable {
     @ApiModelProperty(value = "上报设备")
     private String deviceKey;
 
+    @TableField(exist = false)
+    private Integer mode;
+
+    @TableField(exist = false)
+    private Integer onlineStatus;
+
     @ApiModelProperty(value = "温度")
     private float temperature;
 

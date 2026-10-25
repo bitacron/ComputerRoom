@@ -71,6 +71,8 @@ public interface DeviceService extends IService<Device> {
      */
     Device applyActuatorSnapshot(String deviceKey, Integer coolingFanStatus, Integer ledStatus, Integer heaterStatus, Integer humidifierStatus, Integer dehumidifyingFanStatus);
 
+    Device applyActuatorSnapshot(String deviceKey, Integer coolingFanStatus, Integer ledStatus, Integer heaterStatus, Integer humidifierStatus, Integer dehumidifyingFanStatus, Integer mode);
+
     /**
      * 将设备当前态转成实时页使用的 Environment 形状；尚无快照时返回 null。
      */

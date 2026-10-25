@@ -18,6 +18,7 @@
 #include "cJSON.h"
 
 #include "actuators.h"
+#include "control.h"
 
 #define DEVICEID            "stm32_01"
 #define MQTT_USERNAME       ""
@@ -124,8 +125,8 @@ unsigned short MQTT_Client_FillBuf(char *buf)
 	humidifier = Humidifier_GetState();
 	dehumidifyingFan = DehumidifyingFan_GetState();
 	snprintf(buf, 512,
-		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"leakDig\":%d,\"leakPer\":%d,\"alarm\":%d,\"coolingFan\":%d,\"led\":%d,\"heater\":%d,\"humidifier\":%d,\"dehumidifyingFan\":%d,\"measureTime\":\"%s\"}",
-		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, leakDig, leakPer, alarmFlag, coolingFan, led, heater, humidifier, dehumidifyingFan, measure_time);
+		"{\"dev\":\"" DEVICEID "\",\"temp\":%d,\"humi\":%d,\"gasPPM\":%d,\"gasDig\":%d,\"ldrDig\":%d,\"ldrPer\":%d,\"flameDig\":%d,\"flamePer\":%d,\"leakDig\":%d,\"leakPer\":%d,\"alarm\":%d,\"coolingFan\":%d,\"led\":%d,\"heater\":%d,\"humidifier\":%d,\"dehumidifyingFan\":%d,\"mode\":%d,\"measureTime\":\"%s\"}",
+		temp, humi, gasPPM, gasDig, ldrDig, ldrPer, flameDig, flamePer, leakDig, leakPer, alarmFlag, coolingFan, led, heater, humidifier, dehumidifyingFan, Control_GetMode(), measure_time);
 	return strlen(buf);
 }
 
@@ -138,7 +139,7 @@ unsigned short MQTT_Client_FillBuf(char *buf)
 void MQTT_Client_SendData(void)
 {
 	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};
-	char buf[512];
+	static char buf[512];
 	char topic[64];
 	short body_len = 0, i = 0;
 
@@ -147,7 +148,7 @@ void MQTT_Client_SendData(void)
 	sprintf(topic, "room/%s/report", DEVICEID);
 
 	body_len = MQTT_Client_FillBuf(buf);
-	UsartPrintf(USART_DEBUG, "topic: %s, payload: %s\r\n", topic, buf);
+	UsartPrintf(USART_DEBUG, "topic=%s, len=%u, mode=%u\r\n", topic, (unsigned int)body_len, (unsigned int)Control_GetMode());
 	if (body_len)
 	{
 		if (MQTT_PacketSaveData(topic, body_len, NULL, 5, &mqttPacket) == 0)	// ?? PUBLISH ??
@@ -262,7 +263,7 @@ void MQTT_Client_Subscribe(u8 Sub)
 static void MQTT_Client_SendCmdAck(const char *cmd_id, const char *act, int val, int result)
 {
 	char topic[48];
-	char payload[256];
+	char payload[384];
 	int n;
 
 	coolingFan = CoolingFan_GetState();
@@ -272,8 +273,8 @@ static void MQTT_Client_SendCmdAck(const char *cmd_id, const char *act, int val,
 	dehumidifyingFan = DehumidifyingFan_GetState();
 	sprintf(topic, "room/%s/ack", DEVICEID);
 	n = snprintf(payload, sizeof(payload),
-		"{\"cmdId\":\"%s\",\"dev\":\"%s\",\"act\":\"%s\",\"val\":%d,\"result\":%d,\"coolingFan\":%d,\"led\":%d,\"heater\":%d,\"humidifier\":%d,\"dehumidifyingFan\":%d}",
-		cmd_id ? cmd_id : "", DEVICEID, act ? act : "", val, result, coolingFan, led, heater, humidifier, dehumidifyingFan);
+		"{\"cmdId\":\"%s\",\"dev\":\"%s\",\"act\":\"%s\",\"val\":%d,\"result\":%d,\"coolingFan\":%d,\"led\":%d,\"heater\":%d,\"humidifier\":%d,\"dehumidifyingFan\":%d,\"mode\":%d}",
+		cmd_id ? cmd_id : "", DEVICEID, act ? act : "", val, result, coolingFan, led, heater, humidifier, dehumidifyingFan, Control_GetMode());
 	if (n > 0 && n < (int)sizeof(payload))
 	{
 		UsartPrintf(USART_DEBUG, "ack topic: %s, payload: %s\r\n", topic, payload);
@@ -357,7 +358,8 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 					{
 						cmd_id = id_item->valuestring;
 					}
-					if (val_item != NULL)
+					if (val_item != NULL && val_item->type == cJSON_Number
+                        && (val_item->valuedouble == 0 || val_item->valuedouble == 1))
 					{
 						val = val_item->valueint;
 					}
@@ -370,8 +372,14 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 					{
 						exec_result = 2;
 					}
-					else if (strcmp(act, "coolingFan") == 0)
+					else if (strcmp(act, "mode") == 0)
+                    {
+                        Control_SetMode((uint8_t)val, "REMOTE_MODE");
+                        exec_result = 0;
+                    }
+                    else if (strcmp(act, "coolingFan") == 0)
 					{
+                        Control_SetMode(CONTROL_MANUAL, "REMOTE_SWITCH");
 						if (val == 1)
 						{
 							CoolingFan_ON();
@@ -386,6 +394,7 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 					}
 					else if (strcmp(act, "led") == 0)
 					{
+                        Control_SetMode(CONTROL_MANUAL, "REMOTE_SWITCH");
 						if (val == 1)
 						{
 							Led_ON();
@@ -400,6 +409,7 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 					}
 					else if (strcmp(act, "heater") == 0)
 					{
+                        Control_SetMode(CONTROL_MANUAL, "REMOTE_SWITCH");
 						if (val == 1)
 						{
 							Heater_ON();
@@ -415,6 +425,7 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 					}
 					else if (strcmp(act, "humidifier") == 0)
 					{
+                        Control_SetMode(CONTROL_MANUAL, "REMOTE_SWITCH");
 						if (val == 1)
 						{
 							Humidifier_ON();
@@ -430,6 +441,7 @@ void MQTT_Client_RevPro(unsigned char *cmd)
 					}
 					else if (strcmp(act, "dehumidifyingFan") == 0)
 					{
+                        Control_SetMode(CONTROL_MANUAL, "REMOTE_SWITCH");
 						if (val == 1)
 						{
 							DehumidifyingFan_ON();
